@@ -1,32 +1,28 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CoverShift · Project foundation</title>
-    <style>
-      :root { color-scheme: light; font-family: system-ui, sans-serif; color: #173a32; background: #f4f7f3; }
-      body { margin: 0; min-height: 100svh; display: grid; place-items: center; }
-      main { box-sizing: border-box; width: min(100% - 2rem, 44rem); padding: clamp(1.5rem, 5vw, 3rem); background: white; border: 1px solid #dce5dc; border-radius: 1.5rem; }
-      .label { font-size: .8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #48725c; }
-      h1 { font-size: clamp(2.5rem, 8vw, 4rem); letter-spacing: -.05em; margin: .5rem 0 1rem; }
-      p, li { line-height: 1.7; }
-      ul { padding-left: 1.25rem; }
-      footer { border-top: 1px solid #dce5dc; margin-top: 2rem; padding-top: 1rem; color: #52665c; font-size: .9rem; }
-    </style>
-  </head>
-  <body>
-    <main>
-      <p class="label">CS-001 · Project foundation</p>
-      <h1>CoverShift</h1>
-      <p>Help small teams cover shifts with confidence.</p>
-      <p>The local project is running. This page verifies that both teammates can start CoverShift using the same setup.</p>
-      <ul>
-        <li>Next: responsive worker and manager navigation.</li>
-        <li>Then: data storage and secure sign-in.</li>
-        <li>After that: coverage requests, claims, and manager approval.</li>
-      </ul>
-      <footer>Development preview. Shift management and accounts are planned features.</footer>
-    </main>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CoverShift helps small teams find shift coverage with manager approval.">
+  <title>CoverShift</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <a class="brand" href="#/worker/shifts"><span class="brand-icon" aria-hidden="true">C<span>↗</span></span>CoverShift<span class="brand-dot">.</span></a>
+    <div class="business"><span class="business-icon" aria-hidden="true">N</span><div><strong>Neighbourhood Café</strong><small>Montréal, QC · Demo business</small></div></div>
+    <p class="nav-label" id="nav-label">Workspace</p>
+    <nav id="navigation" aria-labelledby="nav-label"></nav>
+    <div class="sidebar-bottom"><span class="small-dot"></span> A little teamwork goes a long way.<small>Made for small teams.</small></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong id="breadcrumb">My shifts</strong></span><div class="profile"><span id="avatar" class="avatar">JL</span><span id="profile-name">Jamie Lee</span></div></header>
+    <div class="preview-bar"><span><strong>Demo preview</strong><span class="preview-detail"> · Fictional data. Accounts and shift actions come later.</span></span><div class="role-switch" role="group" aria-label="Preview role"><button type="button" data-role="worker">Worker</button><button type="button" data-role="manager">Manager</button></div></div>
+    <main id="main" tabindex="-1"></main>
+    <footer class="page-footer"><span>CoverShift · A better way to cover.</span><span>CS-002 · Navigation preview</span></footer>
+  </div>
+  <noscript>This navigation preview needs JavaScript enabled.</noscript>
+</body>
 </html>

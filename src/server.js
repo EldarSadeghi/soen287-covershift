@@ -8,8 +8,15 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error('PORT must be an integer between 1 and 65535.');
 }
 
+const assets = new Map([
+  ['/', ['index.html', 'text/html; charset=utf-8']],
+  ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
+  ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
+]);
+
 const server = createServer(async (request, response) => {
-  if (request.url !== '/') {
+  const asset = assets.get(new URL(request.url, 'http://localhost').pathname);
+  if (!asset) {
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Page not found');
     return;
@@ -22,8 +29,8 @@ const server = createServer(async (request, response) => {
   }
 
   try {
-    const page = await readFile(new URL('../public/index.html', import.meta.url));
-    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    const page = await readFile(new URL(`../public/${asset[0]}`, import.meta.url));
+    response.writeHead(200, { 'Content-Type': asset[1] });
     response.end(request.method === 'HEAD' ? undefined : page);
   } catch (error) {
     console.error('Unable to serve the start page:', error);

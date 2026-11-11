@@ -16,7 +16,7 @@ Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied.
 
 ## Current scope
 
-CS-001 provides a local start page, server entry point, folder structure, environment example, and collaboration instructions. Authentication, dashboards, JSON persistence, and shift workflows will be implemented in later increments. The Node HTTP server is a minimal bootstrap; confirm the course's allowed backend stack before authentication work.
+CS-002 provides a responsive worker/manager navigation preview with fictional sample records. Use the Worker/Manager preview switch and navigation to explore all seven screens. Direct links such as `http://127.0.0.1:3000/#/manager/approvals` can be refreshed or bookmarked. The switch is a demo control, not authentication or authorization. Accounts, JSON persistence, and shift actions are future increments; disabled buttons are labeled Coming soon. Confirm the course's allowed backend stack before authentication work.
 
 ## Structure
 
@@ -27,7 +27,7 @@ CS-001 provides a local start page, server entry point, folder structure, enviro
 
 ## Checks
 
-Run `npm run check` to check server syntax. Start the app and verify the start page loads, refresh works, and an unknown path returns 404. This increment has no business logic requiring automated unit tests.
+Run `npm run check` to check server and frontend JavaScript syntax. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths should return 404. This increment contains demo presentation data and no persistent business logic.
 
 ## Collaboration
 
