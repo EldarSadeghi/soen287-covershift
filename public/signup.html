@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Create your CoverShift manager account and set up your business.">
+  <title>Create your account · CoverShift</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/signup.css">
+  <script src="/signup.js" defer></script>
+</head>
+<body class="signup-page">
+  <a class="skip" href="#signup-main">Skip to signup</a>
+  <div class="signup-story">
+    <a class="brand" href="/"> <span class="brand-icon" aria-hidden="true">C<span>↗</span></span>CoverShift<span class="brand-dot">.</span></a>
+    <div class="story-content"><p class="eyebrow">Small team. More peace of mind.</p><h2>Good coverage<br>starts with<br>your people.</h2><p class="story-description">A simpler way to cover the unexpected.<br>Bring your team together, one shift at a time.</p>
+      <div class="story-card"><span class="story-check" aria-hidden="true">✓</span><div><strong>A little teamwork. A lot less chasing.</strong><p>Workers find coverage.<br>You give the final approval.</p></div></div>
+    </div>
+    <p class="story-footer">Made for the café, shop, and restaurant around the corner.</p>
+  </div>
+  <main id="signup-main" class="signup-main" tabindex="-1">
+    <div class="signup-top"><span>Already exploring?</span><a href="/">View demo workspace <span aria-hidden="true">↗</span></a></div>
+    <div class="signup-form-wrap">
+      <section id="signup-intro"><p class="eyebrow">Let’s get your team started</p><h1>Create your account.</h1><p class="signup-subtitle">Set up your business and become its manager.</p></section>
+      <div class="signup-notice">Development preview · Signup saves your account. Sign-in is coming next.</div>
+      <div id="form-errors" class="form-errors" role="alert" tabindex="-1" hidden></div>
+      <noscript><p class="form-errors">Enable JavaScript to create your account.</p></noscript>
+      <form id="signup-form" method="post" action="/api/signup" novalidate>
+        <div class="form-field"><label for="name">Your name</label><input id="name" name="name" autocomplete="name" required minlength="2" maxlength="80" placeholder="e.g. Morgan Chen" aria-describedby="name-error"><p id="name-error" class="field-error" hidden></p></div>
+        <div class="form-field"><label for="businessName">Business name</label><input id="businessName" name="businessName" autocomplete="organization" required minlength="2" maxlength="100" placeholder="e.g. Neighbourhood Café" aria-describedby="businessName-error"><p id="businessName-error" class="field-error" hidden></p></div>
+        <div class="form-field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com" aria-describedby="email-error"><p id="email-error" class="field-error" hidden></p></div>
+        <div class="form-field"><label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="new-password" required minlength="15" maxlength="128" aria-describedby="password-hint password-error"><button id="show-password" type="button" aria-pressed="false" aria-controls="password">Show</button></div><p id="password-hint" class="field-hint">Use 15–128 characters. A memorable passphrase works well.</p><p id="password-error" class="field-error" hidden></p></div>
+        <div class="form-field"><label for="timezone">Business timezone</label><select id="timezone" name="timezone" required aria-describedby="timezone-hint timezone-error"><option value="America/Toronto">Eastern time · Montréal / Toronto</option><option value="America/Halifax">Atlantic time · Halifax</option><option value="America/St_Johns">Newfoundland time · St. John’s</option><option value="America/Chicago">Central time · Chicago</option><option value="America/Edmonton">Mountain time · Edmonton</option><option value="America/Vancouver">Pacific time · Vancouver</option><option value="UTC">UTC</option></select><p id="timezone-hint" class="field-hint">Used to display your team’s shift times.</p><p id="timezone-error" class="field-error" hidden></p></div>
+        <button type="submit" id="signup-submit" class="signup-submit">Create account <span aria-hidden="true">↗</span></button><p class="form-footnote">You’ll manage a new business. Your team can join through you.</p>
+      </form>
+      <section id="signup-success" class="signup-success" tabindex="-1" hidden><span class="success-mark" aria-hidden="true">✓</span><h1>You’re all set.</h1><p id="success-message"></p><p>Your manager account is saved. Sign-in will be available in the next preview.</p><a class="solid-link" href="/">Explore the demo workspace →</a><p class="field-hint">The demo uses sample accounts, separate from your new business.</p></section>
+    </div>
+    <footer class="signup-footer">CoverShift · A better way to cover.</footer>
+  </main>
+</body>
+</html>

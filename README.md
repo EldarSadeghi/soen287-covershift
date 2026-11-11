@@ -16,7 +16,9 @@ Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied.
 
 ## Current scope
 
-CS-002 provides a responsive worker/manager navigation preview with fictional sample records. Use the Worker/Manager preview switch and navigation to explore all seven screens. Direct links such as `http://127.0.0.1:3000/#/manager/approvals` can be refreshed or bookmarked. The switch is a demo control, not authentication or authorization. Accounts, JSON persistence, and shift actions are future increments; disabled buttons are labeled Coming soon. Confirm the course's allowed backend stack before authentication work.
+CS-004 adds working manager signup at http://127.0.0.1:3000/signup, backed by CS-003 JSON storage. It creates a new business and manager account with a salted password hash. See [signup behavior and review instructions](docs/signup.md). Login and sessions are the next increment.
+
+The responsive demo workspace remains at http://127.0.0.1:3000. Its Worker/Manager switch is a preview control, not authorization. All seven demo screens use fictional presentation data and label future shift actions Coming soon. Confirm the course's allowed backend stack before deployment.
 
 ## Structure
 
