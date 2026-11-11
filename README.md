@@ -27,7 +27,19 @@ CS-002 provides a responsive worker/manager navigation preview with fictional sa
 
 ## Checks
 
-Run `npm run check` to check server and frontend JavaScript syntax. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths should return 404. This increment contains demo presentation data and no persistent business logic.
+Run `npm run check` to check JavaScript syntax and `npm test` for storage verification. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths and private data paths should return 404. The UI still uses demo presentation data.
+
+## JSON storage (CS-003)
+
+The server now validates private JSON storage on startup, creating an empty database if needed. To review fictional persisted records locally:
+
+```sh
+npm run data:seed
+npm run data:inspect
+npm test
+```
+
+Seeding preserves existing records. Inspection prints a safe summary; tests use isolated temporary data. See [the data model](docs/data-model.md) for fields, transactional access, and recovery notes. Stored data is not available through browser routes; the current UI remains a demo until authentication and scoped endpoints are implemented. Use one server instance with persistent local disk. No new dependencies are required.
 
 ## Collaboration
 
