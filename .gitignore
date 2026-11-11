@@ -142,3 +142,8 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
    .env
+
+# CoverShift local runtime data
+data/*
+!data/README.md
+.DS_Store
