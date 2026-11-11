@@ -62,7 +62,7 @@ form.addEventListener('submit', async event => {
     showErrors('We couldn’t reach the server. Check your connection and try again.');
   } finally {
     submit.disabled = false;
-    submit.textContent = 'Create account ↗';
+    submit.innerHTML = 'Create account <span aria-hidden="true">↗</span>';
     form.removeAttribute('aria-busy');
   }
 });

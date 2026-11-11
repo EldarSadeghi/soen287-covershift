@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 (issue #7) reviewed and approved by the user for push and merge. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 (issue #9) reviewed and approved by the user for push and merge. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 

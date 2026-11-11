@@ -17,3 +17,7 @@ CS-003 approval: the user approved the reviewed storage increment for publishing
 | 2026-11-11 | CS-004 | Built manager signup form, validation, salted scrypt hashing, atomic business/account creation, and HTTP protections. Saved Todo-first tracking instruction. | All 15 tests passed. Browser verified blank errors, visibility toggle, success, duplicate email, navigation, keyboard focus, and 390px layout using isolated signup test data. No CS-004 push or merge; awaiting review. |
 
 CS-004 approval: user reviewed the local signup feature and explicitly requested merging it. Syntax checks and all 15 signup/storage tests passed before publication.
+
+CS-005: implemented login, opaque in-memory sessions, CSRF logout, protected role/business context, a real identity workspace shell, and explicit local demo credential setup. All 24 tests passed before final handoff, including real scrypt verification, expiry/rotation, logout, rate limiting, and role/business boundaries. Browser QA used isolated data and checked both roles, refresh, denial, demo isolation, new signup-to-login, and 390px layout. Fixed the retry button accessible name during browser QA. User review pending; no push/merge approved.
+
+CS-005 approval: the user reviewed the local login/session feature and explicitly requested merging it into main. Syntax checks and all 24 tests passed again before publication.

@@ -16,9 +16,9 @@ Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied.
 
 ## Current scope
 
-CS-004 adds working manager signup at http://127.0.0.1:3000/signup, backed by CS-003 JSON storage. It creates a new business and manager account with a salted password hash. See [signup behavior and review instructions](docs/signup.md). Login and sessions are the next increment.
+CS-005 adds login, logout, server-side sessions, and protected role-specific workspaces. Open http://127.0.0.1:3000/login and use an account created through signup. New manager/business signup remains available at http://127.0.0.1:3000/signup. See [authentication and local review instructions](docs/authentication.md).
 
-The responsive demo workspace remains at http://127.0.0.1:3000. Its Worker/Manager switch is a preview control, not authorization. All seven demo screens use fictional presentation data and label future shift actions Coming soon. Confirm the course's allowed backend stack before deployment.
+The original responsive demo is now at http://127.0.0.1:3000/demo. Its Worker/Manager switch changes fictional preview content only and grants no account access. Signed-in workspaces show the actual user's business and role; saved shifts and business actions are subsequent increments.
 
 ## Structure
 
@@ -41,7 +41,7 @@ npm run data:inspect
 npm test
 ```
 
-Seeding preserves existing records. Inspection prints a safe summary; tests use isolated temporary data. See [the data model](docs/data-model.md) for fields, transactional access, and recovery notes. Stored data is not available through browser routes; the current UI remains a demo until authentication and scoped endpoints are implemented. Use one server instance with persistent local disk. No new dependencies are required.
+Seeding preserves existing records. Inspection prints a safe summary; tests use isolated temporary data. See [the data model](docs/data-model.md) for fields, transactional access, and recovery notes. Runtime JSON files are not served to browsers. Authenticated endpoints return safe identity fields; the separate public demo still uses fictional presentation data. Use one server instance with persistent local disk. No new dependencies are required.
 
 ## Collaboration
 

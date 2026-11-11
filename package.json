@@ -13,6 +13,7 @@
     "check": "node scripts/check.js",
     "test": "node --test",
     "data:seed": "node --env-file-if-exists=.env scripts/data.js seed",
-    "data:inspect": "node --env-file-if-exists=.env scripts/data.js inspect"
+    "data:inspect": "node --env-file-if-exists=.env scripts/data.js inspect",
+    "data:demo-accounts": "node --env-file-if-exists=.env scripts/demo-accounts.js"
   }
 }

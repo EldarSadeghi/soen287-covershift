@@ -4,11 +4,11 @@ Status: reviewed and approved by the user for push and merge. Issue: https://git
 
 ## Review locally
 
-Start the app with `npm run dev` and open http://127.0.0.1:3000/signup. The demo workspace also has a Create a business link.
+Start the app with `npm run dev` and open http://127.0.0.1:3000/signup. The login page has a Create a business link.
 
-The form collects your name, business name, email, password, and business timezone. Use a fictional review account if you are testing. A successful submission saves a new business and its manager account, then shows confirmation. `npm run data:inspect` can display the saved business and user IDs without printing password hashes. These runtime records are ignored by Git.
+The form collects your name, business name, email, password, and business timezone. Use a fictional review account if you are testing. A successful submission saves a new business and its manager account, then shows confirmation with a Sign in link. `npm run data:inspect` can display the saved business and user IDs without printing password hashes. These runtime records are ignored by Git.
 
-Signup is real persistence, not a simulated button. The demo workspace remains separate and shows fictional presentation data. Login, logout, sessions, and authenticated route access are CS-005; signup deliberately does not create a session or imply that login works yet.
+Signup is real persistence, not a simulated button. The demo workspace remains separate and shows fictional presentation data. Login, logout, sessions, and authenticated route access are implemented in CS-005; signup deliberately does not create a session. Its success page now links to login.
 
 ## Behavior and boundaries
 
