@@ -19,7 +19,7 @@ Expected seed totals: 1 business, 5 users (1 manager, 4 workers), 5 shifts, and 
 
 `npm start` validates the data file or initializes an empty one. It never seeds demo records automatically. The file defaults to `data/covershift.json`. `DATA_DIRECTORY` in `.env` can select another directory; relative paths resolve from the process working directory. Runtime files are ignored by Git and are not served by HTTP.
 
-The existing browser screens still use CS-002's presentation fixtures. CS-003 adds backend storage, not authenticated data access. CS-005 adds authenticated account identity and protected workspaces; worker shift data wiring follows in CS-006.
+The public demo uses CS-002 presentation fixtures. CS-005 adds authenticated account identity and protected workspaces; CS-006 connects the worker shift view to assigned saved records.
 
 ## Schema version 1
 

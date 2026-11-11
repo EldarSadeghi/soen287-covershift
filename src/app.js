@@ -4,6 +4,7 @@ import { registerManager } from './auth/signup.js';
 import { authenticate, validateLogin } from './auth/login.js';
 import { HttpError } from './auth/errors.js';
 import { SessionStore, requireAccount, safeAccount } from './auth/sessions.js';
+import { upcomingWorkerShifts } from './shifts/upcoming.js';
 const assets = new Map([
   ['/demo', ['index.html', 'text/html; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
@@ -15,6 +16,8 @@ const assets = new Map([
   ['/login.js', ['login.js', 'text/javascript; charset=utf-8']],
   ['/workspace.js', ['workspace.js', 'text/javascript; charset=utf-8']],
   ['/workspace.css', ['workspace.css', 'text/css; charset=utf-8']],
+  ['/worker-shifts.js', ['worker-shifts.js', 'text/javascript; charset=utf-8']],
+  ['/shift-time.js', ['shift-time.js', 'text/javascript; charset=utf-8']],
 ]);
 export function createSignupLimiter({ limit = 5, windowMs = 10 * 60 * 1000, message = 'Too many signup attempts. Please wait 10 minutes before trying again.' } = {}) {
   const attempts = new Map();
@@ -57,7 +60,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team'], worker: ['shifts', 'open', 'requests'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }) }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now }) {
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -92,6 +95,12 @@ export function createAppServer({ store, signup = registerManager, login = authe
         await readJson(request);
         response.setHeader('Set-Cookie', sessions.destroy(request.headers.cookie));
         response.writeHead(204, { 'Cache-Control': 'no-store' }); response.end(); return;
+      }
+      if (pathname === '/api/worker/shifts') {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This view uses your signed-in account; query filters are not supported.');
+        sendJson(response, 200, await upcomingWorkerShifts(store, account.user.id, shiftClock())); return;
       }
       if (pathname === '/api/session' || pathname === '/api/manager/context' || pathname === '/api/worker/context' || /^\/api\/businesses\/[^/]+\/context$/.test(pathname)) {
         requireMethod(request, response, 'GET');

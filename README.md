@@ -16,9 +16,11 @@ Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied.
 
 ## Current scope
 
-CS-005 adds login, logout, server-side sessions, and protected role-specific workspaces. Open http://127.0.0.1:3000/login and use an account created through signup. New manager/business signup remains available at http://127.0.0.1:3000/signup. See [authentication and local review instructions](docs/authentication.md).
+CS-006 connects the signed-in worker's My shifts page to saved JSON records, with worker/business filtering, business-timezone dates, in-progress status, refresh, and empty/error states. See [worker shift review instructions](docs/worker-shifts.md).
 
-The original responsive demo is now at http://127.0.0.1:3000/demo. Its Worker/Manager switch changes fictional preview content only and grants no account access. Signed-in workspaces show the actual user's business and role; saved shifts and business actions are subsequent increments.
+Login/logout and protected role-specific workspaces are at http://127.0.0.1:3000/login. Use an account created through signup, or the explicit fictional worker setup in [authentication instructions](docs/authentication.md). Signup accounts are managers and cannot view worker-only pages.
+
+The original responsive public demo remains at http://127.0.0.1:3000/demo. Its role switch grants no account access. Other business actions are upcoming increments.
 
 ## Structure
 

@@ -21,3 +21,7 @@ CS-004 approval: user reviewed the local signup feature and explicitly requested
 CS-005: implemented login, opaque in-memory sessions, CSRF logout, protected role/business context, a real identity workspace shell, and explicit local demo credential setup. All 24 tests passed before final handoff, including real scrypt verification, expiry/rotation, logout, rate limiting, and role/business boundaries. Browser QA used isolated data and checked both roles, refresh, denial, demo isolation, new signup-to-login, and 390px layout. Fixed the retry button accessible name during browser QA. User review pending; no push/merge approved.
 
 CS-005 approval: the user reviewed the local login/session feature and explicitly requested merging it into main. Syntax checks and all 24 tests passed again before publication.
+
+CS-006: connected worker My shifts to a read-only authenticated endpoint and saved records, with exact current/upcoming selection, business-timezone formatting, and loading/empty/error/retry states. Added six shift test groups (30 total tests). Browser QA used isolated saved data to verify refresh/reload, empty results, error recovery, ongoing/overnight rows, and mobile layout. Fixed mobile badge spacing and explicit hidden-state CSS after inspection. Normal user records were unchanged. User review pending; no push or merge approved.
+
+CS-006 approval: the user approved merging the worker shift view. Syntax checks and all 30 tests passed again before publication.

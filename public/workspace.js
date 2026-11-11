@@ -1,3 +1,4 @@
+import { mountWorkerShifts } from './worker-shifts.js';
 const main = document.querySelector('main');
 const logout = document.querySelector('#logout');
 const errorBox = document.querySelector('#workspace-error');
@@ -11,7 +12,6 @@ const copy = {
   schedule: ['The team schedule.', 'A little structure for the week ahead.', 'Shift creation and your team’s schedule are coming soon.'],
   approvals: ['Coverage, with your final say.', 'You keep the overview.', 'Coverage claims and approval actions are coming soon.'],
   team: ['Your people, all in one place.', 'Small team. Big difference.', 'Adding and managing workers is coming soon.'],
-  shifts: ['Your working week.', 'A good week starts here.', 'Your saved shifts will appear here once the shift view is connected.'],
   open: ['Lend your team a hand.', 'A little flexibility goes a long way.', 'Open coverage opportunities are coming soon.'],
   requests: ['Your coverage requests.', 'Keep track with confidence.', 'Requesting and tracking coverage is coming soon.'],
 };
@@ -37,6 +37,11 @@ async function load() {
     document.querySelector('#avatar').textContent = user.name.split(/\s+/).slice(0, 2).map(part => part.slice(0, 1)).join('').toUpperCase();
     document.querySelector('#account-role').textContent = `Signed in as ${user.role}`;
     document.querySelector('#navigation').innerHTML = roleRoutes.map(([key, name, icon]) => `<a class="nav-link" href="/workspace/${user.role}/${key}" ${key === page ? 'aria-current="page"' : ''}><span class="nav-icon" aria-hidden="true">${icon}</span>${name}</a>`).join('');
+    logout.disabled = false;
+    if (user.role === 'worker' && page === 'shifts') {
+      await mountWorkerShifts(main);
+      return;
+    }
     const [heading, tagline, description] = copy[page];
     main.innerHTML = '<p class="eyebrow">Welcome to your workspace</p><div class="page-heading"><div><h1 id="workspace-heading"></h1><p class="subtitle" id="workspace-subtitle"></p></div></div><section class="identity-grid" aria-label="Account details"><article class="panel identity-card"><p>Your business</p><strong id="identity-business"></strong></article><article class="panel identity-card"><p>Your role</p><strong id="identity-role"></strong></article><article class="panel identity-card"><p>Business timezone</p><strong id="identity-timezone"></strong></article></section><section class="panel workspace-empty"><h2 id="workspace-tagline"></h2><p id="workspace-description"></p></section>';
     document.querySelector('#workspace-heading').textContent = heading;
