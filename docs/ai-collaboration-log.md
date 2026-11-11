@@ -11,3 +11,9 @@ Record assistance as it happens. Do not claim human review, tests, or results th
 | 2026-11-11 | CS-003 | Generated versioned JSON schema, serialized atomic storage, scoped read repositories, fictional seed and inspection commands, and storage tests. | Nine tests passed covering fresh-process persistence, seed preservation, concurrent transactions, rollback, corrupt files, locks, complete reads during writes, scoped reads, and invalid relationships. Runtime records stay out of Git and HTTP; authentication and business workflows remain future increments. User review pending. |
 
 CS-003 approval: the user approved the reviewed storage increment for publishing and merging. Syntax checks and all nine storage tests passed again before publication.
+
+| Date | Task | Assistance | Verification / limitations |
+| --- | --- | --- | --- |
+| 2026-11-11 | CS-004 | Built manager signup form, validation, salted scrypt hashing, atomic business/account creation, and HTTP protections. Saved Todo-first tracking instruction. | All 15 tests passed. Browser verified blank errors, visibility toggle, success, duplicate email, navigation, keyboard focus, and 390px layout using isolated signup test data. No CS-004 push or merge; awaiting review. |
+
+CS-004 approval: user reviewed the local signup feature and explicitly requested merging it. Syntax checks and all 15 signup/storage tests passed before publication.

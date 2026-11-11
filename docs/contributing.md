@@ -1,6 +1,6 @@
 # Working agreement
 
-1. Choose one task ID from the implementation plan, create its GitHub issue with acceptance criteria, and assign an owner before work starts. Add it to [the project board](https://github.com/users/EldarSadeghi/projects/1) in Todo, then move it to In Progress when implementation starts. Coordinate shared-file changes with the teammate.
+1. Choose one task ID from the implementation plan, create its GitHub issue with acceptance criteria, and assign an owner before work starts. Add it to [the project board](https://github.com/users/EldarSadeghi/projects/1) in Todo and verify it appears there first. Then move it to In Progress and tell the user implementation has started. Do not skip Todo. Coordinate shared-file changes with the teammate.
 2. Work on a local feature branch named `codex/CS-xxx-short-name`; use the same ID in commits, GitHub issues, and pull requests.
 3. Implement the increment and run checks appropriate to it. Update setup instructions and the AI collaboration log when relevant.
 4. Provide a running preview, acceptance checklist, and check results. Move the board task to Your review.
