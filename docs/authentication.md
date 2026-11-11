@@ -8,7 +8,7 @@ Run `npm run dev`, then open http://127.0.0.1:3000/login. Use the email/password
 
 A manager lands at `/workspace/manager/overview`. A worker lands at `/workspace/worker/shifts`. The workspace displays actual account/business identity and only that role's navigation. Sign out invalidates the server session and returns to login. Refresh preserves a valid session; restarting the server invalidates sessions but preserves the stored accounts.
 
-The original seven-screen presentation preview is now at `/demo`. Its role switch controls fictional presentation content only and never changes a session, saved account, or authorization. `/` redirects to login or the current account's own workspace. Saved shift data is not wired into workspace pages until CS-006; upcoming business actions are labeled clearly.
+The original seven-screen presentation preview is now at `/demo`. Its role switch controls fictional presentation content only and never changes a session, saved account, or authorization. `/` redirects to login or the current account's own workspace. CS-006 connects worker My shifts to assigned saved records; upcoming business actions remain labeled clearly.
 
 ## Optional local demo accounts
 
@@ -53,6 +53,6 @@ All current authenticated mutations use the CSRF guard. Future mutating service 
 
 Set `PUBLIC_ORIGIN` to the exact public origin (for example `https://covershift.example`) without a path/trailing slash when deploying behind HTTPS termination. Production mode refuses startup without an HTTPS origin. This enables Secure cookies and HSTS and supplies the exact allowed Origin, without trusting forwarded headers. Persist the JSON data directory on a local disk and use one server instance; multi-instance shared sessions/data are outside this implementation.
 
-Run `npm run check` and `npm test`. There are 24 tests covering the existing storage/signup behavior plus password verification, generic failures, session rotation, idle/absolute expiry, cookie flags, logout, CSRF, role denial, existing cross-business isolation, login rate limiting, signup-to-login compatibility, and explicit demo setup. HTTP tests bind temporary loopback ports and use isolated files.
+Run `npm run check` and `npm test`. The CS-005 baseline had 24 tests covering the existing storage/signup behavior plus password verification, generic failures, session rotation, idle/absolute expiry, cookie flags, logout, CSRF, role denial, existing cross-business isolation, login rate limiting, signup-to-login compatibility, and explicit demo setup. HTTP tests bind temporary loopback ports and use isolated files.
 
 Browser QA used separate temporary data on `localhost:3001`, with the normal preview at `127.0.0.1:3000` left unchanged. Checks covered invalid credentials, both role logins, navigation, refresh, logout, denied manager access for a worker, demo-role isolation, new signup-to-login, and mobile layout at 390px.

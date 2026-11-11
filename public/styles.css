@@ -5,3 +5,4 @@
 @media(prefers-reduced-motion:no-preference){.nav-link,.role-switch button,.solid-link{transition:background .15s ease}}
 @media(max-width:680px){.nav-link{flex:1;justify-content:center;padding:10px 7px}.nav-icon{display:none}}
 @media(max-width:680px){.topbar #profile-name{display:none}.topbar .profile .text-link{font-size:10px}}
+[hidden]{display:none!important}
