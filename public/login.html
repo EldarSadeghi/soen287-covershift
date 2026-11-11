@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Sign in to your CoverShift workspace.">
+  <title>Sign in · CoverShift</title>
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/signup.css">
+  <script src="/login.js" defer></script>
+</head>
+<body class="signup-page">
+  <a class="skip" href="#login-main">Skip to sign in</a>
+  <div class="signup-story">
+    <a class="brand" href="/login"><span class="brand-icon" aria-hidden="true">C<span>↗</span></span>CoverShift<span class="brand-dot">.</span></a>
+    <div class="story-content"><p class="eyebrow">Your team. Your working week.</p><h2>Welcome back<br>to a little<br>more calm.</h2><p class="story-description">One place for your team to show up,<br>step in, and keep things moving.</p><div class="story-card"><span class="story-check" aria-hidden="true">✓</span><div><strong>The right people. The right workspace.</strong><p>Sign in to your business.<br>We’ll take you where you belong.</p></div></div></div>
+    <p class="story-footer">Made for small teams, and the people behind them.</p>
+  </div>
+  <main id="login-main" class="signup-main" tabindex="-1">
+    <div class="signup-top"><span>New to CoverShift?</span><a href="/signup">Create a business <span aria-hidden="true">↗</span></a></div>
+    <div class="signup-form-wrap login-form-wrap"><p class="eyebrow">Good to have you here</p><h1>Let’s get you signed in.</h1><p class="signup-subtitle">Your next working week starts here.</p>
+      <p id="session-notice" class="signup-notice" hidden>Please sign in to access your workspace.</p>
+      <div id="login-errors" class="form-errors" role="alert" tabindex="-1" hidden></div>
+      <noscript><p class="form-errors">Enable JavaScript to sign in.</p></noscript>
+      <form id="login-form" method="post" action="/api/login" novalidate>
+        <div class="form-field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" required maxlength="254" placeholder="you@example.com" aria-describedby="email-error"><p id="email-error" class="field-error" hidden></p></div>
+        <div class="form-field"><label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128" aria-describedby="password-error"><button id="show-password" type="button" aria-controls="password" aria-pressed="false">Show</button></div><p id="password-error" class="field-error" hidden></p></div>
+        <button id="login-submit" class="signup-submit" type="submit">Sign in <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="form-footnote">Just looking around? <a class="text-link" href="/demo">Explore the public demo</a></p>
+    </div>
+    <footer class="signup-footer">CoverShift · A better way to cover.</footer>
+  </main>
+</body>
+</html>

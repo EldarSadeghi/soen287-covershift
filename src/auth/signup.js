@@ -1,22 +1,8 @@
-import { randomBytes, scrypt } from 'node:crypto';
-import { promisify } from 'node:util';
 import { createRecord } from '../storage/repositories.js';
-
-const deriveKey = promisify(scrypt);
-export class SignupError extends Error {
-  constructor(status, message, fields = {}) { super(message); this.status = status; this.fields = fields; }
-}
-let activeHashes = 0;
-export async function hashPassword(password) {
-  if (activeHashes >= 2) throw new SignupError(503, 'Account creation is busy. Please try again shortly.');
-  activeHashes++;
-  try {
-    const salt = randomBytes(16).toString('hex');
-    // OWASP scrypt baseline: N=2^17, r=8, p=1. No extra dependency.
-    const key = await deriveKey(password, salt, 64, { N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024 });
-    return `scrypt$131072$8$1$${salt}$${key.toString('hex')}`;
-  } finally { activeHashes--; }
-}
+import { HttpError as SignupError } from './errors.js';
+import { hashPassword } from './passwords.js';
+export { HttpError as SignupError } from './errors.js';
+export { hashPassword } from './passwords.js';
 
 export function validateSignup(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new SignupError(422, 'Please submit the signup form.');

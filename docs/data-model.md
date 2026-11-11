@@ -19,7 +19,7 @@ Expected seed totals: 1 business, 5 users (1 manager, 4 workers), 5 shifts, and 
 
 `npm start` validates the data file or initializes an empty one. It never seeds demo records automatically. The file defaults to `data/covershift.json`. `DATA_DIRECTORY` in `.env` can select another directory; relative paths resolve from the process working directory. Runtime files are ignored by Git and are not served by HTTP.
 
-The existing browser screens still use CS-002's presentation fixtures. CS-003 adds backend storage, not authenticated data access. Connecting worker/manager screens to scoped data follows authentication in CS-005/CS-006.
+The existing browser screens still use CS-002's presentation fixtures. CS-003 adds backend storage, not authenticated data access. CS-005 adds authenticated account identity and protected workspaces; worker shift data wiring follows in CS-006.
 
 ## Schema version 1
 
@@ -32,7 +32,7 @@ One document contains `schemaVersion: 1` and four arrays. Every record has an im
 | shifts | businessId, assignedWorkerId, title, startsAt, endsAt | Assigned to a worker in that business; end must be after start. |
 | coverageRequests | businessId, shiftId, originalWorkerId, claimantId, reviewerId, status | Shift and all participants must belong to the same business; reviewer must be a manager. |
 
-Demo users have `passwordHash: null` and cannot be used as authenticated accounts. Never treat a null hash as successful login. Password hashing and signup are implemented in CS-004; session authentication and authorization are CS-005. Never persist plaintext passwords or serialize complete user records to a browser.
+Demo users initially have `passwordHash: null` and cannot be used as authenticated accounts until the explicit local demo-accounts setup enables the two review identities. Never treat a null hash as successful login. Password hashing and signup are implemented in CS-004; session authentication and authorization are implemented in CS-005. Never persist plaintext passwords or serialize complete user records to a browser.
 
 Coverage status is open, pending, approved, or cancelled. Open requests have no claimant; pending requests have another worker as claimant; approved requests also need a manager reviewer. Open/pending requests retain the original shift assignment and have no reviewer; only one active request can exist for a shift. Rejection will reopen the request and record its outcome/history when that workflow is implemented. Claim/approval permissions, conflict checks, and audit history remain future tasks.
 
