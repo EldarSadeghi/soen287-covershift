@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 approved by the user on November 11, 2026. GitHub publication and merge are authorized. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 (issue #3) approved for push and merge by the user. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 
