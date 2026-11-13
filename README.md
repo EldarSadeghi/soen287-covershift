@@ -16,11 +16,11 @@ Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied.
 
 ## Current scope
 
-CS-006 connects the signed-in worker's My shifts page to saved JSON records, with worker/business filtering, business-timezone dates, in-progress status, refresh, and empty/error states. See [worker shift review instructions](docs/worker-shifts.md).
+CS-007 connects manager Overview, Schedule, and Approvals to saved business records, with scoped summary counts, assigned workers, pending claim participants, and read-only coverage status. See [manager dashboard and milestone walkthrough](docs/manager-dashboard.md). Approval/rejection and worker management remain upcoming increments.
 
-Login/logout and protected role-specific workspaces are at http://127.0.0.1:3000/login. Use an account created through signup, or the explicit fictional worker setup in [authentication instructions](docs/authentication.md). Signup accounts are managers and cannot view worker-only pages.
+CS-006 connects the worker's My shifts page to only their own assigned current/upcoming shifts. Both roles use business-timezone dates with refresh and empty/error states. See [worker shift instructions](docs/worker-shifts.md).
 
-The original responsive public demo remains at http://127.0.0.1:3000/demo. Its role switch grants no account access. Other business actions are upcoming increments.
+Start at http://127.0.0.1:3000/login and use an account created through signup, or the explicit fictional role setup in [authentication instructions](docs/authentication.md). The public presentation demo stays at /demo and grants no account access.
 
 ## Structure
 

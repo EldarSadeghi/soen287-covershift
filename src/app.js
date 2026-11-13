@@ -5,6 +5,7 @@ import { authenticate, validateLogin } from './auth/login.js';
 import { HttpError } from './auth/errors.js';
 import { SessionStore, requireAccount, safeAccount } from './auth/sessions.js';
 import { upcomingWorkerShifts } from './shifts/upcoming.js';
+import { managerDashboard } from './manager/dashboard.js';
 const assets = new Map([
   ['/demo', ['index.html', 'text/html; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
@@ -18,6 +19,8 @@ const assets = new Map([
   ['/workspace.css', ['workspace.css', 'text/css; charset=utf-8']],
   ['/worker-shifts.js', ['worker-shifts.js', 'text/javascript; charset=utf-8']],
   ['/shift-time.js', ['shift-time.js', 'text/javascript; charset=utf-8']],
+  ['/shift-card.js', ['shift-card.js', 'text/javascript; charset=utf-8']],
+  ['/manager-dashboard.js', ['manager-dashboard.js', 'text/javascript; charset=utf-8']],
 ]);
 export function createSignupLimiter({ limit = 5, windowMs = 10 * 60 * 1000, message = 'Too many signup attempts. Please wait 10 minutes before trying again.' } = {}) {
   const attempts = new Map();
@@ -95,6 +98,12 @@ export function createAppServer({ store, signup = registerManager, login = authe
         await readJson(request);
         response.setHeader('Set-Cookie', sessions.destroy(request.headers.cookie));
         response.writeHead(204, { 'Cache-Control': 'no-store' }); response.end(); return;
+      }
+      if (pathname === '/api/manager/dashboard') {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This dashboard uses your signed-in business; query filters are not supported.');
+        sendJson(response, 200, await managerDashboard(store, account.user.id, shiftClock())); return;
       }
       if (pathname === '/api/worker/shifts') {
         requireMethod(request, response, 'GET');

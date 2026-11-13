@@ -1,4 +1,5 @@
 import { mountWorkerShifts } from './worker-shifts.js';
+import { mountManagerDashboard } from './manager-dashboard.js';
 const main = document.querySelector('main');
 const logout = document.querySelector('#logout');
 const errorBox = document.querySelector('#workspace-error');
@@ -8,9 +9,6 @@ const routes = {
   worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄']],
 };
 const copy = {
-  overview: ['Your team’s workspace.', 'A good week starts with your people.', 'Your manager account is ready. Scheduling, coverage requests, and team management will appear here as they become available.'],
-  schedule: ['The team schedule.', 'A little structure for the week ahead.', 'Shift creation and your team’s schedule are coming soon.'],
-  approvals: ['Coverage, with your final say.', 'You keep the overview.', 'Coverage claims and approval actions are coming soon.'],
   team: ['Your people, all in one place.', 'Small team. Big difference.', 'Adding and managing workers is coming soon.'],
   open: ['Lend your team a hand.', 'A little flexibility goes a long way.', 'Open coverage opportunities are coming soon.'],
   requests: ['Your coverage requests.', 'Keep track with confidence.', 'Requesting and tracking coverage is coming soon.'],
@@ -38,6 +36,10 @@ async function load() {
     document.querySelector('#account-role').textContent = `Signed in as ${user.role}`;
     document.querySelector('#navigation').innerHTML = roleRoutes.map(([key, name, icon]) => `<a class="nav-link" href="/workspace/${user.role}/${key}" ${key === page ? 'aria-current="page"' : ''}><span class="nav-icon" aria-hidden="true">${icon}</span>${name}</a>`).join('');
     logout.disabled = false;
+    if (user.role === 'manager' && ['overview', 'schedule', 'approvals'].includes(page)) {
+      await mountManagerDashboard(main, page, account);
+      return;
+    }
     if (user.role === 'worker' && page === 'shifts') {
       await mountWorkerShifts(main);
       return;

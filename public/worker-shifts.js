@@ -1,28 +1,5 @@
 import { formatShiftTime } from './shift-time.js';
-
-function element(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
-function shiftCard(shift, timezone) {
-  const formatted = formatShiftTime(shift, timezone);
-  const article = element('article', 'shift saved-shift');
-  const calendar = element('div', 'calendar');
-  calendar.setAttribute('aria-hidden', 'true');
-  calendar.append(element('small', '', formatted.weekday), element('strong', '', formatted.day));
-  const info = element('div', 'shift-info');
-  info.append(element('p', 'saved-shift-date', formatted.date), element('h3', '', shift.title));
-  const times = element('p', 'saved-shift-times');
-  const start = element('time', '', formatted.startTime); start.dateTime = shift.startsAt;
-  const end = element('time', '', formatted.endDate ? `${formatted.endDate} · ${formatted.endTime}` : formatted.endTime); end.dateTime = shift.endsAt;
-  times.append(start, document.createTextNode(' – '), end);
-  info.append(times, element('p', '', formatted.duration));
-  const badge = element('span', `badge${shift.status === 'in_progress' ? ' amber' : ''}`, shift.status === 'in_progress' ? 'In progress' : 'Upcoming');
-  article.append(calendar, info, badge);
-  return article;
-}
+import { element, shiftCard } from './shift-card.js';
 
 export async function mountWorkerShifts(main) {
   main.innerHTML = '<p class="eyebrow">Your working week</p><div class="page-heading"><div><h1>Your shifts, all in one place.</h1><p class="subtitle">The shifts assigned to you, from now onward.</p></div></div><section id="shift-summary" class="stats shifts-summary" aria-label="Your shift summary" hidden></section><section class="panel" aria-labelledby="saved-shifts-heading"><div class="panel-head"><h2 id="saved-shifts-heading">Upcoming & current shifts</h2><button id="refresh-shifts" class="logout-button" type="button">Refresh</button></div><p class="shift-timezone" id="shift-timezone"></p><div id="shift-content"></div></section><p class="section-note" id="shifts-updated" role="status"></p>';

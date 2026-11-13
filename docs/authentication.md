@@ -8,7 +8,7 @@ Run `npm run dev`, then open http://127.0.0.1:3000/login. Use the email/password
 
 A manager lands at `/workspace/manager/overview`. A worker lands at `/workspace/worker/shifts`. The workspace displays actual account/business identity and only that role's navigation. Sign out invalidates the server session and returns to login. Refresh preserves a valid session; restarting the server invalidates sessions but preserves the stored accounts.
 
-The original seven-screen presentation preview is now at `/demo`. Its role switch controls fictional presentation content only and never changes a session, saved account, or authorization. `/` redirects to login or the current account's own workspace. CS-006 connects worker My shifts to assigned saved records; upcoming business actions remain labeled clearly.
+The original seven-screen presentation preview is now at `/demo`. Its role switch controls fictional presentation content only and never changes a session, saved account, or authorization. `/` redirects to login or the current account's own workspace. CS-006 connects worker My shifts to assigned saved records; CS-007 connects manager Overview, Schedule, and read-only Approvals. Upcoming actions remain labeled clearly.
 
 ## Optional local demo accounts
 
