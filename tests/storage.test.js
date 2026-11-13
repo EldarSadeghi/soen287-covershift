@@ -71,7 +71,7 @@ test('failed and invalid transactions preserve disk data and release the queue',
 
 test('corrupt files and unsupported schema versions are never reset', async t => {
   const { store, filename } = await fixture(t);
-  for (const content of ['{broken', JSON.stringify({ ...demoDatabase(), schemaVersion: 2 })]) {
+  for (const content of ['{broken', JSON.stringify({ ...demoDatabase(), schemaVersion: 99 })]) {
     await writeFile(filename, content);
     await assert.rejects(store.initialize());
     await assert.rejects(seedDemo(store));

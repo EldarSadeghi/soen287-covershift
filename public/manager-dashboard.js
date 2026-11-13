@@ -73,7 +73,7 @@ export async function mountManagerDashboard(main, page, account) {
         if (result.pendingClaims.length > 3) pending.append(element('p', 'panel-preview-note', `Showing 3 of ${result.pendingClaims.length} pending claims.`));
         grid.append(schedule, pending); content.replaceChildren(grid);
         const note = element('section', 'manager-next-note');
-        note.append(element('h2', '', 'Your people, all in one place.'), element('p', '', 'Worker management is coming soon.'), link('View team page →', '/workspace/manager/team')); content.append(note);
+        note.append(element('h2', '', 'Your people, all in one place.'), element('p', '', 'Add workers and help them set up their login.'), link('View team page →', '/workspace/manager/team')); content.append(note);
       } else if (page === 'schedule') {
         content.replaceChildren(shiftPanel()); content.append(element('p', 'section-note', 'Shift creation and editing are coming soon.'));
       } else {
