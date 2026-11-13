@@ -54,3 +54,7 @@ Writes serialize all collections, create a same-directory temporary file with ow
 Use one server instance with a persistent local disk. Do not deploy to ephemeral storage or network filesystems that cannot guarantee these file operations. A process killed during a write can leave a lock/temp file. Stop all writers, verify none remain, back up and inspect the JSON, and only then manually remove the stale `.lock`/temporary files. Never delete a lock while a writer may be active. Corrupt or unsupported-schema files cause startup/inspection to fail; they are never automatically reset or overwritten.
 
 Keep backups of important records before future migrations. Schema changes require an explicit migration rather than silently accepting a different version.
+
+### CS-008 worker setup metadata
+
+Readers accept schema versions 1 and 2. The first add-worker or setup-link replacement transaction upgrades the document to version 2 atomically, preserving existing records. Version 2 allows an optional `setup: { tokenHash, expiresAt }` on workers whose `passwordHash` is null. The token hash is SHA-256 of a random 32-byte bearer token; expiry is canonical UTC. Completion stores a salted scrypt password hash and removes setup metadata in the same transaction. Version 1 seed data remains supported. Do not run older code against a version 2 file.

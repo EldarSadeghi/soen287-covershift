@@ -1,3 +1,4 @@
+import { mountTeam } from './team.js';
 import { mountWorkerShifts } from './worker-shifts.js';
 import { mountManagerDashboard } from './manager-dashboard.js';
 const main = document.querySelector('main');
@@ -9,7 +10,6 @@ const routes = {
   worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄']],
 };
 const copy = {
-  team: ['Your people, all in one place.', 'Small team. Big difference.', 'Adding and managing workers is coming soon.'],
   open: ['Lend your team a hand.', 'A little flexibility goes a long way.', 'Open coverage opportunities are coming soon.'],
   requests: ['Your coverage requests.', 'Keep track with confidence.', 'Requesting and tracking coverage is coming soon.'],
 };
@@ -40,6 +40,7 @@ async function load() {
       await mountManagerDashboard(main, page, account);
       return;
     }
+    if (user.role === 'manager' && page === 'team') { await mountTeam(main, account, csrfToken); return; }
     if (user.role === 'worker' && page === 'shifts') {
       await mountWorkerShifts(main);
       return;

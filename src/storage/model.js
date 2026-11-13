@@ -16,14 +16,15 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue(db.schemaVersion === 1, 'unsupported schema version');
+  requireValue([1, 2].includes(db.schemaVersion), 'unsupported schema version');
   requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key)), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
     for (const record of db[name]) {
       requireValue(record && typeof record === 'object' && !Array.isArray(record) && id(record.id), `${name} has an invalid record ID`);
-      requireValue(Object.keys(record).length === fields[name].length && fields[name].every(key => Object.hasOwn(record, key)), `${name} fields do not match the schema`);
+      const expected = name === 'users' && db.schemaVersion === 2 && Object.hasOwn(record, 'setup') ? [...fields[name], 'setup'] : fields[name];
+      requireValue(Object.keys(record).length === expected.length && expected.every(key => Object.hasOwn(record, key)), `${name} fields do not match the schema`);
       requireValue(!seen.has(record.id), `${name} has a duplicate ID`);
       seen.add(record.id);
       requireValue(timestamp(record.createdAt) && timestamp(record.updatedAt), `${name} timestamps must be canonical UTC ISO strings`);
@@ -46,6 +47,10 @@ export function validateDatabase(db) {
     requireValue(!emails.has(user.email), 'duplicate email');
     emails.add(user.email);
     requireValue(user.passwordHash === null || text(user.passwordHash), 'passwordHash must be a hash string or null for an account without login');
+    if (Object.hasOwn(user, 'setup')) {
+      const setup = user.setup;
+      requireValue(user.role === 'worker' && user.passwordHash === null && setup && typeof setup === 'object' && !Array.isArray(setup) && Object.keys(setup).length === 2 && /^[a-f0-9]{64}$/.test(setup.tokenHash) && timestamp(setup.expiresAt), 'invalid worker setup metadata');
+    }
     requireValue(!Object.hasOwn(user, 'password'), 'plaintext passwords must never be stored');
   }
   for (const shift of db.shifts) {

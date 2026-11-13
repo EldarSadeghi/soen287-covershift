@@ -6,7 +6,11 @@ import { HttpError } from './auth/errors.js';
 import { SessionStore, requireAccount, safeAccount } from './auth/sessions.js';
 import { upcomingWorkerShifts } from './shifts/upcoming.js';
 import { managerDashboard } from './manager/dashboard.js';
+import { listWorkers, addWorker, reissueSetup, setupDetails, completeSetup } from './manager/workers.js';
 const assets = new Map([
+  ['/team.js', ['team.js', 'text/javascript; charset=utf-8']],
+  ['/setup', ['setup.html', 'text/html; charset=utf-8']],
+  ['/setup.js', ['setup.js', 'text/javascript; charset=utf-8']],
   ['/demo', ['index.html', 'text/html; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
@@ -63,8 +67,10 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team'], worker: ['shifts', 'open', 'requests'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash }) {
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
+  const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
+  const limitTeam = createSignupLimiter({ limit: 20, message: 'Too many worker changes. Please wait 10 minutes and try again.' });
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'same-origin');
@@ -90,6 +96,24 @@ export function createAppServer({ store, signup = registerManager, login = authe
           sendJson(response, 200, { redirectTo: home(user.role) });
         }
         return;
+      }
+      if (pathname === '/api/worker-setup/details' || pathname === '/api/worker-setup/complete') {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        limitSetup(request.socket.remoteAddress);
+        const input = await readJson(request);
+        sendJson(response, 200, pathname.endsWith('/details') ? await setupDetails(store, input, setupClock()) : await completeSetup(store, input, { clock: setupClock, ...(setupHash ? { hash: setupHash } : {}) })); return;
+      }
+      if (pathname === '/api/manager/workers' || /^\/api\/manager\/workers\/[^/]+\/setup$/.test(pathname)) {
+        const listing = pathname === '/api/manager/workers' && ['GET', 'HEAD'].includes(request.method);
+        requireMethod(request, response, listing ? 'GET' : 'POST');
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This view uses your signed-in business.');
+        if (listing) { sendJson(response, 200, await listWorkers(store, account.user.id, setupClock())); return; }
+        protectMutation(request, publicOrigin);
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        limitTeam(account.user.id);
+        const input = await readJson(request);
+        sendJson(response, pathname.endsWith('/setup') ? 200 : 201, pathname.endsWith('/setup') ? await reissueSetup(store, account.user.id, pathname.split('/')[4], input, setupClock()) : await addWorker(store, account.user.id, input, setupClock())); return;
       }
       if (pathname === '/api/logout') {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);

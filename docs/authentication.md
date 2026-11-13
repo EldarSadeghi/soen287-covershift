@@ -56,3 +56,5 @@ Set `PUBLIC_ORIGIN` to the exact public origin (for example `https://covershift.
 Run `npm run check` and `npm test`. The CS-005 baseline had 24 tests covering the existing storage/signup behavior plus password verification, generic failures, session rotation, idle/absolute expiry, cookie flags, logout, CSRF, role denial, existing cross-business isolation, login rate limiting, signup-to-login compatibility, and explicit demo setup. HTTP tests bind temporary loopback ports and use isolated files.
 
 Browser QA used separate temporary data on `localhost:3001`, with the normal preview at `127.0.0.1:3000` left unchanged. Checks covered invalid credentials, both role logins, navigation, refresh, logout, denied manager access for a worker, demo-role isolation, new signup-to-login, and mobile layout at 390px.
+
+CS-008 adds worker onboarding through persistent hashed one-time setup tokens. Workers choose their own passwords through `/setup`; managers never supply passwords. Completion does not create a session. Setup tokens survive restart, unlike in-memory login sessions. See [worker-management.md](worker-management.md).

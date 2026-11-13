@@ -71,3 +71,5 @@ Out of MVP scope: automatic scheduling, payroll, payments/subscriptions, SMS/ema
 ## Tracking template
 
 For every task record: ID, owner, status (planned / in progress / ready for user review / changes requested / approved / merged), acceptance checks, preview instructions, test results, approval reference, issue URL, and PR URL. Owner assignment remains unassigned until coordinated with the teammate. Keep an honest AI log as work happens; proposal statements about past implementation/security reviews are not evidence that those activities have occurred.
+
+CS-007 completed in PR #14. CS-008 is tracked in issue #17 on branch `codex/CS-008-worker-management`: Team roster, add worker, and one-time account setup. User approved push and merge on 2026-11-13. Next increment: CS-009, manager shift creation and assignment.

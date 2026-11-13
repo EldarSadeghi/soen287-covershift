@@ -29,3 +29,9 @@ CS-006 approval: the user approved merging the worker shift view. Syntax checks 
 2026-11-13 — CS-007: resumed and completed validation of the manager dashboard, read-only schedule/approvals, and milestone walkthrough. Six new test groups bring the suite to 36 passing tests. Browser verified both roles, saved refresh/reload, empty and error/retry states, pending participants, disabled actions, and 390px layout using isolated data. Shared shift-card worker regression passed. Review fixture restored; normal records untouched. No push or merge; user approval pending.
 
 2026-11-13 — CS-007 approval: the user reviewed the populated manager preview and explicitly requested merging it into main. Syntax checks and all 36 tests passed again before publication.
+
+## 2026-11-13 — CS-008
+
+Implemented manager-scoped worker roster/add-worker and single-use 24-hour setup links; workers choose their own passwords. Added backward-compatible schema v2 setup metadata and atomic consumption/reissue. Verified JavaScript syntax and 43 automated tests, including real scrypt signup/authentication, scope/CSRF/Origin protections, duplicate races, expiry/reuse/rotation, and preserving version 1 data. Browser review on an isolated local fixture added Casey Review and verified roster status and the setup landing page. Password completion was tested through the HTTP suite; no real worker credentials were entered through browser automation. User approval remains pending; branch has not been pushed or merged.
+
+User approved CS-008 for push and merge on 2026-11-13 after the local preview.
