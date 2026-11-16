@@ -1,3 +1,4 @@
+import { claimRevision, claimCommitments } from './claim.js';
 import { coverageAccount } from './coverage.js';
 
 export async function openShiftBoard(store, userId, now = Date.now()) {
@@ -10,8 +11,8 @@ export async function openShiftBoard(store, userId, now = Date.now()) {
     if (request.businessId !== business.id || request.status !== 'open' || request.claimantId !== null || request.reviewerId !== null || request.originalWorkerId === user.id) continue;
     const shift = shifts.get(request.shiftId); const original = workers.get(request.originalWorkerId);
     if (!shift || !original || shift.assignedWorkerId !== original.id || shift.assignedWorkerId === user.id || Date.parse(shift.startsAt) <= now) continue;
-    requests.push({ id: request.id, status: 'open', originalWorkerName: original.name, shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, status: 'upcoming' } });
+    requests.push({ id: request.id, status: 'open', revision: claimRevision(request, shift), originalWorkerName: original.name, shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, status: 'upcoming' } });
   }
   requests.sort((a,b) => a.shift.startsAt.localeCompare(b.shift.startsAt) || a.id.localeCompare(b.id));
-  return { requests, timezone: business.timezone, asOf: new Date(now).toISOString() };
+  return { requests, commitments: claimCommitments(db, user, now), timezone: business.timezone, asOf: new Date(now).toISOString() };
 }

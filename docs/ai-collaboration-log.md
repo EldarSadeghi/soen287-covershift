@@ -59,3 +59,9 @@ User reviewed CS-011 and explicitly approved push and merge on 2026-11-16.
 Created issue #25, verified Todo then In Progress. Implemented read-only worker Open shifts board and a scoped endpoint filtering own, foreign, started/expired, claimed and closed requests. Cards show teammate, local dates, duration and stable earliest-first order. All 71 tests pass; syntax and diff checks pass. Browser on isolated fictional data at port 3006 verified populated/empty board, cancellation and fresh-request refresh, service-error retry recovery and 390px layout without overflow. Preview remains signed in as worker. No claim action implemented (CS-013). User approval pending; nothing pushed or merged.
 
 User reviewed CS-012 and explicitly approved push and merge on 2026-11-16.
+
+## 2026-11-16 — CS-013
+
+After user approval, merged CS-012 in PR #26, verified issue #25 closed/Done and synced main. Created CS-013 issue #27 and verified Todo then In Progress. Implemented immediate client UTC overlap warnings, fresh server claim checks, atomic pending claims preserving assignment, pending-claim time reservations and worker claim visibility. All 80 tests pass; nine claiming tests rerun with exact adjacency also pass. Browser on isolated fictional port 3007 verified assigned/pending conflicts, pending claim and My requests, confirmation cancellation/focus, stale cancellation rejection at final submission and a 390px mobile layout. CS-013 remains local and awaits user approval before push/merge.
+
+User reviewed CS-013 and explicitly approved push and merge on 2026-11-16.

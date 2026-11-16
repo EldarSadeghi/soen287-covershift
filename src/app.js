@@ -11,10 +11,13 @@ import { createShift } from './shifts/create.js';
 import { manageShift } from './shifts/manage.js';
 import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverage.js';
 import { openShiftBoard } from './requests/open.js';
+import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
   ['/manage-shift.js', ['manage-shift.js', 'text/javascript; charset=utf-8']],
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
   ['/open-shifts.js', ['open-shifts.js', 'text/javascript; charset=utf-8']],
+  ['/claim-conflicts.js', ['claim-conflicts.js', 'text/javascript; charset=utf-8']],
+  ['/claim.js', ['claim.js', 'text/javascript; charset=utf-8']],
   ['/coverage.js', ['coverage.js', 'text/javascript; charset=utf-8']],
   ['/worker-requests.js', ['worker-requests.js', 'text/javascript; charset=utf-8']],
   ['/team.js', ['team.js', 'text/javascript; charset=utf-8']],
@@ -162,6 +165,15 @@ export function createAppServer({ store, signup = registerManager, login = authe
         const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
         if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This board uses your signed-in business; query filters are not supported.');
         sendJson(response, 200, await openShiftBoard(store, account.user.id, shiftClock())); return;
+      }
+      if (/^\/api\/worker\/requests\/[a-zA-Z0-9_-]{1,80}\/(claim-check|claim)$/.test(pathname)) {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This action uses your signed-in account.');
+        limitCoverage(account.user.id);
+        const parts = pathname.split('/');
+        sendJson(response, 200, await (parts[5] === 'claim' ? claimCoverage : checkClaim)(store, account.user.id, parts[4], await readJson(request), shiftClock)); return;
       }
       if (pathname === '/api/worker/requests') {
         requireMethod(request, response, 'GET');
