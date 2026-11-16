@@ -1,8 +1,9 @@
+import { coverageAction, requestLink } from './coverage.js';
 import { formatShiftTime } from './shift-time.js';
 import { element, shiftCard } from './shift-card.js';
 
-export async function mountWorkerShifts(main) {
-  main.innerHTML = '<p class="eyebrow">Your working week</p><div class="page-heading"><div><h1>Your shifts, all in one place.</h1><p class="subtitle">The shifts assigned to you, from now onward.</p></div></div><section id="shift-summary" class="stats shifts-summary" aria-label="Your shift summary" hidden></section><section class="panel" aria-labelledby="saved-shifts-heading"><div class="panel-head"><h2 id="saved-shifts-heading">Upcoming & current shifts</h2><button id="refresh-shifts" class="logout-button" type="button">Refresh</button></div><p class="shift-timezone" id="shift-timezone"></p><div id="shift-content"></div></section><p class="section-note" id="shifts-updated" role="status"></p>';
+export async function mountWorkerShifts(main, csrfToken) {
+  main.innerHTML = '<p class="eyebrow">Your working week</p><div class="page-heading"><div><h1>Your shifts, all in one place.</h1><p class="subtitle">The shifts assigned to you, from now onward.</p></div></div><p id="coverage-result" class="shift-created" role="status" tabindex="-1" hidden></p><p><a class="text-link" href="/workspace/worker/requests">View My requests →</a></p><section id="shift-summary" class="stats shifts-summary" aria-label="Your shift summary" hidden></section><section class="panel" aria-labelledby="saved-shifts-heading"><div class="panel-head"><h2 id="saved-shifts-heading">Upcoming & current shifts</h2><button id="refresh-shifts" class="logout-button" type="button">Refresh</button></div><p class="shift-timezone" id="shift-timezone"></p><div id="shift-content"></div></section><p class="section-note" id="shifts-updated" role="status"></p>';
   const refresh = document.querySelector('#refresh-shifts');
   const content = document.querySelector('#shift-content');
   const summary = document.querySelector('#shift-summary');
@@ -36,7 +37,14 @@ export async function mountWorkerShifts(main) {
           summary.append(card);
         }
         summary.hidden = false;
-        content.replaceChildren(...result.shifts.map(shift => shiftCard(shift, result.timezone)));
+        content.replaceChildren(...result.shifts.map(shift => {
+          const wrapper = element('div', 'worker-coverage-shift'); wrapper.append(shiftCard(shift, result.timezone));
+          const details = element('div', 'coverage-details');
+          if (shift.coverage.request) { details.append(element('p', 'section-note', shift.coverage.request.status === 'pending' ? 'Coverage pending manager approval. You remain assigned.' : 'Coverage requested. You remain assigned until approval.'), requestLink()); }
+          else if (shift.coverage.canRequest) details.append(coverageAction({ kind: 'request', id: shift.id, revision: shift.coverage.revision, title: shift.title, description: `Request coverage for “${shift.title}”? You remain assigned until a teammate’s claim is approved by your manager.`, csrfToken, onSuccess: async message => { await load(); const result = document.querySelector('#coverage-result'); result.textContent = message; result.hidden = false; result.focus(); } }));
+          else details.append(element('p', 'section-note', 'This shift has started. Coverage requests are no longer available.'));
+          wrapper.append(details); return wrapper;
+        }));
       } else {
         const empty = element('div', 'empty saved-shifts-empty');
         empty.append(element('span', 'empty-calendar', '▦'), element('h3', '', 'A little breathing room.'), element('p', '', 'You have no upcoming or current shifts assigned. Check back after your manager updates the schedule.'));

@@ -54,3 +54,5 @@ CS-008 local review adds a working **Team** page: manager-scoped roster, add wor
 CS-009 local review adds **Schedule → Create a shift**, with worker assignment, business-timezone dates, overnight support and overlap prevention. See [shift creation](docs/shift-creation.md) for review steps and date rules.
 
 CS-010 local review adds **Schedule → Edit shift / Delete shift** for eligible future shifts. Coverage-linked and started shifts are locked; see [shift management](docs/shift-management.md).
+
+CS-011 local review adds **My shifts → Request coverage** and a working **My requests** page with confirmed cancellation of eligible open/pending requests. Assignments and cancelled records are preserved. See [coverage requests](docs/coverage-requests.md).

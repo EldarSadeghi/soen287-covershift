@@ -9,9 +9,12 @@ import { managerDashboard } from './manager/dashboard.js';
 import { listWorkers, addWorker, reissueSetup, setupDetails, completeSetup } from './manager/workers.js';
 import { createShift } from './shifts/create.js';
 import { manageShift } from './shifts/manage.js';
+import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverage.js';
 const assets = new Map([
   ['/manage-shift.js', ['manage-shift.js', 'text/javascript; charset=utf-8']],
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
+  ['/coverage.js', ['coverage.js', 'text/javascript; charset=utf-8']],
+  ['/worker-requests.js', ['worker-requests.js', 'text/javascript; charset=utf-8']],
   ['/team.js', ['team.js', 'text/javascript; charset=utf-8']],
   ['/setup', ['setup.html', 'text/html; charset=utf-8']],
   ['/setup.js', ['setup.js', 'text/javascript; charset=utf-8']],
@@ -76,6 +79,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
   const limitTeam = createSignupLimiter({ limit: 20, message: 'Too many worker changes. Please wait 10 minutes and try again.' });
   const limitShifts = createSignupLimiter({ limit: 60, message: 'Too many shift changes. Please wait 10 minutes and try again.' });
+  const limitCoverage = createSignupLimiter({ limit: 30, message: 'Too many coverage changes. Please wait 10 minutes and try again.' });
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'same-origin');
@@ -150,6 +154,21 @@ export function createAppServer({ store, signup = registerManager, login = authe
         const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
         if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This dashboard uses your signed-in business; query filters are not supported.');
         sendJson(response, 200, await managerDashboard(store, account.user.id, shiftClock())); return;
+      }
+      if (pathname === '/api/worker/requests') {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This view uses your signed-in account.');
+        sendJson(response, 200, await ownRequests(store, account.user.id, shiftClock())); return;
+      }
+      if (/^\/api\/worker\/(shifts\/[a-zA-Z0-9_-]{1,80}\/coverage|requests\/[a-zA-Z0-9_-]{1,80}\/cancel)$/.test(pathname)) {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This action uses your signed-in account.');
+        limitCoverage(account.user.id);
+        const parts = pathname.split('/'); const cancel = parts[3] === 'requests';
+        sendJson(response, cancel ? 200 : 201, await (cancel ? cancelCoverage : requestCoverage)(store, account.user.id, parts[4], await readJson(request), shiftClock)); return;
       }
       if (pathname === '/api/worker/shifts') {
         requireMethod(request, response, 'GET');

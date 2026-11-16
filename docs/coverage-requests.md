@@ -1,0 +1,22 @@
+# CS-011: Request and cancel coverage
+
+Issue: https://github.com/EldarSadeghi/soen287-covershift/issues/23
+Branch: `codex/CS-011-request-cancel-coverage`. Status: user approved push and merge on 2026-11-16.
+
+Workers use My shifts → Request coverage for their own future assigned shifts. Confirmation explains that the original worker remains assigned until a manager approves coverage. A saved open/pending request replaces the request button with a status and My requests link. Started shifts do not offer new requests.
+
+My requests lists only requests created by the signed-in worker, including saved cancelled/approved records and ended shifts. Each card shows business-timezone dates, status, current assignment information, claimant name when present, requested/updated times, and cancellation eligibility. A worker who claimed someone else’s request cannot cancel the original worker’s request here.
+
+Cancellation policy: the original worker may cancel an open **or pending** request only before the shift starts and while still assigned. Pending confirmation names the claimant and explains that cancelling will not transfer the assignment. Confirmation offers Keep as is first and restores focus when backed out. Cancelled records and their claimant information remain saved; the shift assignment never changes. A fresh request can be created after cancellation by refreshing My shifts; this creates a new ID and retains the earlier record. Approved, cancelled, and started requests cannot be cancelled. Expired open/pending requests remain visible with the reason cancellation is unavailable; no automatic status rewrite is performed.
+
+A coverage request locks manager editing/deletion under CS-010 even after cancellation because the history remains linked. Open-shift discovery, claims, approvals and fuller audit/history tools remain CS-012 through CS-015; no notifications or email delivery are added here. The pending example in the local review data is an explicitly fictional fixture, not a completed claiming feature.
+
+`GET /api/worker/requests` scopes reads from the current session, rejecting query selectors. `POST /api/worker/shifts/:id/coverage` and `POST /api/worker/requests/:id/cancel` accept only `{ revision }`, require a current worker session, exact Origin, JSON and session CSRF token, and share a 30-change/10-minute account limiter. Body size is bounded by the application’s existing JSON parser.
+
+Every write rechecks account, business, ownership, assignment, start time and current request state inside the exclusive storage transaction. At most one open/pending request may exist for a shift. The My shifts revision covers both the stored shift and its coverage records, preventing stale edits, duplicate submissions and stale retries after cancellation from opening an unintended new request. Cancellation’s revision covers the request, so a new claim/status change requires refresh and reconfirmation. Revisions are concurrency markers, not credentials. Request creation and cancellation touch only coverageRequests; cancellation advances updatedAt and keeps the original request/claimant metadata. Existing JSON schema versions remain unchanged.
+
+Network uncertainty tells the worker to refresh before retrying. Successful mutations refresh the current view and focus the success message. Other open tabs require Refresh. Loading, empty and retry states are present on My requests.
+
+Review: the local worker preview runs on port 3005, signed in as fictional Jamie Lee. Opening service has an open request you can cancel. Afternoon service has a cancelled pending-request record retaining previous claimant Alex; refresh My shifts to request coverage again for that shift. Service already in progress demonstrates the start-time restriction. Test request confirmation, Keep as is, cancellation, saved status after reload and unchanged My shifts assignment.
+
+Verification: 66 passing Node tests, JavaScript syntax and diff checks. Seven added tests cover persisted scoped reads, request/cancel lifecycle, pending history, fresh re-request, duplicate/concurrent/stale changes, exact start limits, approval/ownership/role boundaries, manager mutation races, and HTTP Origin/CSRF/JSON/session protections. Browser verified a saved request, own request list, pending cancellation retaining claimant/assignment, confirmation cancellation and focus, reload through navigation, and a 390px cancellation layout without overflow.
