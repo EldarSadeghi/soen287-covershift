@@ -56,3 +56,5 @@ CS-009 local review adds **Schedule → Create a shift**, with worker assignment
 CS-010 local review adds **Schedule → Edit shift / Delete shift** for eligible future shifts. Coverage-linked and started shifts are locked; see [shift management](docs/shift-management.md).
 
 CS-011 local review adds **My shifts → Request coverage** and a working **My requests** page with confirmed cancellation of eligible open/pending requests. Assignments and cancelled records are preserved. See [coverage requests](docs/coverage-requests.md).
+
+CS-012 local review adds **Open shifts**, a read-only board of teammates’ eligible future coverage requests with timezone-aware dates and refresh. Claiming comes in CS-013. See [open-shift board](docs/open-shift-board.md).

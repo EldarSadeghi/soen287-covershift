@@ -1,3 +1,4 @@
+import { mountOpenShifts } from './open-shifts.js';
 import { mountWorkerRequests } from './worker-requests.js';
 import { mountTeam } from './team.js';
 import { mountWorkerShifts } from './worker-shifts.js';
@@ -9,9 +10,6 @@ let csrfToken;
 const routes = {
   manager: [['overview', 'Overview', '◫'], ['schedule', 'Schedule', '▦'], ['approvals', 'Approvals', '✓'], ['team', 'Team', '♧']],
   worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄']],
-};
-const copy = {
-  open: ['Lend your team a hand.', 'A little flexibility goes a long way.', 'Open coverage opportunities are coming soon.'],
 };
 function showError(message) { errorBox.textContent = message; errorBox.hidden = false; errorBox.focus(); }
 async function load() {
@@ -46,16 +44,7 @@ async function load() {
       return;
     }
     if (user.role === 'worker' && page === 'requests') { await mountWorkerRequests(main, csrfToken); return; }
-    const [heading, tagline, description] = copy[page];
-    main.innerHTML = '<p class="eyebrow">Welcome to your workspace</p><div class="page-heading"><div><h1 id="workspace-heading"></h1><p class="subtitle" id="workspace-subtitle"></p></div></div><section class="identity-grid" aria-label="Account details"><article class="panel identity-card"><p>Your business</p><strong id="identity-business"></strong></article><article class="panel identity-card"><p>Your role</p><strong id="identity-role"></strong></article><article class="panel identity-card"><p>Business timezone</p><strong id="identity-timezone"></strong></article></section><section class="panel workspace-empty"><h2 id="workspace-tagline"></h2><p id="workspace-description"></p></section>';
-    document.querySelector('#workspace-heading').textContent = heading;
-    document.querySelector('#workspace-subtitle').textContent = `Good to see you, ${user.name}.`;
-    document.querySelector('#identity-business').textContent = business.name;
-    document.querySelector('#identity-role').textContent = user.role === 'manager' ? 'Manager' : 'Worker';
-    document.querySelector('#identity-timezone').textContent = business.timezone;
-    document.querySelector('#workspace-tagline').textContent = tagline;
-    document.querySelector('#workspace-description').textContent = description;
-    main.setAttribute('aria-busy', 'false'); logout.disabled = false;
+    if (user.role === 'worker' && page === 'open') { await mountOpenShifts(main); return; }
   } catch { main.setAttribute('aria-busy', 'false'); showError('We couldn’t load your workspace. Refresh the page to try again.'); }
 }
 logout.addEventListener('click', async () => {
