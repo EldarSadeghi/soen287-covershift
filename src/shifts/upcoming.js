@@ -1,3 +1,4 @@
+import { coverageState } from '../requests/coverage.js';
 import { HttpError } from '../auth/errors.js';
 
 // The user ID comes from the authenticated server session, never the URL or
@@ -12,6 +13,6 @@ export async function upcomingWorkerShifts(store, userId, now = Date.now()) {
   const shifts = db.shifts
     .filter(shift => shift.businessId === business.id && shift.assignedWorkerId === user.id && Date.parse(shift.endsAt) > now)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
-    .map(({ id, title, startsAt, endsAt }) => ({ id, title, startsAt, endsAt, status: Date.parse(startsAt) <= now ? 'in_progress' : 'upcoming' }));
+    .map(shift => ({ id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, coverage: coverageState(db, shift, now), status: Date.parse(shift.startsAt) <= now ? 'in_progress' : 'upcoming' }));
   return { shifts, timezone: business.timezone, asOf: new Date(now).toISOString() };
 }

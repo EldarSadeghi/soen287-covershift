@@ -1,3 +1,4 @@
+import { mountWorkerRequests } from './worker-requests.js';
 import { mountTeam } from './team.js';
 import { mountWorkerShifts } from './worker-shifts.js';
 import { mountManagerDashboard } from './manager-dashboard.js';
@@ -11,7 +12,6 @@ const routes = {
 };
 const copy = {
   open: ['Lend your team a hand.', 'A little flexibility goes a long way.', 'Open coverage opportunities are coming soon.'],
-  requests: ['Your coverage requests.', 'Keep track with confidence.', 'Requesting and tracking coverage is coming soon.'],
 };
 function showError(message) { errorBox.textContent = message; errorBox.hidden = false; errorBox.focus(); }
 async function load() {
@@ -42,9 +42,10 @@ async function load() {
     }
     if (user.role === 'manager' && page === 'team') { await mountTeam(main, account, csrfToken); return; }
     if (user.role === 'worker' && page === 'shifts') {
-      await mountWorkerShifts(main);
+      await mountWorkerShifts(main, csrfToken);
       return;
     }
+    if (user.role === 'worker' && page === 'requests') { await mountWorkerRequests(main, csrfToken); return; }
     const [heading, tagline, description] = copy[page];
     main.innerHTML = '<p class="eyebrow">Welcome to your workspace</p><div class="page-heading"><div><h1 id="workspace-heading"></h1><p class="subtitle" id="workspace-subtitle"></p></div></div><section class="identity-grid" aria-label="Account details"><article class="panel identity-card"><p>Your business</p><strong id="identity-business"></strong></article><article class="panel identity-card"><p>Your role</p><strong id="identity-role"></strong></article><article class="panel identity-card"><p>Business timezone</p><strong id="identity-timezone"></strong></article></section><section class="panel workspace-empty"><h2 id="workspace-tagline"></h2><p id="workspace-description"></p></section>';
     document.querySelector('#workspace-heading').textContent = heading;

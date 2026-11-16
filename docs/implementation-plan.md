@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 (issue #21) is ready for user review locally. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 (issue #23) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 
@@ -77,3 +77,5 @@ CS-007 completed in PR #14. CS-008 is tracked in issue #17 on branch `codex/CS-0
 CS-009: manager Schedule form and protected shift creation/assignment endpoint implemented on `codex/CS-009-shift-creation`, issue #19. Validation: 50 tests, syntax checks, desktop/mobile browser creation and worker visibility. User approved push and merge on 2026-11-16. Next task: CS-010, shift editing and deletion.
 
 CS-010: issue #21, local branch `codex/CS-010-shift-edit-delete`. Edit/reassign or delete future shifts with no linked coverage requests; started shifts and all coverage-linked shifts remain locked. Stale revisions and overlaps rejected atomically. 59 tests pass; browser preview on port 3004. User approved push and merge on 2026-11-16. Next: CS-011, request and cancel coverage.
+
+CS-011: issue #23, local branch `codex/CS-011-request-cancel-coverage`. Workers request coverage for own future shifts and cancel open/pending requests before start while still assigned. Cancellation preserves records/claimant and never transfers assignment. 66 tests pass; worker preview on port 3005. User approved push and merge on 2026-11-16. Next: CS-012, open-shift board.
