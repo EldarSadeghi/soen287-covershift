@@ -10,15 +10,15 @@ Install Node.js 24 or newer (includes npm), clone the shared repository when its
 npm start
 ```
 
-Open http://127.0.0.1:3000. No third-party dependencies or installation step are needed for CS-001. For automatic restarts during development, use `npm run dev`.
+Open http://127.0.0.1:3000. No third-party dependencies or installation step are needed. For automatic restarts during development, use `npm run dev`.
 
 Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied. Keep `.env` out of Git. Stop the server with Ctrl+C.
 
 ## Current scope
 
-CS-007 connects manager Overview, Schedule, and Approvals to saved business records, with scoped summary counts, assigned workers, pending claim participants, and read-only coverage status. See [manager dashboard and milestone walkthrough](docs/manager-dashboard.md). Approval/rejection and worker management remain upcoming increments.
+Managers can manage workers, create/edit/delete eligible shifts, and view saved schedules and pending coverage claims. Workers see their own assigned shifts, request/cancel coverage, and browse teammate requests. Dates use the business timezone. Protected pages use saved records; the public demo remains separate.
 
-CS-006 connects the worker's My shifts page to only their own assigned current/upcoming shifts. Both roles use business-timezone dates with refresh and empty/error states. See [worker shift instructions](docs/worker-shifts.md).
+CS-013 is ready for local review: **Open shifts → Check & claim** gives inline conflict warnings, a fresh server check and confirmation. Claims become pending manager approval and appear in **My requests → Coverage you claimed**. Original assignments remain unchanged. Approval/rejection follows in CS-014. See [claiming instructions](docs/claiming.md).
 
 Start at http://127.0.0.1:3000/login and use an account created through signup, or the explicit fictional role setup in [authentication instructions](docs/authentication.md). The public presentation demo stays at /demo and grants no account access.
 
@@ -31,7 +31,7 @@ Start at http://127.0.0.1:3000/login and use an account created through signup, 
 
 ## Checks
 
-Run `npm run check` to check JavaScript syntax and `npm test` for storage verification. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths and private data paths should return 404. The UI still uses demo presentation data.
+Run `npm run check` to check JavaScript syntax and `npm test` for automated verification. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths and private data paths should return 404. Authenticated pages use saved business records; /demo uses separate presentation data.
 
 ## JSON storage (CS-003)
 
@@ -57,4 +57,4 @@ CS-010 local review adds **Schedule → Edit shift / Delete shift** for eligible
 
 CS-011 local review adds **My shifts → Request coverage** and a working **My requests** page with confirmed cancellation of eligible open/pending requests. Assignments and cancelled records are preserved. See [coverage requests](docs/coverage-requests.md).
 
-CS-012 local review adds **Open shifts**, a read-only board of teammates’ eligible future coverage requests with timezone-aware dates and refresh. Claiming comes in CS-013. See [open-shift board](docs/open-shift-board.md).
+CS-012 introduced **Open shifts**, a board of teammates’ eligible future coverage requests with timezone-aware dates and refresh. CS-013 adds claiming. See [open-shift board](docs/open-shift-board.md).

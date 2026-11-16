@@ -69,5 +69,12 @@ export async function ownRequests(store, userId, now = Date.now()) {
       const claimant = request.claimantId ? db.users.find(u => u.id === request.claimantId && u.businessId === business.id) : null;
       return { id: request.id, status: request.status, createdAt: request.createdAt, updatedAt: request.updatedAt, revision: requestRevision(request), canCancel: reason === null, cancelReason: reason, claimantName: claimant?.name ?? null, stillAssigned: shift.assignedWorkerId === user.id, shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, status: Date.parse(shift.endsAt) <= now ? 'completed' : Date.parse(shift.startsAt) <= now ? 'in_progress' : 'upcoming' } };
     });
-  return { requests, timezone: business.timezone, asOf: new Date(now).toISOString() };
+  const claims = db.coverageRequests.filter(r => r.businessId === business.id && r.claimantId === user.id && r.originalWorkerId !== user.id)
+    .sort((a,b) => b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id)).map(request => {
+      const shift = db.shifts.find(s => s.id === request.shiftId && s.businessId === business.id);
+      const original = db.users.find(u => u.id === request.originalWorkerId && u.businessId === business.id);
+      if (!shift || !original) throw new Error('Invalid coverage claim reference');
+      return { id: request.id, status: request.status, updatedAt: request.updatedAt, originalWorkerName: original.name, assignedToYou: shift.assignedWorkerId === user.id, shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, status: Date.parse(shift.endsAt) <= now ? 'completed' : Date.parse(shift.startsAt) <= now ? 'in_progress' : 'upcoming' } };
+    });
+  return { requests, claims, timezone: business.timezone, asOf: new Date(now).toISOString() };
 }

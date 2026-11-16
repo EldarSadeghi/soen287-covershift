@@ -44,7 +44,7 @@ async function load() {
       return;
     }
     if (user.role === 'worker' && page === 'requests') { await mountWorkerRequests(main, csrfToken); return; }
-    if (user.role === 'worker' && page === 'open') { await mountOpenShifts(main); return; }
+    if (user.role === 'worker' && page === 'open') { await mountOpenShifts(main, csrfToken); return; }
   } catch { main.setAttribute('aria-busy', 'false'); showError('We couldn’t load your workspace. Refresh the page to try again.'); }
 }
 logout.addEventListener('click', async () => {
