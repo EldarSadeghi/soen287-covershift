@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 (issue #19) is approved by the user for push and merge. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 (issue #21) is ready for user review locally. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 
@@ -75,3 +75,5 @@ For every task record: ID, owner, status (planned / in progress / ready for user
 CS-007 completed in PR #14. CS-008 is tracked in issue #17 on branch `codex/CS-008-worker-management`: Team roster, add worker, and one-time account setup. User approved push and merge on 2026-11-13. Next increment: CS-009, manager shift creation and assignment.
 
 CS-009: manager Schedule form and protected shift creation/assignment endpoint implemented on `codex/CS-009-shift-creation`, issue #19. Validation: 50 tests, syntax checks, desktop/mobile browser creation and worker visibility. User approved push and merge on 2026-11-16. Next task: CS-010, shift editing and deletion.
+
+CS-010: issue #21, local branch `codex/CS-010-shift-edit-delete`. Edit/reassign or delete future shifts with no linked coverage requests; started shifts and all coverage-linked shifts remain locked. Stale revisions and overlaps rejected atomically. 59 tests pass; browser preview on port 3004. User approved push and merge on 2026-11-16. Next: CS-011, request and cancel coverage.
