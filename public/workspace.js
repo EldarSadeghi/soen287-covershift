@@ -37,7 +37,7 @@ async function load() {
     document.querySelector('#navigation').innerHTML = roleRoutes.map(([key, name, icon]) => `<a class="nav-link" href="/workspace/${user.role}/${key}" ${key === page ? 'aria-current="page"' : ''}><span class="nav-icon" aria-hidden="true">${icon}</span>${name}</a>`).join('');
     logout.disabled = false;
     if (user.role === 'manager' && ['overview', 'schedule', 'approvals'].includes(page)) {
-      await mountManagerDashboard(main, page, account);
+      await mountManagerDashboard(main, page, account, csrfToken);
       return;
     }
     if (user.role === 'manager' && page === 'team') { await mountTeam(main, account, csrfToken); return; }
