@@ -50,3 +50,5 @@ Seeding preserves existing records. Inspection prints a safe summary; tests use 
 See [the implementation plan](docs/implementation-plan.md) and [working agreement](docs/contributing.md). Each increment needs the user's visible review and explicit approval before pushing or merging. Shared repository: https://github.com/EldarSadeghi/soen287-covershift. Teammate access still needs verification.
 
 CS-008 local review adds a working **Team** page: manager-scoped roster, add worker, and one-time worker account setup links. See [worker management](docs/worker-management.md). Links expire after 24 hours; no email is sent. Workers set their own passwords and then sign in.
+
+CS-009 local review adds **Schedule → Create a shift**, with worker assignment, business-timezone dates, overnight support and overlap prevention. See [shift creation](docs/shift-creation.md) for review steps and date rules.

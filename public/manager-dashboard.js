@@ -1,3 +1,4 @@
+import { mountCreateShift } from './create-shift.js';
 import { element, shiftCard } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
 
@@ -35,7 +36,7 @@ function claimCard(claim, timezone, showActions) {
   return node;
 }
 
-export async function mountManagerDashboard(main, page, account) {
+export async function mountManagerDashboard(main, page, account, csrfToken) {
   const titles = { overview: 'Good teams show up together.', schedule: 'The team schedule.', approvals: 'The final say is yours.' };
   main.innerHTML = '<p class="eyebrow">Your team at a glance</p><div class="page-heading"><div><h1 id="manager-heading"></h1><p class="subtitle" id="manager-subtitle"></p></div><button class="logout-button" id="refresh-dashboard" type="button">Refresh</button></div><section id="manager-summary" class="stats" aria-label="Business summary" hidden></section><p class="manager-timezone" id="manager-timezone"></p><div id="manager-content"></div><p class="section-note" id="dashboard-updated" role="status"></p>';
   document.querySelector('#manager-heading').textContent = titles[page];
@@ -46,6 +47,10 @@ export async function mountManagerDashboard(main, page, account) {
   const timezone = document.querySelector('#manager-timezone');
   const updated = document.querySelector('#dashboard-updated');
   let loading = false;
+  if (page === 'schedule') {
+    const creator = element('div'); content.before(creator);
+    await mountCreateShift(creator, account, csrfToken, () => load());
+  }
   async function load() {
     if (loading) return;
     loading = true; main.setAttribute('aria-busy', 'true'); refresh.disabled = true;
@@ -75,7 +80,7 @@ export async function mountManagerDashboard(main, page, account) {
         const note = element('section', 'manager-next-note');
         note.append(element('h2', '', 'Your people, all in one place.'), element('p', '', 'Add workers and help them set up their login.'), link('View team page →', '/workspace/manager/team')); content.append(note);
       } else if (page === 'schedule') {
-        content.replaceChildren(shiftPanel()); content.append(element('p', 'section-note', 'Shift creation and editing are coming soon.'));
+        content.replaceChildren(shiftPanel()); content.append(element('p', 'section-note', 'Shift editing and deletion are coming in CS-010.'));
       } else {
         content.replaceChildren(claimPanel()); content.append(element('p', 'section-note', 'Approval and rejection actions are coming soon. This view does not change assignments.'));
       }

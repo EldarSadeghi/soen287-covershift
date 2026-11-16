@@ -35,3 +35,9 @@ CS-006 approval: the user approved merging the worker shift view. Syntax checks 
 Implemented manager-scoped worker roster/add-worker and single-use 24-hour setup links; workers choose their own passwords. Added backward-compatible schema v2 setup metadata and atomic consumption/reissue. Verified JavaScript syntax and 43 automated tests, including real scrypt signup/authentication, scope/CSRF/Origin protections, duplicate races, expiry/reuse/rotation, and preserving version 1 data. Browser review on an isolated local fixture added Casey Review and verified roster status and the setup landing page. Password completion was tested through the HTTP suite; no real worker credentials were entered through browser automation. User approval remains pending; branch has not been pushed or merged.
 
 User approved CS-008 for push and merge on 2026-11-13 after the local preview.
+
+## 2026-11-16 — CS-009
+
+Created issue #19 with acceptance criteria, verified Todo then In Progress. Implemented local manager shift creation/assignment, atomic same-business and overlap checks, business-timezone UTC conversion and strict DST/calendar validation. Added seven meaningful tests; all 50 tests pass, JavaScript syntax and diff checks pass. Browser checks on isolated fictional data verified saved assignment/counts, reload persistence, worker My shifts visibility, overlap rejection with entries retained, keyboard focus and 390px mobile layout. User approval and publication remain pending.
+
+User reviewed the working manager preview and approved CS-009 push and merge on 2026-11-16.

@@ -7,7 +7,9 @@ import { SessionStore, requireAccount, safeAccount } from './auth/sessions.js';
 import { upcomingWorkerShifts } from './shifts/upcoming.js';
 import { managerDashboard } from './manager/dashboard.js';
 import { listWorkers, addWorker, reissueSetup, setupDetails, completeSetup } from './manager/workers.js';
+import { createShift } from './shifts/create.js';
 const assets = new Map([
+  ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
   ['/team.js', ['team.js', 'text/javascript; charset=utf-8']],
   ['/setup', ['setup.html', 'text/html; charset=utf-8']],
   ['/setup.js', ['setup.js', 'text/javascript; charset=utf-8']],
@@ -71,6 +73,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
   const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
   const limitTeam = createSignupLimiter({ limit: 20, message: 'Too many worker changes. Please wait 10 minutes and try again.' });
+  const limitShifts = createSignupLimiter({ limit: 60, message: 'Too many shift changes. Please wait 10 minutes and try again.' });
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'same-origin');
@@ -122,6 +125,14 @@ export function createAppServer({ store, signup = registerManager, login = authe
         await readJson(request);
         response.setHeader('Set-Cookie', sessions.destroy(request.headers.cookie));
         response.writeHead(204, { 'Cache-Control': 'no-store' }); response.end(); return;
+      }
+      if (pathname === '/api/manager/shifts') {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This action uses your signed-in business.');
+        limitShifts(account.user.id);
+        sendJson(response, 201, await createShift(store, account.user.id, await readJson(request), shiftClock)); return;
       }
       if (pathname === '/api/manager/dashboard') {
         requireMethod(request, response, 'GET');
