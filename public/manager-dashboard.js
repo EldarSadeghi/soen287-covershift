@@ -1,3 +1,4 @@
+import { managedShiftCard } from './manage-shift.js';
 import { mountCreateShift } from './create-shift.js';
 import { element, shiftCard } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
@@ -38,7 +39,7 @@ function claimCard(claim, timezone, showActions) {
 
 export async function mountManagerDashboard(main, page, account, csrfToken) {
   const titles = { overview: 'Good teams show up together.', schedule: 'The team schedule.', approvals: 'The final say is yours.' };
-  main.innerHTML = '<p class="eyebrow">Your team at a glance</p><div class="page-heading"><div><h1 id="manager-heading"></h1><p class="subtitle" id="manager-subtitle"></p></div><button class="logout-button" id="refresh-dashboard" type="button">Refresh</button></div><section id="manager-summary" class="stats" aria-label="Business summary" hidden></section><p class="manager-timezone" id="manager-timezone"></p><div id="manager-content"></div><p class="section-note" id="dashboard-updated" role="status"></p>';
+  main.innerHTML = '<p class="eyebrow">Your team at a glance</p><div class="page-heading"><div><h1 id="manager-heading"></h1><p class="subtitle" id="manager-subtitle"></p></div><button class="logout-button" id="refresh-dashboard" type="button">Refresh</button></div><section id="manager-summary" class="stats" aria-label="Business summary" hidden></section><p class="manager-timezone" id="manager-timezone"></p><p id="manage-result" class="shift-created" role="status" tabindex="-1" hidden></p><div id="manager-content"></div><p class="section-note" id="dashboard-updated" role="status"></p>';
   document.querySelector('#manager-heading').textContent = titles[page];
   document.querySelector('#manager-subtitle').textContent = page === 'overview' ? `Hi ${account.user.name}, here’s what’s coming up for your team.` : page === 'schedule' ? 'Your business’s assigned upcoming and current shifts.' : 'Saved coverage claims waiting for manager approval.';
   const refresh = document.querySelector('#refresh-dashboard');
@@ -69,7 +70,7 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
       summary.hidden = false;
       const shifts = page === 'overview' ? result.shifts.slice(0, 3) : result.shifts;
       const claims = page === 'overview' ? result.pendingClaims.slice(0, 3) : result.pendingClaims;
-      const shiftPanel = () => panel('Upcoming & current shifts', shifts.length ? shifts.map(shift => shiftCard(shift, result.timezone, { workerName: shift.assignedWorker.name })) : [empty('A clear schedule.', 'There are no upcoming or current shifts saved for your business.')], page === 'overview' ? link('View schedule →', '/workspace/manager/schedule') : null);
+      const shiftPanel = () => panel('Upcoming & current shifts', shifts.length ? shifts.map(shift => page === 'schedule' ? managedShiftCard(shift, result.timezone, csrfToken, async message => { await load(); const result = document.querySelector('#manage-result'); result.textContent = message; result.hidden = false; result.focus(); }) : shiftCard(shift, result.timezone, { workerName: shift.assignedWorker.name })) : [empty('A clear schedule.', 'There are no upcoming or current shifts saved for your business.')], page === 'overview' ? link('View schedule →', '/workspace/manager/schedule') : null);
       const claimPanel = () => panel('Pending coverage claims', claims.length ? claims.map(claim => claimCard(claim, result.timezone, page === 'approvals')) : [empty('Nothing waiting on you.', 'There are no pending coverage claims in your business.')], page === 'overview' ? link('View approvals →', '/workspace/manager/approvals') : null);
       if (page === 'overview') {
         const grid = element('div', 'manager-grid');
@@ -80,7 +81,7 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
         const note = element('section', 'manager-next-note');
         note.append(element('h2', '', 'Your people, all in one place.'), element('p', '', 'Add workers and help them set up their login.'), link('View team page →', '/workspace/manager/team')); content.append(note);
       } else if (page === 'schedule') {
-        content.replaceChildren(shiftPanel()); content.append(element('p', 'section-note', 'Shift editing and deletion are coming in CS-010.'));
+        content.replaceChildren(shiftPanel()); content.append(element('p', 'section-note', 'Future shifts without linked coverage requests can be edited or deleted. Started shifts and shifts with coverage history are locked.'));
       } else {
         content.replaceChildren(claimPanel()); content.append(element('p', 'section-note', 'Approval and rejection actions are coming soon. This view does not change assignments.'));
       }

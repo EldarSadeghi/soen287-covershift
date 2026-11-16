@@ -41,3 +41,9 @@ User approved CS-008 for push and merge on 2026-11-13 after the local preview.
 Created issue #19 with acceptance criteria, verified Todo then In Progress. Implemented local manager shift creation/assignment, atomic same-business and overlap checks, business-timezone UTC conversion and strict DST/calendar validation. Added seven meaningful tests; all 50 tests pass, JavaScript syntax and diff checks pass. Browser checks on isolated fictional data verified saved assignment/counts, reload persistence, worker My shifts visibility, overlap rejection with entries retained, keyboard focus and 390px mobile layout. User approval and publication remain pending.
 
 User reviewed the working manager preview and approved CS-009 push and merge on 2026-11-16.
+
+## 2026-11-16 — CS-010
+
+Created issue #21, verified Todo then In Progress. Implemented manager edit/reassignment/deletion for future shifts without any linked coverage request; retained all coverage history and locked started shifts. Added transaction-level stale revision protection and shared CS-009 assignment/time/conflict checks. All 59 tests pass, including nine added edit/delete tests; syntax and diff checks pass. Browser used isolated fictional data on port 3004 to save an overnight reassignment, confirm prefilled fields, reject overlap without clearing drafts, verify deletion confirmation/cancel/focus and check a 390px mobile editor. Actual deletion verified in HTTP tests; browser preview kept signed in as manager. User approval pending; nothing pushed or merged.
+
+User reviewed CS-010 and explicitly approved push and merge on 2026-11-16.

@@ -8,7 +8,9 @@ import { upcomingWorkerShifts } from './shifts/upcoming.js';
 import { managerDashboard } from './manager/dashboard.js';
 import { listWorkers, addWorker, reissueSetup, setupDetails, completeSetup } from './manager/workers.js';
 import { createShift } from './shifts/create.js';
+import { manageShift } from './shifts/manage.js';
 const assets = new Map([
+  ['/manage-shift.js', ['manage-shift.js', 'text/javascript; charset=utf-8']],
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
   ['/team.js', ['team.js', 'text/javascript; charset=utf-8']],
   ['/setup', ['setup.html', 'text/html; charset=utf-8']],
@@ -125,6 +127,15 @@ export function createAppServer({ store, signup = registerManager, login = authe
         await readJson(request);
         response.setHeader('Set-Cookie', sessions.destroy(request.headers.cookie));
         response.writeHead(204, { 'Cache-Control': 'no-store' }); response.end(); return;
+      }
+      if (/^\/api\/manager\/shifts\/[a-zA-Z0-9_-]{1,80}\/(edit|delete)$/.test(pathname)) {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This action uses your signed-in business.');
+        limitShifts(account.user.id);
+        const parts = pathname.split('/');
+        sendJson(response, 200, await manageShift(store, account.user.id, parts[4], parts[5], await readJson(request), shiftClock)); return;
       }
       if (pathname === '/api/manager/shifts') {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
