@@ -53,3 +53,9 @@ User reviewed CS-010 and explicitly approved push and merge on 2026-11-16.
 Created issue #23, verified Todo then In Progress. Implemented worker-owned request/cancel services and My shifts/My requests UI, before-start eligibility, open/pending cancellation policy, unchanged assignment and retained claimant/history. Added atomic duplicate and stale-state checks with shared session/role/business/Origin/JSON/CSRF protections. All 66 tests pass, syntax and diff checks pass. Browser on isolated fictional data at port 3005 created a request, cancelled a pending request, verified retained claimant/assignment and confirmation focus, and checked a 390px mobile cancellation layout. Preview remains signed in as worker. User approval pending; nothing pushed or merged.
 
 User reviewed CS-011 and explicitly approved push and merge on 2026-11-16.
+
+## 2026-11-16 — CS-012
+
+Created issue #25, verified Todo then In Progress. Implemented read-only worker Open shifts board and a scoped endpoint filtering own, foreign, started/expired, claimed and closed requests. Cards show teammate, local dates, duration and stable earliest-first order. All 71 tests pass; syntax and diff checks pass. Browser on isolated fictional data at port 3006 verified populated/empty board, cancellation and fresh-request refresh, service-error retry recovery and 390px layout without overflow. Preview remains signed in as worker. No claim action implemented (CS-013). User approval pending; nothing pushed or merged.
+
+User reviewed CS-012 and explicitly approved push and merge on 2026-11-16.

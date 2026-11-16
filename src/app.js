@@ -10,9 +10,11 @@ import { listWorkers, addWorker, reissueSetup, setupDetails, completeSetup } fro
 import { createShift } from './shifts/create.js';
 import { manageShift } from './shifts/manage.js';
 import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverage.js';
+import { openShiftBoard } from './requests/open.js';
 const assets = new Map([
   ['/manage-shift.js', ['manage-shift.js', 'text/javascript; charset=utf-8']],
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
+  ['/open-shifts.js', ['open-shifts.js', 'text/javascript; charset=utf-8']],
   ['/coverage.js', ['coverage.js', 'text/javascript; charset=utf-8']],
   ['/worker-requests.js', ['worker-requests.js', 'text/javascript; charset=utf-8']],
   ['/team.js', ['team.js', 'text/javascript; charset=utf-8']],
@@ -154,6 +156,12 @@ export function createAppServer({ store, signup = registerManager, login = authe
         const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
         if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This dashboard uses your signed-in business; query filters are not supported.');
         sendJson(response, 200, await managerDashboard(store, account.user.id, shiftClock())); return;
+      }
+      if (pathname === '/api/worker/open-shifts') {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This board uses your signed-in business; query filters are not supported.');
+        sendJson(response, 200, await openShiftBoard(store, account.user.id, shiftClock())); return;
       }
       if (pathname === '/api/worker/requests') {
         requireMethod(request, response, 'GET');
