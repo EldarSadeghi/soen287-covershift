@@ -1,3 +1,4 @@
+import { reviewCoverage } from './requests/review.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { registerManager } from './auth/signup.js';
@@ -17,6 +18,7 @@ const assets = new Map([
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
   ['/open-shifts.js', ['open-shifts.js', 'text/javascript; charset=utf-8']],
   ['/claim-conflicts.js', ['claim-conflicts.js', 'text/javascript; charset=utf-8']],
+  ['/review-claim.js', ['review-claim.js', 'text/javascript; charset=utf-8']],
   ['/claim.js', ['claim.js', 'text/javascript; charset=utf-8']],
   ['/coverage.js', ['coverage.js', 'text/javascript; charset=utf-8']],
   ['/worker-requests.js', ['worker-requests.js', 'text/javascript; charset=utf-8']],
@@ -153,6 +155,15 @@ export function createAppServer({ store, signup = registerManager, login = authe
         if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This action uses your signed-in business.');
         limitShifts(account.user.id);
         sendJson(response, 201, await createShift(store, account.user.id, await readJson(request), shiftClock)); return;
+      }
+      if (/^\/api\/manager\/requests\/[a-zA-Z0-9_-]{1,80}\/(approve|reject)$/.test(pathname)) {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This action uses your signed-in business.');
+        limitCoverage(account.user.id);
+        const parts = pathname.split('/');
+        sendJson(response, 200, await reviewCoverage(store, account.user.id, parts[4], parts[5], await readJson(request), shiftClock)); return;
       }
       if (pathname === '/api/manager/dashboard') {
         requireMethod(request, response, 'GET');

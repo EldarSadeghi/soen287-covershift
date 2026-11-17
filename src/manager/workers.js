@@ -39,7 +39,7 @@ export async function addWorker(store, managerId, input, now = Date.now()) {
     const at = new Date(now).toISOString();
     const worker = createRecord({ name, email, businessId: manager.businessId, role: 'worker', passwordHash: null, createdAt: at, updatedAt: at });
     worker.createdAt = at; worker.updatedAt = at;
-    db.schemaVersion = 2;
+    db.schemaVersion = Math.max(db.schemaVersion, 2);
     db.users.push(worker);
     return issue(worker, now);
   });
@@ -51,7 +51,7 @@ export async function reissueSetup(store, managerId, workerId, input, now = Date
     const worker = db.users.find(user => user.id === workerId && user.businessId === manager.businessId && user.role === 'worker');
     if (!worker) throw new HttpError(404, 'Worker not found.');
     if (worker.passwordHash !== null) throw new HttpError(409, 'This worker already has a login. Password resets are not available here.');
-    db.schemaVersion = 2;
+    db.schemaVersion = Math.max(db.schemaVersion, 2);
     return issue(worker, now);
   });
 }

@@ -1,3 +1,4 @@
+import { reviewActions } from './review-claim.js';
 import { managedShiftCard } from './manage-shift.js';
 import { mountCreateShift } from './create-shift.js';
 import { element, shiftCard } from './shift-card.js';
@@ -12,7 +13,7 @@ function panel(title, content, navigation = null) {
   head.append(element('h2', '', title)); if (navigation) head.append(navigation);
   node.append(head, ...content); return node;
 }
-function claimCard(claim, timezone, showActions) {
+function claimCard(claim, timezone, showActions, csrfToken, onSuccess) {
   const node = element('article', 'pending-claim');
   const heading = element('div', 'claim-heading');
   heading.append(element('h3', '', claim.shift.title), element('span', 'badge amber', 'Pending approval'));
@@ -26,13 +27,7 @@ function claimCard(claim, timezone, showActions) {
   people.append(original, element('span', 'claim-arrow', '→'), claimant); node.append(people);
   if (claim.shift.status === 'completed') node.append(element('p', 'stale-claim', 'This shift has ended. The saved claim is still pending.'));
   else if (claim.shift.status === 'in_progress') node.append(element('p', 'stale-claim', 'This shift is already in progress.'));
-  if (showActions) {
-    const actions = element('div', 'claim-actions');
-    for (const label of ['Approve · Coming soon', 'Reject · Coming soon']) {
-      const button = element('button', 'future-action', label); button.disabled = true; button.type = 'button'; actions.append(button);
-    }
-    node.append(actions);
-  }
+  if (showActions) node.append(reviewActions(claim, csrfToken, onSuccess));
   node.append(element('p', 'claim-footnote', 'The original worker remains assigned until approval.'));
   return node;
 }
@@ -71,7 +66,7 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
       const shifts = page === 'overview' ? result.shifts.slice(0, 3) : result.shifts;
       const claims = page === 'overview' ? result.pendingClaims.slice(0, 3) : result.pendingClaims;
       const shiftPanel = () => panel('Upcoming & current shifts', shifts.length ? shifts.map(shift => page === 'schedule' ? managedShiftCard(shift, result.timezone, csrfToken, async message => { await load(); const result = document.querySelector('#manage-result'); result.textContent = message; result.hidden = false; result.focus(); }) : shiftCard(shift, result.timezone, { workerName: shift.assignedWorker.name })) : [empty('A clear schedule.', 'There are no upcoming or current shifts saved for your business.')], page === 'overview' ? link('View schedule →', '/workspace/manager/schedule') : null);
-      const claimPanel = () => panel('Pending coverage claims', claims.length ? claims.map(claim => claimCard(claim, result.timezone, page === 'approvals')) : [empty('Nothing waiting on you.', 'There are no pending coverage claims in your business.')], page === 'overview' ? link('View approvals →', '/workspace/manager/approvals') : null);
+      const claimPanel = () => panel('Pending coverage claims', claims.length ? claims.map(claim => claimCard(claim, result.timezone, page === 'approvals', csrfToken, async message => { await load(); const result = document.querySelector('#manage-result'); result.textContent = message; result.hidden = false; result.focus(); })) : [empty('Nothing waiting on you.', 'There are no pending coverage claims in your business.')], page === 'overview' ? link('View approvals →', '/workspace/manager/approvals') : null);
       if (page === 'overview') {
         const grid = element('div', 'manager-grid');
         const schedule = shiftPanel(); const pending = claimPanel();
@@ -83,7 +78,7 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
       } else if (page === 'schedule') {
         content.replaceChildren(shiftPanel()); content.append(element('p', 'section-note', 'Future shifts without linked coverage requests can be edited or deleted. Started shifts and shifts with coverage history are locked.'));
       } else {
-        content.replaceChildren(claimPanel()); content.append(element('p', 'section-note', 'Approval and rejection actions are coming soon. This view does not change assignments.'));
+        content.replaceChildren(claimPanel()); content.append(element('p', 'section-note', 'Approval transfers assignment after fresh conflict checks. Rejection keeps the original assignment and reopens coverage. Refresh to check for changes.'));
       }
       updated.textContent = `Updated ${new Intl.DateTimeFormat('en-US', { timeZone: result.timezone, hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(new Date(result.asOf))}. Refresh to check for changes.`;
     } catch {

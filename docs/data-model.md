@@ -58,3 +58,7 @@ Keep backups of important records before future migrations. Schema changes requi
 ### CS-008 worker setup metadata
 
 Readers accept schema versions 1 and 2. The first add-worker or setup-link replacement transaction upgrades the document to version 2 atomically, preserving existing records. Version 2 allows an optional `setup: { tokenHash, expiresAt }` on workers whose `passwordHash` is null. The token hash is SHA-256 of a random 32-byte bearer token; expiry is canonical UTC. Completion stores a salted scrypt password hash and removes setup metadata in the same transaction. Version 1 seed data remains supported. Do not run older code against a version 2 file.
+
+## CS-014 schema v3
+
+Readers accept v1/v2/v3. First rejected claim upgrades to v3 atomically, retaining all existing records and optional v2 worker setup metadata. `rejected` coverage records require a claimant and manager reviewer. Rejection closes that claim and creates a new `open` request for the same shift/original worker in the same transaction. This preserves the decision actor/time without erasing the claimant or allowing old revisions to act on the reopened request. Adding/reissuing workers never downgrades schema v3. See manager-decisions.md.

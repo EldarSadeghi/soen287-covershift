@@ -65,3 +65,9 @@ User reviewed CS-012 and explicitly approved push and merge on 2026-11-16.
 After user approval, merged CS-012 in PR #26, verified issue #25 closed/Done and synced main. Created CS-013 issue #27 and verified Todo then In Progress. Implemented immediate client UTC overlap warnings, fresh server claim checks, atomic pending claims preserving assignment, pending-claim time reservations and worker claim visibility. All 80 tests pass; nine claiming tests rerun with exact adjacency also pass. Browser on isolated fictional port 3007 verified assigned/pending conflicts, pending claim and My requests, confirmation cancellation/focus, stale cancellation rejection at final submission and a 390px mobile layout. CS-013 remains local and awaits user approval before push/merge.
 
 User reviewed CS-013 and explicitly approved push and merge on 2026-11-16.
+
+## 2026-11-17 — CS-014
+
+User requested manager approval/rejection. Created issue #29 with acceptance criteria and owner; verified Todo then In Progress before implementation. Implemented exclusive review transactions, scoped protected endpoints, confirmed manager actions, rejected-record retention/reopening with schema v3, and worker outcome labels. Full suite: 86 passing tests; syntax checks passed. Fictional isolated preview on port 3008; browser approval/rejection/conflict checks and phone layout. Awaiting user review; no push/merge.
+
+User explicitly approved CS-014 push and merge on 2026-11-17.

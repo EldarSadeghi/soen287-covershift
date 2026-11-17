@@ -1,3 +1,4 @@
+import { reviewState } from '../requests/review.js';
 import { shiftRevision, shiftLockReason } from '../shifts/manage.js';
 import { HttpError } from '../auth/errors.js';
 
@@ -19,7 +20,7 @@ export async function managerDashboard(store, userId, now = Date.now()) {
     .map(request => {
       const shift = businessShifts.get(request.shiftId);
       if (!shift) throw new Error('Invalid business shift reference');
-      return { id: request.id, status: 'pending', createdAt: request.createdAt, shift: shiftView(shift), originalWorker: person(request.originalWorkerId), claimant: person(request.claimantId) };
+      return { id: request.id, ...reviewState(db, request, shift, now), status: 'pending', createdAt: request.createdAt, shift: shiftView(shift), originalWorker: person(request.originalWorkerId), claimant: person(request.claimantId) };
     }).sort((a, b) => a.shift.startsAt.localeCompare(b.shift.startsAt) || a.id.localeCompare(b.id));
   // Pending claims on completed shifts remain visible for attention rather than
   // silently disappearing. This endpoint does not approve or change assignments.
