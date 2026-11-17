@@ -19,3 +19,5 @@ Isolated fictional preview: http://localhost:3012/workspace/manager/team. Manage
 Browser checked Delete confirmation and Escape/focus return without submitting the permanent deletion; deletion persistence is verified by automated service tests. Browser confirmed fictional Jamie deactivation, success focus, active count change and inactive filter. Phone reflow and confirmation labels checked. Preview screenshot `/tmp/covershift-cs019-review.png`.
 
 User approval is required before pushing this feature or merging into main.
+
+User explicitly approved CS-019 push and merge on 2026-11-17. CS-018 remains the final step.

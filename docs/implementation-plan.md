@@ -104,3 +104,5 @@ User explicitly approved CS-017 push and merge on 2026-11-17. CS-018 remains the
 User instruction, 2026-11-17: CS-018 Deployment and submission is the very last step, after CS-019 and any further implementation tasks.
 
 CS-019: issue #36, branch `codex/CS-019-employee-removal`, isolated worktree `/private/tmp/covershift-cs019-worktree`, based on merged CS-017. Employee deletion is restricted to no shift/coverage/history references. Deactivation clears login/setup access, preserves history and is blocked by current/upcoming assignments or pending claims on unended shifts. Inactive roster and assignment exclusion; current authorization/revision checks. 108 tests pass; fictional preview port 3012. Awaiting user approval before push/merge.
+
+User explicitly approved CS-019 push and merge on 2026-11-17. CS-018 remains the final step.
