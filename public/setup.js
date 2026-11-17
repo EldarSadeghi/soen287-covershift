@@ -19,12 +19,13 @@ async function load() {
 form.addEventListener('submit', async event => {
   event.preventDefault(); error.hidden = true;
   const password = document.querySelector('#password'); const confirmation = document.querySelector('#confirm-password');
-  if (password.value !== confirmation.value) { showError('The passwords do not match.'); confirmation.focus(); return; }
+  confirmation.removeAttribute('aria-invalid'); confirmation.removeAttribute('aria-describedby');
+  if (password.value !== confirmation.value) { confirmation.setAttribute('aria-invalid', 'true'); confirmation.setAttribute('aria-describedby', 'setup-error'); showError('The passwords do not match.'); confirmation.focus(); return; }
   const button = form.querySelector('button[type=submit]'); button.disabled = true;
   try { await post('/api/worker-setup/complete', { token, password: password.value }); token = null; form.reset(); form.hidden = true; document.querySelector('#setup-success').hidden = false; document.querySelector('#setup-success').focus(); }
   catch (e) { showError(e.message); if (e.status === 400) { token = null; form.reset(); form.hidden = true; } }
   finally { button.disabled = false; }
 });
-document.querySelector('#show-password').addEventListener('click', event => { const password = document.querySelector('#password'); const showing = password.type === 'password'; password.type = showing ? 'text' : 'password'; event.currentTarget.textContent = showing ? 'Hide' : 'Show'; event.currentTarget.setAttribute('aria-pressed', String(showing)); });
+document.querySelector('#show-password').addEventListener('click', event => { const password = document.querySelector('#password'); const showing = password.type === 'password'; password.type = showing ? 'text' : 'password'; event.currentTarget.textContent = showing ? 'Hide' : 'Show'; event.currentTarget.setAttribute('aria-pressed', String(showing)); event.currentTarget.setAttribute('aria-label', showing ? 'Hide password' : 'Show password'); });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
 load();

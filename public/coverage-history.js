@@ -2,7 +2,7 @@ import { element, shiftCard } from './shift-card.js';
 const labels = { open: 'Open', pending: 'Pending approval', approved: 'Approved', rejected: 'Rejected', cancelled: 'Cancelled' };
 const actions = { requested: 'Coverage requested', claimed: 'Coverage claimed', approved: 'Claim approved · assignment transferred', rejected: 'Claim rejected · original assignment retained', reopened: 'Coverage reopened after rejection', cancelled: 'Coverage cancelled · assignment unchanged', legacy: 'Saved status · earlier event details were not recorded' };
 export async function mountCoverageHistory(main, role) {
-  main.innerHTML = '<p class="eyebrow">Every step, in one place</p><div class="page-heading"><div><h1>Coverage history.</h1><p class="subtitle" id="history-subtitle"></p></div><button class="logout-button" id="refresh-history" type="button">Refresh</button></div><label class="history-filter">Show status <select id="history-status"><option value="all">All statuses</option><option value="open">Open</option><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option></select></label><p class="section-note" id="history-count" role="status"></p><section id="history-records" aria-live="polite"></section><p class="section-note" id="history-updated"></p>';
+  main.innerHTML = '<p class="eyebrow">Every step, in one place</p><div class="page-heading"><div><h1>Coverage history.</h1><p class="subtitle" id="history-subtitle"></p></div><button class="logout-button" id="refresh-history" type="button">Refresh</button></div><label class="history-filter">Show status <select id="history-status"><option value="all">All statuses</option><option value="open">Open</option><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option></select></label><p class="section-note" id="history-count" role="status" aria-atomic="true"></p><section id="history-records"></section><p class="section-note" id="history-updated"></p>';
   main.querySelector('#history-subtitle').textContent = role === 'manager' ? 'Coverage requests and decisions within your business.' : 'Requests you created and claims you made. Each record keeps its own outcome.';
   const filter = main.querySelector('#history-status'); const refresh = main.querySelector('#refresh-history'); const content = main.querySelector('#history-records'); const count = main.querySelector('#history-count'); const updated = main.querySelector('#history-updated');
   let data; let loading = false;
@@ -26,7 +26,8 @@ export async function mountCoverageHistory(main, role) {
     }
     updated.textContent = `Updated ${time.format(new Date(data.asOf))}. Refresh to check for changes.`;
   }
-  async function load() {
+  async function load(event) {
+    const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return; loading = true; refresh.disabled = filter.disabled = true; main.setAttribute('aria-busy', 'true'); count.textContent = ''; updated.textContent = ''; content.replaceChildren(element('p', 'shift-loading', 'Loading coverage history…'));
     const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
     try {
@@ -34,7 +35,7 @@ export async function mountCoverageHistory(main, role) {
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error(); data = await response.json(); render();
     } catch { const box = element('section', 'panel shift-load-error'); const error = element('p', '', 'We couldn’t load coverage history. Please try again.'); error.setAttribute('role', 'alert'); const retry = element('button', 'logout-button', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); box.append(error, retry); content.replaceChildren(box); }
-    finally { clearTimeout(timeout); loading = false; refresh.disabled = filter.disabled = false; main.setAttribute('aria-busy', 'false'); }
+    finally { clearTimeout(timeout); loading = false; refresh.disabled = filter.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
   filter.addEventListener('change', () => { if (data) render(); }); refresh.addEventListener('click', load); await load();
 }

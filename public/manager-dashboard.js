@@ -47,7 +47,8 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
     const creator = element('div'); content.before(creator);
     await mountCreateShift(creator, account, csrfToken, () => load());
   }
-  async function load() {
+  async function load(event) {
+    const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return;
     loading = true; main.setAttribute('aria-busy', 'true'); refresh.disabled = true;
     summary.hidden = true; summary.replaceChildren(); timezone.textContent = ''; updated.textContent = '';
@@ -85,7 +86,7 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
       const error = element('div', 'panel shift-load-error');
       const message = element('p', '', 'We couldn’t load your business dashboard. Please try again.'); message.setAttribute('role', 'alert');
       const retry = element('button', 'solid-link', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); error.append(message, retry); content.replaceChildren(error);
-    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); }
+    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
   refresh.addEventListener('click', load); await load();
 }

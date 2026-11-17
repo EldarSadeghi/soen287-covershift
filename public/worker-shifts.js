@@ -10,7 +10,8 @@ export async function mountWorkerShifts(main, csrfToken) {
   const timezone = document.querySelector('#shift-timezone');
   const updated = document.querySelector('#shifts-updated');
   let loading = false;
-  async function load() {
+  async function load(event) {
+    const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return;
     loading = true;
     main.setAttribute('aria-busy', 'true'); refresh.disabled = true;
@@ -58,7 +59,7 @@ export async function mountWorkerShifts(main, csrfToken) {
       const retry = element('button', 'solid-link', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load);
       error.append(message, retry); content.replaceChildren(error);
     } finally {
-      clearTimeout(timeout); main.setAttribute('aria-busy', 'false'); refresh.disabled = false; loading = false;
+      clearTimeout(timeout); main.setAttribute('aria-busy', 'false'); refresh.disabled = false; loading = false; if (restoreFocus) refresh.focus();
     }
   }
   refresh.addEventListener('click', load);

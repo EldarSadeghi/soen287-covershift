@@ -6,7 +6,7 @@
   <title>Sign in · CoverShift</title>
   <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/signup.css">
   <script src="/login.js" defer></script>
-</head>
+<link rel="stylesheet" href="/accessibility.css"></head>
 <body class="signup-page">
   <a class="skip" href="#login-main">Skip to sign in</a>
   <div class="signup-story">
@@ -22,7 +22,7 @@
       <noscript><p class="form-errors">Enable JavaScript to sign in.</p></noscript>
       <form id="login-form" method="post" action="/api/login" novalidate>
         <div class="form-field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" required maxlength="254" placeholder="you@example.com" aria-describedby="email-error"><p id="email-error" class="field-error" hidden></p></div>
-        <div class="form-field"><label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128" aria-describedby="password-error"><button id="show-password" type="button" aria-controls="password" aria-pressed="false">Show</button></div><p id="password-error" class="field-error" hidden></p></div>
+        <div class="form-field"><label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128" aria-describedby="password-error"><button id="show-password" aria-label="Show password" type="button" aria-controls="password" aria-pressed="false">Show</button></div><p id="password-error" class="field-error" hidden></p></div>
         <button id="login-submit" class="signup-submit" type="submit">Sign in <span aria-hidden="true">↗</span></button>
       </form>
       <p class="form-footnote">Just looking around? <a class="text-link" href="/demo">Explore the public demo</a></p>

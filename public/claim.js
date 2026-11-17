@@ -5,9 +5,11 @@ export function claimAction(request, context, csrfToken, onClaimed) {
   const root = element('div', 'claim-control'); const check = element('button', 'logout-button', 'Check & claim'); check.type = 'button'; check.setAttribute('aria-label', `Check and claim ${request.shift.title}`);
   const feedback = element('div', 'claim-feedback'); feedback.setAttribute('aria-live','polite'); feedback.tabIndex = -1;
   const confirm = element('section', 'coverage-confirm'); confirm.hidden = true;
+  confirm.setAttribute('role', 'group'); confirm.setAttribute('aria-label', `Claim coverage for ${request.shift.title}`);
   confirm.append(element('h3','','Claim this coverage?'), element('p','',`Claim “${request.shift.title}” from ${request.originalWorkerName}? This reserves your time while awaiting manager approval. The original worker remains assigned until approval.`));
   const buttons = element('div','create-actions'); const back = element('button','logout-button','Keep browsing'); back.type = 'button'; const submit = element('button','solid-link','Confirm claim'); submit.type = 'button'; buttons.append(back,submit); confirm.append(buttons);
   root.append(check,feedback,confirm); let busy = false;
+  root.addEventListener('keydown', event => { if (event.key === 'Escape' && !confirm.hidden && !busy) { event.preventDefault(); back.click(); } });
   function conflicts(items, fresh = false) {
     feedback.replaceChildren();
     if (!items.length) return;

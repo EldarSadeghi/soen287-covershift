@@ -1,9 +1,10 @@
 import { claimAction } from './claim.js';
 import { element, shiftCard } from './shift-card.js';
 export async function mountOpenShifts(main, csrfToken) {
-  main.innerHTML = '<p class="eyebrow">A little teamwork goes a long way</p><div class="page-heading"><div><h1>Lend your team a hand.</h1><p class="subtitle">Future shifts your teammates have requested coverage for.</p></div><button id="refresh-open" class="logout-button" type="button">Refresh</button></div><section class="panel open-board-note"><h2>Your team’s open requests</h2><p>Only open requests from other workers in your business appear here. The original worker stays assigned until coverage is approved.</p><p>Check your schedule before claiming. Assigned shifts and pending claims are checked for overlaps; your manager gives final approval.</p></section><p id="claim-result" class="shift-created" role="status" tabindex="-1" hidden></p><p><a class="text-link" href="/workspace/worker/requests">View My requests & claims →</a></p><div id="open-summary" class="section-note" role="status"></div><section id="open-content" aria-live="polite"></section><p id="open-updated" class="section-note" role="status"></p>';
+  main.innerHTML = '<p class="eyebrow">A little teamwork goes a long way</p><div class="page-heading"><div><h1>Lend your team a hand.</h1><p class="subtitle">Future shifts your teammates have requested coverage for.</p></div><button id="refresh-open" class="logout-button" type="button">Refresh</button></div><section class="panel open-board-note"><h2>Your team’s open requests</h2><p>Only open requests from other workers in your business appear here. The original worker stays assigned until coverage is approved.</p><p>Check your schedule before claiming. Assigned shifts and pending claims are checked for overlaps; your manager gives final approval.</p></section><p id="claim-result" class="shift-created" role="status" tabindex="-1" hidden></p><p><a class="text-link" href="/workspace/worker/requests">View My requests & claims →</a></p><div id="open-summary" class="section-note" role="status" aria-atomic="true"></div><section id="open-content"></section><p id="open-updated" class="section-note" role="status"></p>';
   const content = main.querySelector('#open-content'); const refresh = main.querySelector('#refresh-open'); const summary = main.querySelector('#open-summary'); const updated = main.querySelector('#open-updated'); let loading = false;
-  async function load() {
+  async function load(event) {
+    const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return; loading = true; refresh.disabled = true; main.setAttribute('aria-busy', 'true'); summary.textContent = ''; updated.textContent = '';
     const status = element('p', 'shift-loading', 'Loading open coverage requests…'); status.setAttribute('role','status'); content.replaceChildren(status);
     const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
@@ -26,7 +27,7 @@ export async function mountOpenShifts(main, csrfToken) {
       updated.textContent = `Updated ${new Intl.DateTimeFormat('en-US',{timeZone:result.timezone,hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(result.asOf))}. Refresh to check availability; requests may change or expire.`;
     } catch {
       const panel = element('div','panel shift-load-error'); const message = element('p','','We couldn’t load open shifts. Please try again.'); message.setAttribute('role','alert'); const retry = element('button','logout-button','Try again'); retry.type = 'button'; retry.addEventListener('click',load); panel.append(message,retry); content.replaceChildren(panel);
-    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy','false'); }
+    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy','false'); if (restoreFocus) refresh.focus(); }
   }
   refresh.addEventListener('click',load); await load();
 }

@@ -27,6 +27,7 @@ document.querySelector('#show-password').addEventListener('click', event => {
   password.type = visible ? 'text' : 'password';
   event.currentTarget.textContent = visible ? 'Hide' : 'Show';
   event.currentTarget.setAttribute('aria-pressed', String(visible));
+  event.currentTarget.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
 });
 form.addEventListener('submit', async event => {
   event.preventDefault();

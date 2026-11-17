@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/signup.css">
   <script src="/signup.js" defer></script>
-</head>
+<link rel="stylesheet" href="/accessibility.css"></head>
 <body class="signup-page">
   <a class="skip" href="#signup-main">Skip to signup</a>
   <div class="signup-story">
@@ -29,7 +29,7 @@
         <div class="form-field"><label for="name">Your name</label><input id="name" name="name" autocomplete="name" required minlength="2" maxlength="80" placeholder="e.g. Morgan Chen" aria-describedby="name-error"><p id="name-error" class="field-error" hidden></p></div>
         <div class="form-field"><label for="businessName">Business name</label><input id="businessName" name="businessName" autocomplete="organization" required minlength="2" maxlength="100" placeholder="e.g. Neighbourhood Café" aria-describedby="businessName-error"><p id="businessName-error" class="field-error" hidden></p></div>
         <div class="form-field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com" aria-describedby="email-error"><p id="email-error" class="field-error" hidden></p></div>
-        <div class="form-field"><label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="new-password" required minlength="15" maxlength="128" aria-describedby="password-hint password-error"><button id="show-password" type="button" aria-pressed="false" aria-controls="password">Show</button></div><p id="password-hint" class="field-hint">Use 15–128 characters. A memorable passphrase works well.</p><p id="password-error" class="field-error" hidden></p></div>
+        <div class="form-field"><label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="new-password" required minlength="15" maxlength="128" aria-describedby="password-hint password-error"><button id="show-password" aria-label="Show password" type="button" aria-pressed="false" aria-controls="password">Show</button></div><p id="password-hint" class="field-hint">Use 15–128 characters. A memorable passphrase works well.</p><p id="password-error" class="field-error" hidden></p></div>
         <div class="form-field"><label for="timezone">Business timezone</label><select id="timezone" name="timezone" required aria-describedby="timezone-hint timezone-error"><option value="America/Toronto">Eastern time · Montréal / Toronto</option><option value="America/Halifax">Atlantic time · Halifax</option><option value="America/St_Johns">Newfoundland time · St. John’s</option><option value="America/Chicago">Central time · Chicago</option><option value="America/Edmonton">Mountain time · Edmonton</option><option value="America/Vancouver">Pacific time · Vancouver</option><option value="UTC">UTC</option></select><p id="timezone-hint" class="field-hint">Used to display your team’s shift times.</p><p id="timezone-error" class="field-error" hidden></p></div>
         <button type="submit" id="signup-submit" class="signup-submit">Create account <span aria-hidden="true">↗</span></button><p class="form-footnote">Already registered? <a class="text-link" href="/login">Sign in</a></p>
       </form>

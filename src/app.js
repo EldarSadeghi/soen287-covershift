@@ -15,6 +15,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/accessibility.css', ['accessibility.css', 'text/css; charset=utf-8']],
   ['/manage-shift.js', ['manage-shift.js', 'text/javascript; charset=utf-8']],
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
   ['/open-shifts.js', ['open-shifts.js', 'text/javascript; charset=utf-8']],
