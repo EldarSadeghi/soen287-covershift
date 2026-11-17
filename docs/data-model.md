@@ -62,3 +62,7 @@ Readers accept schema versions 1 and 2. The first add-worker or setup-link repla
 ## CS-014 schema v3
 
 Readers accept v1/v2/v3. First rejected claim upgrades to v3 atomically, retaining all existing records and optional v2 worker setup metadata. `rejected` coverage records require a claimant and manager reviewer. Rejection closes that claim and creates a new `open` request for the same shift/original worker in the same transaction. This preserves the decision actor/time without erasing the claimant or allowing old revisions to act on the reopened request. Adding/reissuing workers never downgrades schema v3. See manager-decisions.md.
+
+## CS-015 schema v4
+
+Readers accept v1–v4. Successful coverage request/claim/cancel/approve/reject mutations upgrade to v4 and write `history` on the affected request inside the same exclusive transaction. Entries contain only `action`, `actorId`, `at` (canonical UTC), and resulting `status`. Action/status, same-business actor role/identity, field shape and chronological timestamps are validated. New reopened requests begin with a manager-authored reopened event. Rejected records retain their own events. Existing records are not rewritten on reads; their UI shows a legacy saved-status snapshot with unknown actor and no invented transition times. On first mutation of an older record, that snapshot is retained before the new event. Versions and worker setup are never downgraded. Names in history views resolve from current same-business user records; timestamps are saved event times, not name snapshots.

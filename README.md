@@ -58,3 +58,5 @@ CS-010 local review adds **Schedule → Edit shift / Delete shift** for eligible
 CS-011 local review adds **My shifts → Request coverage** and a working **My requests** page with confirmed cancellation of eligible open/pending requests. Assignments and cancelled records are preserved. See [coverage requests](docs/coverage-requests.md).
 
 CS-012 introduced **Open shifts**, a board of teammates’ eligible future coverage requests with timezone-aware dates and refresh. CS-013 adds claiming. See [open-shift board](docs/open-shift-board.md).
+
+CS-015 is ready for local review: **History** in both workspaces shows scoped coverage records, status filtering, current assignment and actor/time timelines. New successful actions record events atomically; older records show a saved-status snapshot with an explicit missing-history note. See [coverage history](docs/coverage-history.md).

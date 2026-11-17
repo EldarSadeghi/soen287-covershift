@@ -71,3 +71,9 @@ User reviewed CS-013 and explicitly approved push and merge on 2026-11-16.
 User requested manager approval/rejection. Created issue #29 with acceptance criteria and owner; verified Todo then In Progress before implementation. Implemented exclusive review transactions, scoped protected endpoints, confirmed manager actions, rejected-record retention/reopening with schema v3, and worker outcome labels. Full suite: 86 passing tests; syntax checks passed. Fictional isolated preview on port 3008; browser approval/rejection/conflict checks and phone layout. Awaiting user review; no push/merge.
 
 User explicitly approved CS-014 push and merge on 2026-11-17.
+
+## 2026-11-17 — CS-015
+
+User requested coverage status/history. Created issue #31 with acceptance criteria/owner; verified Todo then In Progress before implementation. Added transactional per-request history in v4, preserving legacy snapshots without inventing actors/times; protected participant/business history endpoints and shared History UI with filters and current assignment. Full suite 92 passing tests; syntax/diff checks passed. Fictional local preview on port 3009. Manager timeline/filter and employee phone checks. Awaiting approval before push/merge.
+
+User explicitly approved CS-015 push and merge on 2026-11-17.

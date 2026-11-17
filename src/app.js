@@ -1,3 +1,4 @@
+import { coverageHistory } from './requests/history.js';
 import { reviewCoverage } from './requests/review.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -18,6 +19,7 @@ const assets = new Map([
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
   ['/open-shifts.js', ['open-shifts.js', 'text/javascript; charset=utf-8']],
   ['/claim-conflicts.js', ['claim-conflicts.js', 'text/javascript; charset=utf-8']],
+  ['/coverage-history.js', ['coverage-history.js', 'text/javascript; charset=utf-8']],
   ['/review-claim.js', ['review-claim.js', 'text/javascript; charset=utf-8']],
   ['/claim.js', ['claim.js', 'text/javascript; charset=utf-8']],
   ['/coverage.js', ['coverage.js', 'text/javascript; charset=utf-8']],
@@ -79,7 +81,7 @@ async function readJson(request) {
   catch { throw new HttpError(400, 'This request could not be read. Please try again.'); }
 }
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
-const pages = { manager: ['overview', 'schedule', 'approvals', 'team'], worker: ['shifts', 'open', 'requests'] };
+const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history'], worker: ['shifts', 'open', 'requests', 'history'] };
 
 export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash }) {
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
@@ -164,6 +166,13 @@ export function createAppServer({ store, signup = registerManager, login = authe
         limitCoverage(account.user.id);
         const parts = pathname.split('/');
         sendJson(response, 200, await reviewCoverage(store, account.user.id, parts[4], parts[5], await readJson(request), shiftClock)); return;
+      }
+      if (/^\/api\/(manager|worker)\/coverage-history$/.test(pathname)) {
+        requireMethod(request, response, 'GET');
+        const role = pathname.split('/')[2];
+        const account = await requireAccount(store, sessions, request.headers.cookie, role);
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'History uses your signed-in account; query filters are not supported.');
+        sendJson(response, 200, await coverageHistory(store, account.user.id, role, shiftClock())); return;
       }
       if (pathname === '/api/manager/dashboard') {
         requireMethod(request, response, 'GET');

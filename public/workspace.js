@@ -1,3 +1,4 @@
+import { mountCoverageHistory } from './coverage-history.js';
 import { mountOpenShifts } from './open-shifts.js';
 import { mountWorkerRequests } from './worker-requests.js';
 import { mountTeam } from './team.js';
@@ -8,8 +9,8 @@ const logout = document.querySelector('#logout');
 const errorBox = document.querySelector('#workspace-error');
 let csrfToken;
 const routes = {
-  manager: [['overview', 'Overview', '◫'], ['schedule', 'Schedule', '▦'], ['approvals', 'Approvals', '✓'], ['team', 'Team', '♧']],
-  worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄']],
+  manager: [['overview', 'Overview', '◫'], ['schedule', 'Schedule', '▦'], ['approvals', 'Approvals', '✓'], ['team', 'Team', '♧'], ['history', 'History', '◷']],
+  worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄'], ['history', 'History', '◷']],
 };
 function showError(message) { errorBox.textContent = message; errorBox.hidden = false; errorBox.focus(); }
 async function load() {
@@ -34,6 +35,7 @@ async function load() {
     document.querySelector('#account-role').textContent = `Signed in as ${user.role}`;
     document.querySelector('#navigation').innerHTML = roleRoutes.map(([key, name, icon]) => `<a class="nav-link" href="/workspace/${user.role}/${key}" ${key === page ? 'aria-current="page"' : ''}><span class="nav-icon" aria-hidden="true">${icon}</span>${name}</a>`).join('');
     logout.disabled = false;
+    if (page === 'history') { await mountCoverageHistory(main, user.role); return; }
     if (user.role === 'manager' && ['overview', 'schedule', 'approvals'].includes(page)) {
       await mountManagerDashboard(main, page, account, csrfToken);
       return;

@@ -1,3 +1,4 @@
+import { recordCoverageEvent } from './history.js';
 import { createHash } from 'node:crypto';
 import { HttpError } from '../auth/errors.js';
 import { createRecord } from '../storage/repositories.js';
@@ -38,6 +39,7 @@ export async function requestCoverage(store, userId, shiftId, input, clock = Dat
     if (db.coverageRequests.some(r => r.shiftId === shift.id && ['open','pending'].includes(r.status))) throw new HttpError(409, 'This shift already has an active coverage request.');
     const request = createRecord({ businessId: business.id, shiftId: shift.id, originalWorkerId: user.id, claimantId: null, reviewerId: null, status: 'open' });
     request.createdAt = request.updatedAt = new Date(now).toISOString();
+    recordCoverageEvent(db, request, 'requested', user.id, request.updatedAt);
     db.coverageRequests.push(request);
     return { request: { id: request.id, status: request.status }, message: 'Coverage requested. You remain assigned until coverage is approved.' };
   });
@@ -53,8 +55,10 @@ export async function cancelCoverage(store, userId, requestId, input, clock = Da
     if (!shift) throw new HttpError(404, 'Shift not found.');
     const now = clock(); const reason = cancelReason(request, shift, user, now);
     if (reason) throw new HttpError(409, reason);
+    const previous = { ...request };
     request.status = 'cancelled';
     request.updatedAt = new Date(Math.max(now, Date.parse(request.updatedAt) + 1)).toISOString();
+    recordCoverageEvent(db, request, 'cancelled', user.id, request.updatedAt, previous);
     // Keep claimant/reviewer metadata and the original shift assignment intact.
     return { request: { id: request.id, status: request.status }, message: 'Coverage request cancelled. You remain assigned to the shift.' };
   });

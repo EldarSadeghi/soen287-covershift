@@ -1,3 +1,4 @@
+import { recordCoverageEvent } from './history.js';
 import { HttpError } from '../auth/errors.js';
 import { managerBusiness } from '../shifts/create.js';
 import { createRecord } from '../storage/repositories.js';
@@ -23,15 +24,19 @@ export async function reviewCoverage(store, managerId, requestId, decision, inpu
     const reason = decision === 'approve' ? state.approvalReason : state.rejectionReason;
     if (reason) throw new HttpError(409, `${reason} Refresh approvals.`, { conflicts: state.conflicts });
     const updatedAt = new Date(Math.max(now, Date.parse(request.updatedAt) + 1, Date.parse(shift.updatedAt) + 1)).toISOString();
+    const previous = { ...request };
     request.reviewerId = managerId; request.updatedAt = updatedAt;
     if (decision === 'approve') {
       request.status = 'approved'; shift.assignedWorkerId = request.claimantId; shift.updatedAt = updatedAt;
     } else {
       // Retain this claim as an immutable rejected outcome; reopen with a fresh
       // request ID so old claimant/reviewer history and stale revisions survive.
-      db.schemaVersion = 3; request.status = 'rejected';
-      db.coverageRequests.push({ ...createRecord({ businessId: business.id, shiftId: shift.id, originalWorkerId: request.originalWorkerId, claimantId: null, reviewerId: null, status: 'open' }), createdAt: updatedAt, updatedAt });
+      db.schemaVersion = Math.max(db.schemaVersion, 3); request.status = 'rejected';
+      const reopened = { ...createRecord({ businessId: business.id, shiftId: shift.id, originalWorkerId: request.originalWorkerId, claimantId: null, reviewerId: null, status: 'open' }), createdAt: updatedAt, updatedAt };
+      recordCoverageEvent(db, reopened, 'reopened', managerId, updatedAt);
+      db.coverageRequests.push(reopened);
     }
+    recordCoverageEvent(db, request, decision === 'approve' ? 'approved' : 'rejected', managerId, updatedAt, previous);
     return { request: { id: request.id, status: request.status }, message: decision === 'approve' ? 'Coverage approved. The shift is now assigned to the claimant.' : 'Claim rejected. The original worker remains assigned and coverage is open again.' };
   });
 }
