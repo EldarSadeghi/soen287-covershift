@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 merged (PR #30, issue #29). CS-015 merged (PR #32, issue #31). CS-016 merged (PR #34, issue #33). CS-017 (issue #35) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 merged (PR #30, issue #29). CS-015 merged (PR #32, issue #31). CS-016 merged (PR #34, issue #33). CS-017 merged (PR #37, issue #35). CS-019 (issue #36) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 
@@ -44,7 +44,8 @@ M2 means proposed next-milestone scope; Final means the complete MVP after M2. E
 | CS-015 | Coverage status and history | Final | CS-014 | Both workers and managers can understand open, pending, approved, rejected, and cancelled outcomes; history records actor and time within the business. |
 | CS-016 | Security and workflow verification | Final | CS-015 | Verify cross-business denial, role restrictions, tampered IDs, overlapping shifts, concurrent claims, stale approvals, validation, and session protections. Core checks also accompany relevant earlier increments. |
 | CS-017 | Accessibility and responsive polish | Final | CS-015 | Keyboard use, labels, readable errors, mobile layouts, and loading/empty states work through the core loop. Apply basic accessibility from CS-002 onward. |
-| CS-018 | Deployment and final submission package | Final | CS-016, CS-017 | Deployment supports persistent JSON storage and sessions; documented demo works; report, actual AI collaboration log, security review, and approved release tag are ready. Release publication requires user approval. |
+| CS-019 | Remove and deactivate employees | Final | CS-017 | Delete only unreferenced employees; deactivate with access revoked and history retained; block unresolved assignments/claims; confirm scoped atomic changes. |
+| CS-018 | Deployment and final submission package | Final | CS-016, CS-017, CS-019 | Deployment supports persistent JSON storage and sessions; documented demo works; report, actual AI collaboration log, security review, and approved release tag are ready. Release publication requires user approval. |
 
 ## Milestone priority
 
@@ -99,3 +100,9 @@ User explicitly approved CS-016 push and merge on 2026-11-17.
 CS-017: issue #35, branch `codex/CS-017-accessibility-responsive`. Shared contrast/focus/control/reflow styles; labeled inline groups and Escape/focus return; focused create/edit validation; concise status live regions and refresh focus; setup/password accessibility. 101 tests and syntax checks pass; keyboard/320px/390px checks with long fictional content, preview port 3011. Awaiting user approval before push/merge.
 
 User explicitly approved CS-017 push and merge on 2026-11-17. CS-018 remains the final step after CS-019 and remaining implementation work.
+
+User instruction, 2026-11-17: CS-018 Deployment and submission is the very last step, after CS-019 and any further implementation tasks.
+
+CS-019: issue #36, branch `codex/CS-019-employee-removal`, isolated worktree `/private/tmp/covershift-cs019-worktree`, based on merged CS-017. Employee deletion is restricted to no shift/coverage/history references. Deactivation clears login/setup access, preserves history and is blocked by current/upcoming assignments or pending claims on unended shifts. Inactive roster and assignment exclusion; current authorization/revision checks. 108 tests pass; fictional preview port 3012. Awaiting user approval before push/merge.
+
+User explicitly approved CS-019 push and merge on 2026-11-17. CS-018 remains the final step.

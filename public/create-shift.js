@@ -16,8 +16,8 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
       if (!response.ok) throw new Error();
       const { workers } = await response.json();
       find('shift-worker').replaceChildren(new Option('Choose a worker', ''));
-      for (const worker of workers) find('shift-worker').append(new Option(`${worker.name}${worker.status === 'ready' ? '' : ' · login setup pending'}`, worker.id));
-      if (!workers.length) {
+      for (const worker of workers.filter(worker=>worker.status !== 'inactive')) find('shift-worker').append(new Option(`${worker.name}${worker.status === 'ready' ? '' : ' · login setup pending'}`, worker.id));
+      if (!workers.some(worker=>worker.status !== 'inactive')) {
         find('roster-state').replaceChildren(element('p', 'section-note', 'Add your first worker before creating a shift.'));
         const team = element('a', 'text-link', 'Add workers →'); team.href = '/workspace/manager/team'; find('roster-state').append(team);
         find('retry-roster').hidden = false;

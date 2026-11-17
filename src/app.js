@@ -1,3 +1,4 @@
+import { removeWorker } from './manager/offboarding.js';
 import { coverageHistory } from './requests/history.js';
 import { reviewCoverage } from './requests/review.js';
 import { createServer } from 'node:http';
@@ -15,6 +16,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/remove-worker.js', ['remove-worker.js', 'text/javascript; charset=utf-8']],
   ['/accessibility.css', ['accessibility.css', 'text/css; charset=utf-8']],
   ['/manage-shift.js', ['manage-shift.js', 'text/javascript; charset=utf-8']],
   ['/create-shift.js', ['create-shift.js', 'text/javascript; charset=utf-8']],
@@ -121,6 +123,14 @@ export function createAppServer({ store, signup = registerManager, login = authe
         limitSetup(request.socket.remoteAddress);
         const input = await readJson(request);
         sendJson(response, 200, pathname.endsWith('/details') ? await setupDetails(store, input, setupClock()) : await completeSetup(store, input, { clock: setupClock, ...(setupHash ? { hash: setupHash } : {}) })); return;
+      }
+      if (/^\/api\/manager\/workers\/[a-zA-Z0-9_-]{1,80}\/(delete|deactivate)$/.test(pathname)) {
+        requireMethod(request,response,'POST'); protectMutation(request,publicOrigin);
+        const account=await requireAccount(store,sessions,request.headers.cookie,'manager');
+        if (!sessions.validCsrf(account.session,request.headers['x-csrf-token'])) throw new HttpError(403,'Refresh the page and try again.');
+        if (new URL(request.url,'http://localhost').search) throw new HttpError(400,'This action uses your signed-in business.');
+        limitTeam(account.user.id); const parts=pathname.split('/');
+        sendJson(response,200,await removeWorker(store,account.user.id,parts[4],parts[5],await readJson(request),setupClock));return;
       }
       if (pathname === '/api/manager/workers' || /^\/api\/manager\/workers\/[^/]+\/setup$/.test(pathname)) {
         const listing = pathname === '/api/manager/workers' && ['GET', 'HEAD'].includes(request.method);

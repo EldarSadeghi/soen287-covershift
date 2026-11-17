@@ -64,3 +64,5 @@ CS-015 is ready for local review: **History** in both workspaces shows scoped co
 CS-016 security/workflow verification is ready for local review: run `npm run verify` for syntax checks and the full test suite. See [verification evidence and deployment limits](docs/security-verification.md).
 
 CS-017 is ready for local review: clearer focus/errors, keyboard dismissal and refresh focus, explicit password labels, larger phone controls and wrapped navigation/long content. See [accessibility review and verification](docs/accessibility-review.md).
+
+CS-019 is ready for local review: **Team** can delete employees with no work records or deactivate eligible employees while retaining history. Active/inactive filtering, blockers and confirmation are included. See [employee removal](docs/employee-removal.md). **CS-018 Deployment and submission remains the final step.**

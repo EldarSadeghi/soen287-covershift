@@ -24,5 +24,5 @@ export async function managerDashboard(store, userId, now = Date.now()) {
     }).sort((a, b) => a.shift.startsAt.localeCompare(b.shift.startsAt) || a.id.localeCompare(b.id));
   // Pending claims on completed shifts remain visible for attention rather than
   // silently disappearing. This endpoint does not approve or change assignments.
-  return { timezone: business.timezone, asOf: new Date(now).toISOString(), summary: { workers: workers.size, shifts: shifts.length, pendingClaims: pendingClaims.length }, shifts, pendingClaims };
+  return { timezone: business.timezone, asOf: new Date(now).toISOString(), summary: { workers: [...workers.values()].filter(u=>!u.deactivation).length, shifts: shifts.length, pendingClaims: pendingClaims.length }, shifts, pendingClaims };
 }

@@ -89,3 +89,9 @@ User explicitly approved CS-016 push and merge on 2026-11-17.
 User requested accessibility/responsive polish. Created issue #35 with acceptance criteria/owner; verified Todo then In Progress. Improved shared focus/contrast/phone controls/navigation/reflow, password/setup labels, create/edit field errors, confirmation groups/Escape and refresh focus; reduced repeated list announcements. 101 regression tests and syntax checks pass, diff clean. Browser verified skip link, error focus/Tab, editor and worker/manager Escape return, refreshed focus, 320px employee/manager reflow and 390px manager long-name confirmation. Selected contrast ratios calculated; no claim of full screen-reader/WCAG audit. Fictional preview port 3011, data isolated. Awaiting approval before push/merge.
 
 User explicitly approved CS-017 push and merge on 2026-11-17. CS-018 remains the final step after CS-019 and remaining implementation work.
+
+## 2026-11-17 — CS-019 and CS-017 approval
+
+User requested employee removal/deactivation and instructed CS-018 remain the final step; saved in AGENTS.md/plan. Created CS-019 issue #36 and isolated worktree so pending CS-017 stayed separate. User then explicitly approved CS-017, which was pushed/merged in PR #37, issue closed and board Done. Brought untouched CS-019 branch forward to that merge. Verified CS-019 Todo then In Progress. Implemented scoped atomic deletion/deactivation, work/history blockers, v5 metadata, access/setup revocation and assignment exclusion with confirmation/filter UI. 108 tests pass. Fictional local preview port 3012; delete confirmation cancelled with Escape; Jamie deactivation and inactive roster verified. Awaiting CS-019 review; no CS-019 push/merge.
+
+User explicitly approved CS-019 push and merge on 2026-11-17. CS-018 remains the final step.

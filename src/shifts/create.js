@@ -42,7 +42,7 @@ export function managerBusiness(db, managerId) {
   return business;
 }
 export function assignmentFields(db, business, input, now, excludeId = null) {
-  const worker = db.users.find(user => user.id === input.assignedWorkerId && user.businessId === business.id && user.role === 'worker');
+  const worker = db.users.find(user => user.id === input.assignedWorkerId && !user.deactivation && user.businessId === business.id && user.role === 'worker');
   if (!worker) throw new HttpError(422, 'Choose a worker from your team.', { assignedWorkerId: 'Choose a worker from your team.' });
   const startsAt = businessInstant(input.startLocal, business.timezone, 'startLocal');
   const endsAt = businessInstant(input.endLocal, business.timezone, 'endLocal');
