@@ -42,11 +42,11 @@ test('approval persists exactly one transfer, reviewer, timestamps and both work
 });
 test('rejection retains claimant/reviewer history, reopens with new ID, releases reservation and supports reclaim',async t=>{
  const f=await fixture(t);const r=await pending(f);const before=await f.store.read();await reviewCoverage(f.store,'manager_morgan',r.id,'reject',r.input,clock);
- const db=await f.store.read();assert.equal(db.schemaVersion,3);assert.deepEqual(db.shifts,before.shifts);const rejected=db.coverageRequests.find(q=>q.id===r.id);assert.equal(rejected.status,'rejected');assert.equal(rejected.claimantId,'worker_jamie');assert.equal(rejected.reviewerId,'manager_morgan');
+ const db=await f.store.read();assert.equal(db.schemaVersion,4);assert.deepEqual(db.shifts,before.shifts);const rejected=db.coverageRequests.find(q=>q.id===r.id);assert.equal(rejected.status,'rejected');assert.equal(rejected.claimantId,'worker_jamie');assert.equal(rejected.reviewerId,'manager_morgan');
  const open=(await openShiftBoard(f.store,'worker_jamie',now)).requests.find(q=>q.shift.id===r.shiftId);assert.ok(open);assert.notEqual(open.id,r.id);assert.equal((await ownRequests(f.store,'worker_jamie',now)).claims.find(q=>q.id===r.id).status,'rejected');
  await claimCoverage(f.store,'worker_jamie',open.id,{revision:open.revision},clock);assert.equal((await f.store.read()).coverageRequests.filter(q=>q.shiftId===r.shiftId&&q.status==='pending').length,1);
  const invalid=structuredClone(db);invalid.schemaVersion=2;assert.throws(()=>validateDatabase(invalid));
- const added=await addWorker(f.store,'manager_morgan',{name:'New teammate',email:'new@example.test'},now);await reissueSetup(f.store,'manager_morgan',added.worker.id,{},now+1);assert.equal((await f.store.read()).schemaVersion,3);
+ const added=await addWorker(f.store,'manager_morgan',{name:'New teammate',email:'new@example.test'},now);await reissueSetup(f.store,'manager_morgan',added.worker.id,{},now+1);assert.equal((await f.store.read()).schemaVersion,4);
 });
 test('fresh assigned and pending conflicts block approval without blocking rejection; adjacency works',async t=>{
  const f=await fixture(t);const r=await pending(f);
@@ -55,7 +55,7 @@ test('fresh assigned and pending conflicts block approval without blocking rejec
  const raw=await readFile(f.store.filename,'utf8');await assert.rejects(reviewCoverage(f.store,'manager_morgan',r.id,'approve',r.input,clock),status(409));assert.equal(await readFile(f.store.filename,'utf8'),raw);
  await reviewCoverage(f.store,'manager_morgan',r.id,'reject',r.input,clock);
  const g=await fixture(t);const a=await pending(g);const b=await pending(g,'worker_sam','2026-11-20T17:00','2026-11-20T19:00');await reviewCoverage(g.store,'manager_morgan',a.id,'approve',a.input,clock);await reviewCoverage(g.store,'manager_morgan',b.id,'approve',b.input,clock);
- const h=await fixture(t);const c=await pending(h);await h.store.transaction(db=>{const shift={...db.shifts.find(s=>s.id===c.shiftId),id:'overlap',assignedWorkerId:'worker_sam'};db.shifts.push(shift);db.coverageRequests.push({...db.coverageRequests.find(q=>q.id===c.id),id:'overlap_request',shiftId:'overlap',originalWorkerId:'worker_sam'});});
+ const h=await fixture(t);const c=await pending(h);await h.store.transaction(db=>{const shift={...db.shifts.find(s=>s.id===c.shiftId),id:'overlap',assignedWorkerId:'worker_sam'};db.shifts.push(shift);db.coverageRequests.push({...db.coverageRequests.find(q=>q.id===c.id),id:'overlap_request',shiftId:'overlap',originalWorkerId:'worker_sam',history:[{action:'legacy',actorId:null,at:new Date(now).toISOString(),status:'pending'}]});});
  await assert.rejects(reviewCoverage(h.store,'manager_morgan',c.id,'approve',c.input,clock),e=>e.status===409&&e.fields.conflicts[0].kind==='pending_claim');
 });
 test('concurrent approve/reject permits one decision and never duplicates reopening or transfer',async t=>{

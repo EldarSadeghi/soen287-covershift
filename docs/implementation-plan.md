@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 (issue #29) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 merged (PR #30, issue #29). CS-015 (issue #31) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 
@@ -87,3 +87,7 @@ CS-013: issue #27, local branch `codex/CS-013-claim-conflict-detection`. Immedia
 CS-014: issue #29, local branch `codex/CS-014-manager-decisions`. Atomic approval transfers once after current authorization, revision, start-time and assigned/pending conflict checks. Rejection retains the reviewed claim as rejected and atomically opens a fresh request. Schema v3 adds rejected outcomes without altering v1/v2 records. 86 tests pass; fictional manager preview port 3008. Awaiting user approval before push/merge.
 
 User explicitly approved CS-014 push and merge on 2026-11-17.
+
+CS-015: issue #31, branch `codex/CS-015-coverage-history`. Manager business history and employee participant-only history, all five status filters, current assignment and chronological actor/time events. Schema v4 adds optional per-request history; existing data stays readable with honest legacy snapshots. 92 tests pass; fictional preview on port 3009. Awaiting user review before push/merge.
+
+User explicitly approved CS-015 push and merge on 2026-11-17.

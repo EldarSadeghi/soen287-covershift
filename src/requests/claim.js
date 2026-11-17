@@ -1,3 +1,4 @@
+import { recordCoverageEvent } from './history.js';
 import { createHash } from 'node:crypto';
 import { HttpError } from '../auth/errors.js';
 import { coverageAccount } from './coverage.js';
@@ -31,8 +32,10 @@ export async function claimCoverage(store, userId, requestId, input, clock = Dat
     const now = clock(); const result = inspect(db, userId, requestId, input, now);
     if (result.conflicts.length) throw new HttpError(409, 'This shift overlaps your assigned shifts or pending claims. You cannot claim it.', { conflicts: result.conflicts });
     const request = result.request;
+    const previous = { ...request };
     request.claimantId = result.user.id; request.status = 'pending';
     request.updatedAt = new Date(Math.max(now, Date.parse(request.updatedAt) + 1)).toISOString();
+    recordCoverageEvent(db, request, 'claimed', result.user.id, request.updatedAt, previous);
     return { request: { id: request.id, status: request.status }, message: 'Claim submitted for manager approval. The original worker remains assigned until approval.' };
   });
 }

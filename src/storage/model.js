@@ -16,14 +16,15 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue([1, 2, 3, 4].includes(db.schemaVersion), 'unsupported schema version');
   requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key)), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
     for (const record of db[name]) {
       requireValue(record && typeof record === 'object' && !Array.isArray(record) && id(record.id), `${name} has an invalid record ID`);
-      const expected = name === 'users' && db.schemaVersion >= 2 && Object.hasOwn(record, 'setup') ? [...fields[name], 'setup'] : fields[name];
+      const baseFields = name === 'coverageRequests' && db.schemaVersion >= 4 && Object.hasOwn(record, 'history') ? [...fields[name], 'history'] : fields[name];
+      const expected = name === 'users' && db.schemaVersion >= 2 && Object.hasOwn(record, 'setup') ? [...baseFields, 'setup'] : baseFields;
       requireValue(Object.keys(record).length === expected.length && expected.every(key => Object.hasOwn(record, key)), `${name} fields do not match the schema`);
       requireValue(!seen.has(record.id), `${name} has a duplicate ID`);
       seen.add(record.id);
@@ -65,6 +66,24 @@ export function validateDatabase(db) {
     requireValue(shift?.businessId === request.businessId && businesses.has(request.businessId), 'request shift must belong to its business');
     requireValue(original?.businessId === request.businessId && original.role === 'worker', 'original worker must belong to the request business');
     requireValue((request.status === 'rejected' ? db.schemaVersion >= 3 : ['open', 'pending', 'approved', 'cancelled'].includes(request.status)), 'invalid coverage status');
+    if (Object.hasOwn(request, 'history')) {
+      requireValue(Array.isArray(request.history) && request.history.length > 0, 'coverage history must contain events');
+      let previousAt = request.createdAt;
+      const outcomes = { requested: 'open', claimed: 'pending', approved: 'approved', rejected: 'rejected', reopened: 'open', cancelled: 'cancelled' };
+      for (const event of request.history) {
+        requireValue(event && typeof event === 'object' && !Array.isArray(event) && Object.keys(event).length === 4 && ['action','actorId','at','status'].every(k => Object.hasOwn(event,k)), 'invalid coverage event fields');
+        requireValue(timestamp(event.at) && event.at >= previousAt && event.at <= request.updatedAt, 'coverage events must be chronological');
+        previousAt = event.at;
+        if (event.action === 'legacy') requireValue(event === request.history[0] && event.actorId === null && ['open','pending','approved','rejected','cancelled'].includes(event.status), 'invalid legacy coverage snapshot');
+        else {
+          const actor = users.get(event.actorId);
+          requireValue(Object.hasOwn(outcomes,event.action) && outcomes[event.action] === event.status && actor?.businessId === request.businessId, 'invalid coverage event action or actor');
+          requireValue(['approved','rejected','reopened'].includes(event.action) ? actor.role === 'manager' : actor.role === 'worker', 'invalid coverage actor role');
+          if (['requested','cancelled'].includes(event.action)) requireValue(actor.id === request.originalWorkerId, 'coverage event must belong to original worker');
+          if (event.action === 'claimed') requireValue(actor.id === request.claimantId, 'claim event must belong to claimant');
+        }
+      }
+    }
     if (request.claimantId !== null) {
       const claimant = users.get(request.claimantId);
       requireValue(claimant?.businessId === request.businessId && claimant.role === 'worker' && claimant.id !== original.id, 'claimant must be another worker in the same business');
@@ -80,7 +99,7 @@ export function validateDatabase(db) {
     }
     if (request.status === 'open') requireValue(request.claimantId === null, 'open request cannot have a claimant');
     if (request.status === 'pending') requireValue(request.claimantId !== null, 'pending request needs a claimant');
-    if (['approved', 'rejected'].includes(request.status)) requireValue(request.claimantId !== null && request.reviewerId !== null, 'approved request needs a claimant and reviewer');
+    if (['approved', 'rejected'].includes(request.status)) requireValue(request.claimantId !== null && request.reviewerId !== null, 'reviewed request needs a claimant and reviewer');
   }
   return db;
 }
