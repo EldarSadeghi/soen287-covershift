@@ -16,14 +16,14 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue([1, 2, 3].includes(db.schemaVersion), 'unsupported schema version');
   requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key)), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
     for (const record of db[name]) {
       requireValue(record && typeof record === 'object' && !Array.isArray(record) && id(record.id), `${name} has an invalid record ID`);
-      const expected = name === 'users' && db.schemaVersion === 2 && Object.hasOwn(record, 'setup') ? [...fields[name], 'setup'] : fields[name];
+      const expected = name === 'users' && db.schemaVersion >= 2 && Object.hasOwn(record, 'setup') ? [...fields[name], 'setup'] : fields[name];
       requireValue(Object.keys(record).length === expected.length && expected.every(key => Object.hasOwn(record, key)), `${name} fields do not match the schema`);
       requireValue(!seen.has(record.id), `${name} has a duplicate ID`);
       seen.add(record.id);
@@ -64,7 +64,7 @@ export function validateDatabase(db) {
     const original = users.get(request.originalWorkerId);
     requireValue(shift?.businessId === request.businessId && businesses.has(request.businessId), 'request shift must belong to its business');
     requireValue(original?.businessId === request.businessId && original.role === 'worker', 'original worker must belong to the request business');
-    requireValue(['open', 'pending', 'approved', 'cancelled'].includes(request.status), 'invalid coverage status');
+    requireValue((request.status === 'rejected' ? db.schemaVersion >= 3 : ['open', 'pending', 'approved', 'cancelled'].includes(request.status)), 'invalid coverage status');
     if (request.claimantId !== null) {
       const claimant = users.get(request.claimantId);
       requireValue(claimant?.businessId === request.businessId && claimant.role === 'worker' && claimant.id !== original.id, 'claimant must be another worker in the same business');
@@ -80,7 +80,7 @@ export function validateDatabase(db) {
     }
     if (request.status === 'open') requireValue(request.claimantId === null, 'open request cannot have a claimant');
     if (request.status === 'pending') requireValue(request.claimantId !== null, 'pending request needs a claimant');
-    if (request.status === 'approved') requireValue(request.claimantId !== null && request.reviewerId !== null, 'approved request needs a claimant and reviewer');
+    if (['approved', 'rejected'].includes(request.status)) requireValue(request.claimantId !== null && request.reviewerId !== null, 'approved request needs a claimant and reviewer');
   }
   return db;
 }

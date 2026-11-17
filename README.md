@@ -18,7 +18,7 @@ Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied.
 
 Managers can manage workers, create/edit/delete eligible shifts, and view saved schedules and pending coverage claims. Workers see their own assigned shifts, request/cancel coverage, and browse teammate requests. Dates use the business timezone. Protected pages use saved records; the public demo remains separate.
 
-CS-013 is ready for local review: **Open shifts → Check & claim** gives inline conflict warnings, a fresh server check and confirmation. Claims become pending manager approval and appear in **My requests → Coverage you claimed**. Original assignments remain unchanged. Approval/rejection follows in CS-014. See [claiming instructions](docs/claiming.md).
+CS-013 is merged: **Open shifts → Check & claim** gives inline conflict warnings, a fresh server check and confirmation. Claims become pending manager approval and appear in **My requests → Coverage you claimed**. Original assignments remain unchanged until approval. CS-014 adds manager approval/rejection in Approvals with fresh conflict checks and confirmation. See [manager decisions](docs/manager-decisions.md). See [claiming instructions](docs/claiming.md).
 
 Start at http://127.0.0.1:3000/login and use an account created through signup, or the explicit fictional role setup in [authentication instructions](docs/authentication.md). The public presentation demo stays at /demo and grants no account access.
 

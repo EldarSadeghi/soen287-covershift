@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 (issue #27) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 (issue #29) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 
@@ -83,3 +83,7 @@ CS-011: issue #23, local branch `codex/CS-011-request-cancel-coverage`. Workers 
 CS-012: issue #25, local branch `codex/CS-012-open-shift-board`. Read-only worker board filters own/business/status/expiry server-side, shows business-local dates, duration and requesting teammate, and supports refresh/empty/retry states. 71 tests pass; worker preview on port 3006. User approved push and merge on 2026-11-16. Next: CS-013, claiming with live conflict detection.
 
 CS-013: issue #27, local branch `codex/CS-013-claim-conflict-detection`. Immediate inline assigned/pending overlap checks, fresh server preflight, atomic claim-to-pending without reassignment, and scoped My requests claims. 80 tests pass; worker preview on port 3007. User approved push and merge on 2026-11-16. Next: CS-014, manager approval and rejection with fresh conflict checks.
+
+CS-014: issue #29, local branch `codex/CS-014-manager-decisions`. Atomic approval transfers once after current authorization, revision, start-time and assigned/pending conflict checks. Rejection retains the reviewed claim as rejected and atomically opens a fresh request. Schema v3 adds rejected outcomes without altering v1/v2 records. 86 tests pass; fictional manager preview port 3008. Awaiting user approval before push/merge.
+
+User explicitly approved CS-014 push and merge on 2026-11-17.

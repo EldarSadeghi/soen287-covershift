@@ -16,7 +16,7 @@ export async function mountWorkerRequests(main, csrfToken) {
       if (!result.requests.length) { const empty = element('section', 'panel empty'); empty.append(element('h2', '', 'No requests yet.'), element('p', '', 'Open My shifts to request coverage for a future shift assigned to you.')); content.append(empty); }
       for (const request of result.requests) {
         const article = element('article', 'panel coverage-request');
-        const head = element('div', 'panel-head'); const labels = { open: 'Open · waiting for a teammate', pending: 'Pending manager approval', approved: 'Approved', cancelled: 'Cancelled' };
+        const head = element('div', 'panel-head'); const labels = { open: 'Open · waiting for a teammate', pending: 'Pending manager approval', approved: 'Approved', rejected: 'Claim rejected · coverage reopened', cancelled: 'Cancelled' };
         head.append(element('h2', '', labels[request.status])); article.append(head, shiftCard(request.shift, result.timezone));
         const details = element('div', 'coverage-details');
         if (request.claimantName) details.append(element('p', '', `${request.status === 'cancelled' ? 'Previous claimant' : 'Claimed by'}: ${request.claimantName}`));
@@ -32,7 +32,7 @@ export async function mountWorkerRequests(main, csrfToken) {
       content.append(element('h2','requests-group-title','Coverage you claimed'));
       if (!result.claims.length) { const empty = element('section','panel empty'); empty.append(element('p','','You haven’t claimed any coverage yet. Browse Open shifts to help a teammate.')); const link = element('a','text-link','Browse Open shifts →'); link.href='/workspace/worker/open';empty.append(link);content.append(empty); }
       for (const claim of result.claims) {
-        const article = element('article','panel coverage-request'); const head=element('div','panel-head');const labels={pending:'Your claim · Pending manager approval',approved:'Your claim · Approved',cancelled:'Your claim · Request cancelled',open:'Your claim · Open'};
+        const article = element('article','panel coverage-request'); const head=element('div','panel-head');const labels={pending:'Your claim · Pending manager approval',approved:'Your claim · Approved',rejected:'Your claim · Rejected',cancelled:'Your claim · Request cancelled',open:'Your claim · Open'};
         head.append(element('h2','',labels[claim.status]));article.append(head,shiftCard(claim.shift,result.timezone));const details=element('div','coverage-details');
         details.append(element('p','',`Original worker: ${claim.originalWorkerName}`),element('p','section-note',claim.status==='pending'?'Your claim is awaiting manager approval. The original worker remains assigned. This time is reserved when checking your other claims.':claim.assignedToYou?'This shift is now assigned to you.':'This claim does not assign the shift to you.'));
         if(claim.status==='pending'&&claim.shift.status!=='upcoming')details.append(element('p','section-note','This shift has started or ended while awaiting review. Contact your manager.'));
