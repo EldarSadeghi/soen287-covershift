@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 merged (PR #30, issue #29). CS-015 (issue #31) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
+Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 merged (PR #30, issue #29). CS-015 merged (PR #32, issue #31). CS-016 (issue #33) is ready for local user review. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
 
@@ -91,3 +91,7 @@ User explicitly approved CS-014 push and merge on 2026-11-17.
 CS-015: issue #31, branch `codex/CS-015-coverage-history`. Manager business history and employee participant-only history, all five status filters, current assignment and chronological actor/time events. Schema v4 adds optional per-request history; existing data stays readable with honest legacy snapshots. 92 tests pass; fictional preview on port 3009. Awaiting user review before push/merge.
 
 User explicitly approved CS-015 push and merge on 2026-11-17.
+
+CS-016: issue #33, branch `codex/CS-016-security-workflow-verification`. Source security review and nine new HTTP integration checks cover complete lifecycle, business/role/CSRF guards, tampered IDs/bodies, races, stale approvals, session revocation/expiry, private paths, safe errors, production-origin headers and throttling. `npm run verify`: 101 tests pass plus syntax checks. No bypass found within checked scope; production behavior unchanged. Evidence and deployment limits in security-verification.md; isolated browser preview port 3010. Awaiting user approval before push/merge.
+
+User explicitly approved CS-016 push and merge on 2026-11-17.
