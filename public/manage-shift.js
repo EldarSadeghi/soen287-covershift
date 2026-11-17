@@ -56,7 +56,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
       for (const [key, label, type, value] of [['title', 'Shift title', 'text', shift.title], ['assignedWorkerId', 'Assign to worker', 'select', shift.assignedWorker.id], ['startLocal', 'Start date and time', 'datetime-local', businessLocal(shift.startsAt, timezone)], ['endLocal', 'End date and time', 'datetime-local', businessLocal(shift.endsAt, timezone)]]) {
         const field = element('div', 'team-field'); const caption = element('label', '', label);
         const input = element(type === 'select' ? 'select' : 'input'); input.id = `edit-${shift.id}-${key}`; input.name = key; input.required = true; caption.htmlFor = input.id;
-        if (type === 'select') { input.append(new Option('Choose a worker', '')); for (const worker of workers) input.append(new Option(worker.name, worker.id)); }
+        if (type === 'select') { input.append(new Option('Choose a worker', '')); for (const worker of workers.filter(worker=>worker.status !== 'inactive')) input.append(new Option(worker.name, worker.id)); }
         else { input.type = type; if (type === 'text') input.maxLength = 100; else { input.min = '2000-01-01T00:00'; input.max = '2099-12-31T23:59'; } }
         input.value = value; inputs[key] = input; const error = element('p', 'field-error'); error.id = `${input.id}-error`; error.hidden = true; input.setAttribute('aria-describedby', error.id); field.append(caption, input, error); grid.append(field);
       }

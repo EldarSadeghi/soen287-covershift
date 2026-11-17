@@ -1,3 +1,4 @@
+import { workerRemovalState } from './offboarding.js';
 import { randomBytes, createHash } from 'node:crypto';
 import { createRecord } from '../storage/repositories.js';
 import { HttpError } from '../auth/errors.js';
@@ -14,7 +15,7 @@ function managerIn(db, id) {
   return user;
 }
 const digest = token => createHash('sha256').update(token).digest('hex');
-const view = (user, now) => ({ id: user.id, name: user.name, email: user.email, status: user.passwordHash !== null ? 'ready' : !user.setup ? 'needed' : Date.parse(user.setup.expiresAt) <= now ? 'expired' : 'pending', setupExpiresAt: user.setup?.expiresAt ?? null });
+const view = (user, now) => ({ id: user.id, name: user.name, email: user.email, status: user.deactivation ? 'inactive' : user.passwordHash !== null ? 'ready' : !user.setup ? 'needed' : Date.parse(user.setup.expiresAt) <= now ? 'expired' : 'pending', setupExpiresAt: user.setup?.expiresAt ?? null });
 function issue(user, now) {
   const setupToken = randomBytes(32).toString('hex');
   user.setup = { tokenHash: digest(setupToken), expiresAt: new Date(now + lifetime).toISOString() };
@@ -23,7 +24,7 @@ function issue(user, now) {
 }
 export async function listWorkers(store, managerId, now = Date.now()) {
   const db = await store.read(); const manager = managerIn(db, managerId);
-  return { workers: db.users.filter(user => user.role === 'worker' && user.businessId === manager.businessId).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)).map(user => view(user, now)) };
+  return { workers: db.users.filter(user => user.role === 'worker' && user.businessId === manager.businessId).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)).map(user => ({...view(user, now), ...workerRemovalState(db,user,now), deactivatedAt:user.deactivation?.at ?? null})) };
 }
 export async function addWorker(store, managerId, input, now = Date.now()) {
   exact(input, ['name', 'email']);
@@ -50,6 +51,7 @@ export async function reissueSetup(store, managerId, workerId, input, now = Date
     const manager = managerIn(db, managerId);
     const worker = db.users.find(user => user.id === workerId && user.businessId === manager.businessId && user.role === 'worker');
     if (!worker) throw new HttpError(404, 'Worker not found.');
+    if (worker.deactivation) throw new HttpError(409, 'Inactive employees cannot receive setup links.');
     if (worker.passwordHash !== null) throw new HttpError(409, 'This worker already has a login. Password resets are not available here.');
     db.schemaVersion = Math.max(db.schemaVersion, 2);
     return issue(worker, now);
@@ -58,7 +60,7 @@ export async function reissueSetup(store, managerId, workerId, input, now = Date
 function invited(db, token, now) {
   if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) throw invalid();
   const hash = digest(token);
-  const user = db.users.find(user => user.role === 'worker' && user.passwordHash === null && user.setup?.tokenHash === hash && Date.parse(user.setup.expiresAt) > now);
+  const user = db.users.find(user => user.role === 'worker' && !user.deactivation && user.passwordHash === null && user.setup?.tokenHash === hash && Date.parse(user.setup.expiresAt) > now);
   if (!user) throw invalid();
   return user;
 }

@@ -14,13 +14,13 @@ export async function enableDemoAccounts(store, password) {
   if (!targets.every(target => initial.users.some(user => matches(user, target)))) throw new Error('Fictional demo users were not found. Use a dedicated demo data directory.');
   const pending = [];
   for (const target of targets) {
-    if (initial.users.find(user => matches(user, target)).passwordHash === null) pending.push({ target, hash: await hashPassword(password) });
+    if (initial.users.find(user => matches(user, target)).passwordHash === null && !initial.users.find(user => matches(user, target)).deactivation) pending.push({ target, hash: await hashPassword(password) });
   }
   return store.transaction(db => {
     const enabled = [];
     for (const { target, hash } of pending) {
       const user = db.users.find(user => matches(user, target));
-      if (!user || user.passwordHash !== null) continue;
+      if (!user || user.deactivation || user.passwordHash !== null) continue;
       user.passwordHash = hash; user.updatedAt = new Date().toISOString(); enabled.push(target.email);
     }
     return enabled;

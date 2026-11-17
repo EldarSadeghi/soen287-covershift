@@ -16,7 +16,7 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue([1, 2, 3, 4, 5].includes(db.schemaVersion), 'unsupported schema version');
   requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key)), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
@@ -24,7 +24,8 @@ export function validateDatabase(db) {
     for (const record of db[name]) {
       requireValue(record && typeof record === 'object' && !Array.isArray(record) && id(record.id), `${name} has an invalid record ID`);
       const baseFields = name === 'coverageRequests' && db.schemaVersion >= 4 && Object.hasOwn(record, 'history') ? [...fields[name], 'history'] : fields[name];
-      const expected = name === 'users' && db.schemaVersion >= 2 && Object.hasOwn(record, 'setup') ? [...baseFields, 'setup'] : baseFields;
+      const userFields = name === 'users' && db.schemaVersion >= 5 && Object.hasOwn(record, 'deactivation') ? [...baseFields, 'deactivation'] : baseFields;
+      const expected = name === 'users' && db.schemaVersion >= 2 && Object.hasOwn(record, 'setup') ? [...userFields, 'setup'] : userFields;
       requireValue(Object.keys(record).length === expected.length && expected.every(key => Object.hasOwn(record, key)), `${name} fields do not match the schema`);
       requireValue(!seen.has(record.id), `${name} has a duplicate ID`);
       seen.add(record.id);
@@ -48,6 +49,10 @@ export function validateDatabase(db) {
     requireValue(!emails.has(user.email), 'duplicate email');
     emails.add(user.email);
     requireValue(user.passwordHash === null || text(user.passwordHash), 'passwordHash must be a hash string or null for an account without login');
+    if (Object.hasOwn(user, 'deactivation')) {
+      const info = user.deactivation; const manager = users.get(info?.managerId);
+      requireValue(user.role === 'worker' && user.passwordHash === null && !Object.hasOwn(user,'setup') && info && typeof info === 'object' && !Array.isArray(info) && Object.keys(info).length === 2 && timestamp(info.at) && info.at >= user.createdAt && info.at <= user.updatedAt && manager?.role === 'manager' && manager.businessId === user.businessId, 'invalid employee deactivation');
+    }
     if (Object.hasOwn(user, 'setup')) {
       const setup = user.setup;
       requireValue(user.role === 'worker' && user.passwordHash === null && setup && typeof setup === 'object' && !Array.isArray(setup) && Object.keys(setup).length === 2 && /^[a-f0-9]{64}$/.test(setup.tokenHash) && timestamp(setup.expiresAt), 'invalid worker setup metadata');
