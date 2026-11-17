@@ -83,3 +83,9 @@ User explicitly approved CS-015 push and merge on 2026-11-17.
 User requested security/workflow verification. Created issue #33 with acceptance criteria and owner, verified Todo then In Progress. Reviewed authorization, session/setup, rendering and storage paths; added nine HTTP integration tests covering full lifecycle, foreign IDs/role/CSRF/input matrices, competing actions, stale approvals, session expiry/revocation, private files/error disclosure, HTTPS Origin/cookie/header behavior and throttling. No bypass found in tested scope; production behavior unchanged. Added `npm run verify` and evidence/limits report. 101 tests and syntax checks pass; diff check clean. Isolated fictional preview port 3010: browser approval, assignment/history and literal HTML-like title verified. Awaiting user approval before push/merge.
 
 User explicitly approved CS-016 push and merge on 2026-11-17.
+
+## 2026-11-17 — CS-017
+
+User requested accessibility/responsive polish. Created issue #35 with acceptance criteria/owner; verified Todo then In Progress. Improved shared focus/contrast/phone controls/navigation/reflow, password/setup labels, create/edit field errors, confirmation groups/Escape and refresh focus; reduced repeated list announcements. 101 regression tests and syntax checks pass, diff clean. Browser verified skip link, error focus/Tab, editor and worker/manager Escape return, refreshed focus, 320px employee/manager reflow and 390px manager long-name confirmation. Selected contrast ratios calculated; no claim of full screen-reader/WCAG audit. Fictional preview port 3011, data isolated. Awaiting approval before push/merge.
+
+User explicitly approved CS-017 push and merge on 2026-11-17. CS-018 remains the final step after CS-019 and remaining implementation work.

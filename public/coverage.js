@@ -3,12 +3,15 @@ export function coverageAction({ kind, id, revision, title, description, csrfTok
   const container = element('div', 'coverage-action');
   const trigger = element('button', 'logout-button', kind === 'request' ? 'Request coverage' : 'Cancel request'); trigger.type = 'button'; trigger.setAttribute('aria-label', `${kind === 'request' ? 'Request coverage for' : 'Cancel request for'} ${title}`);
   const confirmation = element('section', 'coverage-confirm'); confirmation.hidden = true;
+  confirmation.setAttribute('role', 'group'); confirmation.setAttribute('aria-label', `${kind === 'request' ? 'Request coverage' : 'Cancel request'} for ${title}`);
   confirmation.append(element('h3', '', kind === 'request' ? 'Request coverage?' : 'Cancel this request?'), element('p', '', description));
   const error = element('p', 'team-message'); error.hidden = true; error.tabIndex = -1; error.setAttribute('role', 'alert'); confirmation.append(error);
   const buttons = element('div', 'create-actions');
   const back = element('button', 'logout-button', 'Keep as is'); back.type = 'button';
   const submit = element('button', 'solid-link', kind === 'request' ? 'Confirm request' : 'Confirm cancellation'); submit.type = 'button';
   let busy = false;
+  container.addEventListener('keydown', event => { if (event.key === 'Escape' && !confirmation.hidden && !busy) { event.preventDefault(); back.click(); } });
+
   trigger.addEventListener('click', () => { trigger.hidden = true; confirmation.hidden = false; error.hidden = true; back.focus(); });
   back.addEventListener('click', () => { if (busy) return; confirmation.hidden = true; trigger.hidden = false; trigger.focus(); });
   submit.addEventListener('click', async () => {

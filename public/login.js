@@ -16,6 +16,7 @@ function showError(message, invalidFields = {}) {
 document.querySelector('#show-password').addEventListener('click', event => {
   const visible = password.type === 'password'; password.type = visible ? 'text' : 'password';
   event.currentTarget.textContent = visible ? 'Hide' : 'Show'; event.currentTarget.setAttribute('aria-pressed', String(visible));
+  event.currentTarget.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
 });
 form.addEventListener('submit', async event => {
   event.preventDefault(); summary.hidden = true;

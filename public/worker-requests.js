@@ -1,9 +1,10 @@
 import { element, shiftCard } from './shift-card.js';
 import { coverageAction } from './coverage.js';
 export async function mountWorkerRequests(main, csrfToken) {
-  main.innerHTML = '<p class="eyebrow">Coverage, with confidence</p><div class="page-heading"><div><h1>Your requests & claims.</h1><p class="subtitle">Track requests you created and coverage you claimed. The original worker remains assigned until manager approval.</p></div><button id="refresh-requests" class="logout-button" type="button">Refresh</button></div><p><a class="text-link" href="/workspace/worker/shifts">Request coverage from My shifts →</a> · <a class="text-link" href="/workspace/worker/history">View coverage history →</a></p><p id="request-result" class="shift-created" role="status" tabindex="-1" hidden></p><section id="requests-content" aria-live="polite"></section><p class="section-note" id="requests-updated" role="status"></p>';
+  main.innerHTML = '<p class="eyebrow">Coverage, with confidence</p><div class="page-heading"><div><h1>Your requests & claims.</h1><p class="subtitle">Track requests you created and coverage you claimed. The original worker remains assigned until manager approval.</p></div><button id="refresh-requests" class="logout-button" type="button">Refresh</button></div><p><a class="text-link" href="/workspace/worker/shifts">Request coverage from My shifts →</a> · <a class="text-link" href="/workspace/worker/history">View coverage history →</a></p><p id="request-result" class="shift-created" role="status" tabindex="-1" hidden></p><section id="requests-content"></section><p class="section-note" id="requests-updated" role="status"></p>';
   const content = main.querySelector('#requests-content'); const refresh = main.querySelector('#refresh-requests'); const updated = main.querySelector('#requests-updated'); let loading = false;
-  async function load() {
+  async function load(event) {
+    const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return; loading = true; refresh.disabled = true; main.setAttribute('aria-busy', 'true'); updated.textContent = '';
     content.replaceChildren(element('p', 'shift-loading', 'Loading your requests…'));
     const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
@@ -42,7 +43,7 @@ export async function mountWorkerRequests(main, csrfToken) {
     } catch {
       const panel = element('div', 'panel shift-load-error'); const error = element('p', '', 'We couldn’t load your requests. Please try again.'); error.setAttribute('role', 'alert');
       const retry = element('button', 'logout-button', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); panel.append(error, retry); content.replaceChildren(panel);
-    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); }
+    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
   refresh.addEventListener('click', load); await load();
 }

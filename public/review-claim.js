@@ -3,6 +3,7 @@ export function reviewActions(claim, csrfToken, onSuccess) {
   const root = element('div', 'coverage-action');
   const actions = element('div', 'claim-actions');
   const confirmation = element('section', 'coverage-confirm'); confirmation.hidden = true;
+  confirmation.setAttribute('role', 'group'); confirmation.setAttribute('aria-label', `Review claim for ${claim.shift.title}`);
   const heading = element('h3'); const description = element('p');
   const error = element('p', 'team-message'); error.setAttribute('role', 'alert'); error.tabIndex = -1; error.hidden = true;
   const back = element('button', 'logout-button', 'Keep pending'); back.type = 'button';
@@ -10,6 +11,8 @@ export function reviewActions(claim, csrfToken, onSuccess) {
   const buttons = element('div', 'create-actions'); buttons.append(back, submit);
   confirmation.append(heading, description, error, buttons);
   let decision; let busy = false;
+  root.addEventListener('keydown', event => { if (event.key === 'Escape' && !confirmation.hidden && !busy) { event.preventDefault(); back.click(); } });
+
   for (const kind of ['approve', 'reject']) {
     const label = kind === 'approve' ? 'Approve' : 'Reject'; const trigger = element('button', 'logout-button', label); trigger.type = 'button'; trigger.disabled = kind === 'approve' ? !claim.canApprove : !claim.canReject;
     trigger.setAttribute('aria-label', `${label} claim for ${claim.shift.title}`);

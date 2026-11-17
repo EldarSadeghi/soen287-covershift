@@ -1,0 +1,45 @@
+/* Shared last-loaded accessibility and reflow rules. */
+:root{--muted:#526258}
+:is(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid #214d3d;outline-offset:3px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #214d3d!important;outline-offset:3px}
+button,input,select,textarea{min-height:44px}
+button,.solid-link,.text-link{touch-action:manipulation}
+button{white-space:normal;overflow-wrap:anywhere}
+.text-link{display:inline-flex;align-items:center;min-height:32px}
+.eyebrow{color:#526344}.page-footer{color:#526258}
+input::placeholder,.form-field input::placeholder{color:#657267;opacity:1}
+.password-wrap input{min-height:50px;padding-right:78px}
+.password-wrap button{top:3px;bottom:3px;min-width:58px;min-height:44px;font-size:12px}
+:is(h1,h2,h3,p,small,strong,.badge,.business,.profile,.team-worker,.claim-people){overflow-wrap:anywhere}
+.business>div,.profile,.page-heading>div,.claim-people>div,.panel-head>*{min-width:0}
+.business strong{display:block}.profile #profile-name{max-width:14rem}
+.page-heading,.panel-head,.claim-heading,.claim-actions,.preview-bar{flex-wrap:wrap}
+.page-heading>div{flex:1 1 220px}.page-heading>button{flex-shrink:0}
+.badge{white-space:normal}.claim-people{align-items:flex-start}
+input,select,textarea{max-width:100%;min-width:0}
+.history-filter{flex-wrap:wrap}.history-filter select{min-width:0}
+.section-note,.field-hint,.form-footnote,.signup-notice,.signup-footer,.story-footer,.worker-email,.text-link{font-size:12px}
+.skip{z-index:1000}.skip:focus-visible{top:10px}
+@media(max-width:680px){
+  .sidebar{padding:16px 16px 0}
+  #navigation{display:flex;flex-wrap:wrap;overflow:visible;gap:6px;margin-top:16px;padding-bottom:12px}
+  #navigation .nav-link{flex:1 1 88px;min-height:44px;padding:10px 8px;font-size:12px;white-space:normal;text-align:center}
+  main{padding:26px 16px}.topbar{padding:10px 16px;height:auto;min-height:64px;gap:10px;flex-wrap:wrap}
+  .preview-bar{padding:12px 16px}.page-heading{gap:14px}
+  input,select,textarea,.form-field input,.form-field select,.team-field input,.create-fields input,.create-fields select{font-size:16px}
+  .stat-title,.stat small,.saved-shift .shift-info .saved-shift-times,.manager-timezone,.shift-timezone,.page-footer{font-size:12px}
+  .stat strong{overflow-wrap:anywhere}.claim-people{gap:12px}
+  .signup-top,.form-field label,.signup-submit,.form-field .field-error{font-size:13px}
+  .signup-form-wrap,.signup-main{min-width:0}.signup-top{flex-wrap:wrap}
+}
+@media(max-width:480px){
+  .stats{grid-template-columns:1fr;gap:10px}
+  .stat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:14px 16px}
+  .stat .stat-title{margin:0;min-height:0;align-self:center}.stat strong{font-size:24px;max-width:100%}
+  .stat small{grid-column:1/-1;margin:0}
+  .claim-people{flex-wrap:wrap}.claim-people>div{flex:1 1 110px}
+  .claim-arrow{display:none}.coverage-details{padding:0 16px 20px}
+  .signup-main{padding:20px 16px}.signup-story{padding:20px 16px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(forced-colors:active){:focus-visible{outline:3px solid Highlight!important}.badge,button,input,select{border:1px solid CanvasText}}

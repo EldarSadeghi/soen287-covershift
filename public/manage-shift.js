@@ -15,7 +15,9 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   const deleteButton = element('button', 'logout-button delete-action', 'Delete shift'); deleteButton.type = 'button'; deleteButton.setAttribute('aria-label', `Delete ${shift.title}`);
   actions.append(editButton, deleteButton); wrapper.append(actions);
   const editor = element('section', 'shift-editor'); editor.hidden = true; wrapper.append(editor);
+  editor.setAttribute('role', 'group'); editor.setAttribute('aria-label', `Manage shift ${shift.title}`);
   let busy = false; let trigger;
+  editor.addEventListener('keydown', event => { if (event.key === 'Escape' && !busy) { event.preventDefault(); reset(); } });
   const reset = () => { editor.replaceChildren(); editor.hidden = true; editButton.disabled = false; deleteButton.disabled = false; trigger?.focus(); };
   function message(text) { const error = editor.querySelector('.manage-error'); error.textContent = text; error.hidden = false; error.focus(); }
   function start(button) {
@@ -24,13 +26,13 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   }
   function errorBox() { const error = element('p', 'team-message manage-error'); error.setAttribute('role', 'alert'); error.tabIndex = -1; error.hidden = true; editor.append(error); }
   function cancelButton() { const button = element('button', 'logout-button', 'Cancel'); button.type = 'button'; button.addEventListener('click', () => { if (!busy) reset(); }); return button; }
-  async function mutate(action, values, submit, cancel) {
+  async function mutate(action, values, submit, cancel, markErrors = () => {}) {
     busy = true; submit.disabled = true; cancel.disabled = true; submit.textContent = action === 'edit' ? 'Saving changes…' : 'Deleting…';
     try {
       const response = await fetch(`/api/manager/shifts/${encodeURIComponent(shift.id)}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ ...values, revision: shift.revision }) });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       const result = await response.json();
-      if (!response.ok) { message(result.message || 'The change could not be saved. Try again.'); return; }
+      if (!response.ok) { markErrors(result.fields || {}); message(result.message || 'The change could not be saved. Try again.'); return; }
       await onChanged(action === 'edit' ? `“${result.shift.title}” was updated and assigned to ${result.shift.assignedWorker.name}.` : `“${shift.title}” was deleted.`);
     } catch { message('We couldn’t confirm the result. Cancel and refresh the schedule before retrying.'); }
     finally { busy = false; submit.disabled = false; cancel.disabled = false; submit.textContent = action === 'edit' ? 'Save changes' : 'Delete this shift'; }
@@ -48,7 +50,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
       // Cancel may have closed/reopened the editor while this read was pending.
       if (!state.isConnected) return;
       state.remove(); cancel.remove();
-      const form = element('form');
+      const form = element('form'); form.noValidate = true;
       const grid = element('div', 'create-fields');
       const inputs = {};
       for (const [key, label, type, value] of [['title', 'Shift title', 'text', shift.title], ['assignedWorkerId', 'Assign to worker', 'select', shift.assignedWorker.id], ['startLocal', 'Start date and time', 'datetime-local', businessLocal(shift.startsAt, timezone)], ['endLocal', 'End date and time', 'datetime-local', businessLocal(shift.endsAt, timezone)]]) {
@@ -56,10 +58,26 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
         const input = element(type === 'select' ? 'select' : 'input'); input.id = `edit-${shift.id}-${key}`; input.name = key; input.required = true; caption.htmlFor = input.id;
         if (type === 'select') { input.append(new Option('Choose a worker', '')); for (const worker of workers) input.append(new Option(worker.name, worker.id)); }
         else { input.type = type; if (type === 'text') input.maxLength = 100; else { input.min = '2000-01-01T00:00'; input.max = '2099-12-31T23:59'; } }
-        input.value = value; inputs[key] = input; field.append(caption, input); grid.append(field);
+        input.value = value; inputs[key] = input; const error = element('p', 'field-error'); error.id = `${input.id}-error`; error.hidden = true; input.setAttribute('aria-describedby', error.id); field.append(caption, input, error); grid.append(field);
+      }
+      function markErrors(errors) {
+        for (const [key, input] of Object.entries(inputs)) {
+          const error = document.getElementById(`${input.id}-error`);
+          input.removeAttribute('aria-invalid'); error.hidden = true;
+          if (errors[key]) { input.setAttribute('aria-invalid', 'true'); error.textContent = errors[key]; error.hidden = false; }
+        }
       }
       const buttons = element('div', 'create-actions'); const submit = element('button', 'solid-link', 'Save changes'); submit.type = 'submit'; buttons.append(submit, cancel);
-      form.append(grid, buttons); form.addEventListener('submit', event => { event.preventDefault(); if (!busy) { editor.querySelector('.manage-error').hidden = true; mutate('edit', Object.fromEntries(new FormData(form)), submit, cancel); } });
+      form.append(grid, buttons); form.addEventListener('submit', event => {
+        event.preventDefault(); if (busy) return;
+        editor.querySelector('.manage-error').hidden = true;
+        const errors = {};
+        for (const [key, input] of Object.entries(inputs)) if (!input.validity.valid) errors[key] = input.validationMessage;
+        if (!inputs.title.value.trim()) errors.title = 'Enter a shift title.';
+        markErrors(errors);
+        if (Object.keys(errors).length) { message('Please check the highlighted fields before saving.'); return; }
+        mutate('edit', Object.fromEntries(new FormData(form)), submit, cancel, markErrors);
+      });
       editor.append(form); inputs.title.focus();
     } catch { if (state.isConnected) { state.textContent = 'We couldn’t load the workers. Cancel and choose Edit shift to retry.'; message('Your shift has not changed. Please retry.'); } }
   });

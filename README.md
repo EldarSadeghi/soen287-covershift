@@ -62,3 +62,5 @@ CS-012 introduced **Open shifts**, a board of teammates’ eligible future cover
 CS-015 is ready for local review: **History** in both workspaces shows scoped coverage records, status filtering, current assignment and actor/time timelines. New successful actions record events atomically; older records show a saved-status snapshot with an explicit missing-history note. See [coverage history](docs/coverage-history.md).
 
 CS-016 security/workflow verification is ready for local review: run `npm run verify` for syntax checks and the full test suite. See [verification evidence and deployment limits](docs/security-verification.md).
+
+CS-017 is ready for local review: clearer focus/errors, keyboard dismissal and refresh focus, explicit password labels, larger phone controls and wrapped navigation/long content. See [accessibility review and verification](docs/accessibility-review.md).
