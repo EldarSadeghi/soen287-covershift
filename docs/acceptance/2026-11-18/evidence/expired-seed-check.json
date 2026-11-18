@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-18",
+  "seedUpcoming": 0,
+  "seedPending": 1,
+  "pendingCanApprove": false,
+  "pendingCanReject": false,
+  "attempts": [
+    {
+      "action": "approve",
+      "status": 409,
+      "message": "This shift has started. Decisions are no longer available. Refresh approvals."
+    },
+    {
+      "action": "reject",
+      "status": 409,
+      "message": "This shift has started. Decisions are no longer available. Refresh approvals."
+    },
+    {
+      "action": "cancel",
+      "status": 409,
+      "message": "This shift has started. Cancellation is no longer available."
+    }
+  ],
+  "storageUnchanged": true
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "path": "/login",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/accessibility.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/login.js",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/signup.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/styles.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/signup",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/accessibility.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/signup.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/signup.js",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/styles.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/setup",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/accessibility.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/setup.js",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/signup.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/styles.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/demo",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/accessibility.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/app.js",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/styles.css",
+    "expected": 200,
+    "actual": 200
+  },
+  {
+    "path": "/data/covershift.json",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "path": "/src/server.js",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "path": "/.env",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "path": "/AGENTS.md",
+    "expected": 404,
+    "actual": 404
+  },
+  {
+    "path": "/missing-acceptance-page",
+    "expected": 404,
+    "actual": 404
+  }
+]
