@@ -50,3 +50,5 @@ Fictional isolated preview: http://localhost:3016/workspace/manager/approvals. T
 [Approvals](cs022-evidence/approvals.png) · [Expired history](cs022-evidence/history.png) · [Worker history](cs022-evidence/worker.png) · [Phone view](cs022-evidence/mobile.png).
 
 The preview uses one-time QA fixtures to demonstrate this feature; no reusable CS-021 demo generator was implemented. Broad screen-reader/zoom conformance remains outside this task. Explicit user approval is required before any feature branch push or merge.
+
+User explicitly approved CS-022 push and merge on 2026-11-18. CS-021 remains an unstarted suggestion; CS-018 remains the final step.

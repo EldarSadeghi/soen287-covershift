@@ -116,3 +116,5 @@ CS-020 ready for Your review: 118 tests and syntax checks pass; browser delayed 
 User explicitly approved CS-020 push and merge on 2026-11-18. CS-018 remains the final step.
 
 CS-022: issue #42, branch `codex/CS-022-expired-coverage`. Todo verified, then In Progress on 2026-11-18. Derived Expired status for unresolved started coverage; actionable manager queue and expired History filter/deep links; both-role request labels; no data rewrite. 125 tests plus syntax/diff checks pass; fictional preview port 3016. Awaiting review before push/merge. CS-021 remains a suggestion, and CS-018 remains last.
+
+User explicitly approved CS-022 push and merge on 2026-11-18. CS-021 remains an unstarted suggestion; CS-018 remains the final step.
