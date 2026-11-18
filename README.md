@@ -72,3 +72,5 @@ CS-019 is ready for local review: **Team** can delete employees with no work rec
 The [2026-11-18 acceptance report and proposed tasks](docs/acceptance/2026-11-18/REPORT.md) reviews the 18 merged implementation issues. See the [criterion-by-criterion evidence register](docs/acceptance/2026-11-18/CRITERIA.md) and [reproduction instructions](docs/acceptance/2026-11-18/REPRODUCE.md) for supporting logs, screenshots and limitations. Proposed tasks remain recommendations awaiting selection; CS-018 Deployment and submission remains the final step.
 
 CS-020 local review improves request recovery and loads saved Schedule independently of the worker selector. See [request recovery](docs/request-recovery.md) for timeout, retry and uncertain-save behavior. User approval is required before push/merge.
+
+CS-022 local review separates **Expired** coverage from actionable Approvals and adds an Expired filter to both-role History. Stored decisions/events and assignments remain intact. See [expired coverage](docs/expired-coverage.md). Awaiting user approval before push/merge.

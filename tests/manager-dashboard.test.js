@@ -37,7 +37,7 @@ test('manager summary returns sorted business shifts and pending people without 
   const store = await fixture(t);
   const before = await readFile(store.filename, 'utf8');
   const result = await managerDashboard(store, 'manager_morgan', now);
-  assert.deepEqual(result.summary, { workers: 4, shifts: 5, pendingClaims: 1 });
+  assert.deepEqual(result.summary, { workers: 4, shifts: 5, pendingClaims: 1, expiredCoverage: 0 });
   assert.deepEqual(result.shifts.map(s => s.id), ['shift_thursday', 'shift_friday', 'shift_saturday', 'shift_sunday', 'shift_monday']);
   assert.equal(result.shifts[0].status, 'in_progress');
   assert.equal(result.shifts[1].assignedWorker.name, 'Alex Morgan');
@@ -55,28 +55,27 @@ test('each manager sees only their own business including claim participants and
     db.businesses.push({ ...db.businesses[0], id: 'other_business', name: 'Other private café' });
     db.users.push({ ...db.users[0], id: 'manager_other', businessId: 'other_business', email: 'manager_other@example.test' });
     for (const [id, name] of [['worker_other', 'Other worker'], ['claimant_other', 'Other claimant']]) db.users.push({ ...db.users[1], id, name, businessId: 'other_business', email: `${id}@example.test` });
-    db.shifts.push({ ...db.shifts[0], id: 'shift_other', businessId: 'other_business', assignedWorkerId: 'worker_other', title: 'Other business private shift' });
+    db.shifts.push({ ...db.shifts[0], id: 'shift_other', businessId: 'other_business', assignedWorkerId: 'worker_other', startsAt: '2026-11-13T12:00:00.000Z', endsAt: '2026-11-13T18:00:00.000Z', title: 'Other business private shift' });
     db.coverageRequests.push({ ...db.coverageRequests[0], id: 'request_other', businessId: 'other_business', shiftId: 'shift_other', originalWorkerId: 'worker_other', claimantId: 'claimant_other' });
   });
   const original = await managerDashboard(store, 'manager_morgan', now);
-  assert.deepEqual(original.summary, { workers: 4, shifts: 5, pendingClaims: 1 });
+  assert.deepEqual(original.summary, { workers: 4, shifts: 5, pendingClaims: 1, expiredCoverage: 0 });
   assert.doesNotMatch(JSON.stringify(original), /Other worker|Other claimant|shift_other|request_other/);
   const other = await managerDashboard(store, 'manager_other', now);
-  assert.deepEqual(other.summary, { workers: 2, shifts: 1, pendingClaims: 1 });
+  assert.deepEqual(other.summary, { workers: 2, shifts: 1, pendingClaims: 1, expiredCoverage: 0 });
   assert.equal(other.shifts[0].assignedWorker.id, 'worker_other');
   assert.equal(other.pendingClaims[0].claimant.id, 'claimant_other');
   assert.doesNotMatch(JSON.stringify(other), /Jamie Lee|Alex Morgan|Taylor Brooks/);
 });
 
-test('completed shifts leave the schedule but unresolved pending claims remain visible', async t => {
+test('completed shifts leave the schedule and expired claims leave actionable approvals', async t => {
   const store = await fixture(t);
   const boundary = Date.parse('2026-11-13T23:00:00.000Z');
   const result = await managerDashboard(store, 'manager_morgan', boundary);
   assert.deepEqual(result.shifts.map(s => s.id), ['shift_saturday', 'shift_sunday', 'shift_monday']);
-  assert.equal(result.pendingClaims.length, 1);
-  assert.equal(result.pendingClaims[0].shift.status, 'completed');
-  assert.equal(result.pendingClaims[0].status, 'pending');
-  assert.equal(result.summary.pendingClaims, 1);
+  assert.equal(result.pendingClaims.length, 0);
+  assert.equal(result.summary.pendingClaims, 0);
+  assert.equal(result.summary.expiredCoverage, 1);
 });
 
 test('new businesses return empty data and access re-checks stored roles and credentials', async t => {
@@ -86,7 +85,7 @@ test('new businesses return empty data and access re-checks stored roles and cre
     db.users.push({ ...db.users[0], id: 'manager_new', businessId: 'empty_business', email: 'new@example.test' });
   });
   const empty = await managerDashboard(store, 'manager_new', now);
-  assert.deepEqual(empty.summary, { workers: 0, shifts: 0, pendingClaims: 0 });
+  assert.deepEqual(empty.summary, { workers: 0, shifts: 0, pendingClaims: 0, expiredCoverage: 0 });
   assert.deepEqual(empty.shifts, []); assert.deepEqual(empty.pendingClaims, []);
   await assert.rejects(managerDashboard(store, 'worker_jamie', now), error => error.status === 403);
   await assert.rejects(managerDashboard(store, 'missing_manager', now), error => error.status === 401);
@@ -123,7 +122,7 @@ test('milestone walkthrough: signup, own empty dashboard, both-role pages, logou
   const identity = await (await get('/api/session', manager)).json();
   assert.equal(identity.business.id, created.business.id);
   const dashboard = await (await get('/api/manager/dashboard', manager)).json();
-  assert.deepEqual(dashboard.summary, { workers: 0, shifts: 0, pendingClaims: 0 });
+  assert.deepEqual(dashboard.summary, { workers: 0, shifts: 0, pendingClaims: 0, expiredCoverage: 0 });
   for (const page of ['overview', 'schedule', 'approvals', 'team']) assert.equal((await get(`/workspace/manager/${page}`, manager)).status, 200);
   assert.equal((await post('/api/logout', {}, manager, { 'X-CSRF-Token': identity.csrfToken })).status, 204);
   assert.equal((await get('/api/manager/dashboard', manager)).status, 401);

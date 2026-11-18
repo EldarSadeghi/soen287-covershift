@@ -1,3 +1,4 @@
+import { coverageDisplayState } from '../requests/status.js';
 import { reviewState } from '../requests/review.js';
 import { shiftRevision, shiftLockReason } from '../shifts/manage.js';
 import { HttpError } from '../auth/errors.js';
@@ -16,13 +17,15 @@ export async function managerDashboard(store, userId, now = Date.now()) {
   const shiftView = shift => ({ id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, status: timing(shift), revision: shiftRevision(shift), lockReason: shiftLockReason(db, shift, now), assignedWorker: person(shift.assignedWorkerId) });
   const shifts = [...businessShifts.values()].filter(shift => Date.parse(shift.endsAt) > now)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id)).map(shiftView);
-  const pendingClaims = db.coverageRequests.filter(request => request.businessId === business.id && request.status === 'pending')
+  const coverage = db.coverageRequests.filter(request => request.businessId === business.id);
+  const expiredCoverage = coverage.filter(request => coverageDisplayState(request, businessShifts.get(request.shiftId), now).displayStatus === 'expired').length;
+  const pendingClaims = coverage.filter(request => request.status === 'pending' && Date.parse(businessShifts.get(request.shiftId).startsAt) > now)
     .map(request => {
       const shift = businessShifts.get(request.shiftId);
       if (!shift) throw new Error('Invalid business shift reference');
       return { id: request.id, ...reviewState(db, request, shift, now), status: 'pending', createdAt: request.createdAt, shift: shiftView(shift), originalWorker: person(request.originalWorkerId), claimant: person(request.claimantId) };
     }).sort((a, b) => a.shift.startsAt.localeCompare(b.shift.startsAt) || a.id.localeCompare(b.id));
-  // Pending claims on completed shifts remain visible for attention rather than
-  // silently disappearing. This endpoint does not approve or change assignments.
-  return { timezone: business.timezone, asOf: new Date(now).toISOString(), summary: { workers: [...workers.values()].filter(u=>!u.deactivation).length, shifts: shifts.length, pendingClaims: pendingClaims.length }, shifts, pendingClaims };
+  // Expired unresolved records remain available in History, not in the
+  // actionable approval queue. Reading never creates a decision or a write.
+  return { timezone: business.timezone, asOf: new Date(now).toISOString(), summary: { workers: [...workers.values()].filter(u=>!u.deactivation).length, shifts: shifts.length, pendingClaims: pendingClaims.length, expiredCoverage }, shifts, pendingClaims };
 }
