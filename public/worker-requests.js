@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { element, shiftCard } from './shift-card.js';
 import { coverageAction } from './coverage.js';
 export async function mountWorkerRequests(main, csrfToken) {
@@ -7,12 +8,12 @@ export async function mountWorkerRequests(main, csrfToken) {
     const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return; loading = true; refresh.disabled = true; main.setAttribute('aria-busy', 'true'); updated.textContent = '';
     content.replaceChildren(element('p', 'shift-loading', 'Loading your requests…'));
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
-      const response = await fetch('/api/worker/requests', { cache: 'no-store', signal: controller.signal });
+      const response = await requestJSON('/api/worker/requests', { cache: 'no-store' });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error();
-      const result = await response.json(); content.replaceChildren();
+      const result = response.data; content.replaceChildren();
       const ownHeading = element('h2','requests-group-title','Requests you created'); content.append(ownHeading);
       if (!result.requests.length) { const empty = element('section', 'panel empty'); empty.append(element('h2', '', 'No requests yet.'), element('p', '', 'Open My shifts to request coverage for a future shift assigned to you.')); content.append(empty); }
       for (const request of result.requests) {
@@ -43,7 +44,7 @@ export async function mountWorkerRequests(main, csrfToken) {
     } catch {
       const panel = element('div', 'panel shift-load-error'); const error = element('p', '', 'We couldn’t load your requests. Please try again.'); error.setAttribute('role', 'alert');
       const retry = element('button', 'logout-button', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); panel.append(error, retry); content.replaceChildren(panel);
-    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
+    } finally { loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
   refresh.addEventListener('click', load); await load();
 }

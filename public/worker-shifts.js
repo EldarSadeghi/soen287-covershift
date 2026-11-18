@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { coverageAction, requestLink } from './coverage.js';
 import { formatShiftTime } from './shift-time.js';
 import { element, shiftCard } from './shift-card.js';
@@ -18,13 +19,12 @@ export async function mountWorkerShifts(main, csrfToken) {
     summary.hidden = true; summary.replaceChildren(); timezone.textContent = ''; updated.textContent = '';
     const status = element('p', 'shift-loading', 'Loading your shifts…'); status.setAttribute('role', 'status');
     content.replaceChildren(status);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
-      const response = await fetch('/api/worker/shifts', { cache: 'no-store', signal: controller.signal });
+      const response = await requestJSON('/api/worker/shifts', { cache: 'no-store' });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error('Unable to load shifts');
-      const result = await response.json();
+      const result = response.data;
       timezone.textContent = `All times shown in your business timezone: ${result.timezone}.`;
       if (result.shifts.length) {
         const total = result.shifts.reduce((sum, shift) => sum + formatShiftTime(shift, result.timezone).hours, 0);
@@ -59,7 +59,7 @@ export async function mountWorkerShifts(main, csrfToken) {
       const retry = element('button', 'solid-link', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load);
       error.append(message, retry); content.replaceChildren(error);
     } finally {
-      clearTimeout(timeout); main.setAttribute('aria-busy', 'false'); refresh.disabled = false; loading = false; if (restoreFocus) refresh.focus();
+      main.setAttribute('aria-busy', 'false'); refresh.disabled = false; loading = false; if (restoreFocus) refresh.focus();
     }
   }
   refresh.addEventListener('click', load);

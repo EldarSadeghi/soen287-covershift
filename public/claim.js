@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
 import { findClaimConflicts } from './claim-conflicts.js';
@@ -20,12 +21,12 @@ export function claimAction(request, context, csrfToken, onClaimed) {
   }
   function message(text, warning = false) { feedback.replaceChildren(element('p','',text)); feedback.className = `claim-feedback ${warning ? 'claim-warning' : ''}`; }
   async function post(action) {
-    const controller = new AbortController(); const timeout = setTimeout(()=>controller.abort(),15000);
+
     try {
-      const response = await fetch(`/api/worker/requests/${encodeURIComponent(request.id)}/${action}`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:JSON.stringify({revision:request.revision}),signal:controller.signal});
+      const response = await requestJSON(`/api/worker/requests/${encodeURIComponent(request.id)}/${action}`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},readOnly:action==='claim-check',body:JSON.stringify({revision:request.revision})});
       if(response.status===401){location.replace('/login?expired=1');throw new Error('Please sign in again.');}
-      const data = await response.json(); if(!response.ok){const error = new Error(data.message || 'Unable to check this request. Refresh the board.');error.conflicts = data.fields?.conflicts;error.responseError = true;throw error;}return data;
-    } catch(error) { if(error.responseError)throw error;throw new Error(action === 'claim' ? 'We couldn’t confirm whether your claim was saved. Refresh the board and My requests before retrying.' : 'We couldn’t check availability. Please try again or refresh the board.'); } finally {clearTimeout(timeout);}
+      const data = response.data; if(!response.ok){const error = new Error(data.message || 'Unable to check this request. Refresh the board.');error.conflicts = data.fields?.conflicts;error.responseError = true;throw error;}return data;
+    } catch(error) { if(error.responseError || error.uncertain !== undefined)throw error;throw new Error(action === 'claim' ? 'We couldn’t confirm whether your claim was saved. Refresh the board and My requests before retrying.' : 'We couldn’t check availability. Please try again or refresh the board.'); }
   }
   conflicts(findClaimConflicts(request.shift,context.commitments));
   check.addEventListener('click',async()=>{

@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { claimAction } from './claim.js';
 import { element, shiftCard } from './shift-card.js';
 export async function mountOpenShifts(main, csrfToken) {
@@ -7,12 +8,12 @@ export async function mountOpenShifts(main, csrfToken) {
     const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return; loading = true; refresh.disabled = true; main.setAttribute('aria-busy', 'true'); summary.textContent = ''; updated.textContent = '';
     const status = element('p', 'shift-loading', 'Loading open coverage requests…'); status.setAttribute('role','status'); content.replaceChildren(status);
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
-      const response = await fetch('/api/worker/open-shifts', { cache: 'no-store', signal: controller.signal });
+      const response = await requestJSON('/api/worker/open-shifts', { cache: 'no-store' });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error();
-      const result = await response.json(); content.replaceChildren();
+      const result = response.data; content.replaceChildren();
       summary.textContent = `${result.requests.length} open request${result.requests.length === 1 ? '' : 's'} · Times shown in ${result.timezone}.`;
       if (!result.requests.length) {
         const empty = element('section','panel empty'); empty.append(element('h2','','All covered for now.'),element('p','','There are no eligible open coverage requests from your teammates. Your own, started and unavailable requests don’t appear here. Refresh to check again.'));
@@ -27,7 +28,7 @@ export async function mountOpenShifts(main, csrfToken) {
       updated.textContent = `Updated ${new Intl.DateTimeFormat('en-US',{timeZone:result.timezone,hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(result.asOf))}. Refresh to check availability; requests may change or expire.`;
     } catch {
       const panel = element('div','panel shift-load-error'); const message = element('p','','We couldn’t load open shifts. Please try again.'); message.setAttribute('role','alert'); const retry = element('button','logout-button','Try again'); retry.type = 'button'; retry.addEventListener('click',load); panel.append(message,retry); content.replaceChildren(panel);
-    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy','false'); if (restoreFocus) refresh.focus(); }
+    } finally { loading = false; refresh.disabled = false; main.setAttribute('aria-busy','false'); if (restoreFocus) refresh.focus(); }
   }
   refresh.addEventListener('click',load); await load();
 }

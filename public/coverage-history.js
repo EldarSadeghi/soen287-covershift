@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { element, shiftCard } from './shift-card.js';
 const labels = { open: 'Open', pending: 'Pending approval', approved: 'Approved', rejected: 'Rejected', cancelled: 'Cancelled' };
 const actions = { requested: 'Coverage requested', claimed: 'Coverage claimed', approved: 'Claim approved · assignment transferred', rejected: 'Claim rejected · original assignment retained', reopened: 'Coverage reopened after rejection', cancelled: 'Coverage cancelled · assignment unchanged', legacy: 'Saved status · earlier event details were not recorded' };
@@ -29,13 +30,13 @@ export async function mountCoverageHistory(main, role) {
   async function load(event) {
     const restoreFocus = Boolean(event?.currentTarget);
     if (loading) return; loading = true; refresh.disabled = filter.disabled = true; main.setAttribute('aria-busy', 'true'); count.textContent = ''; updated.textContent = ''; content.replaceChildren(element('p', 'shift-loading', 'Loading coverage history…'));
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
-      const response = await fetch(`/api/${role}/coverage-history`, { cache: 'no-store', signal: controller.signal });
+      const response = await requestJSON(`/api/${role}/coverage-history`, { cache: 'no-store' });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
-      if (!response.ok) throw new Error(); data = await response.json(); render();
+      if (!response.ok) throw new Error(); data = response.data; render();
     } catch { const box = element('section', 'panel shift-load-error'); const error = element('p', '', 'We couldn’t load coverage history. Please try again.'); error.setAttribute('role', 'alert'); const retry = element('button', 'logout-button', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); box.append(error, retry); content.replaceChildren(box); }
-    finally { clearTimeout(timeout); loading = false; refresh.disabled = filter.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
+    finally { loading = false; refresh.disabled = filter.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
   filter.addEventListener('change', () => { if (data) render(); }); refresh.addEventListener('click', load); await load();
 }

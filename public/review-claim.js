@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
 export function reviewActions(claim, csrfToken, onSuccess) {
   const root = element('div', 'coverage-action');
@@ -10,7 +11,7 @@ export function reviewActions(claim, csrfToken, onSuccess) {
   const submit = element('button', 'solid-link'); submit.type = 'button';
   const buttons = element('div', 'create-actions'); buttons.append(back, submit);
   confirmation.append(heading, description, error, buttons);
-  let decision; let busy = false;
+  let decision; let busy = false; let uncertain = false;
   root.addEventListener('keydown', event => { if (event.key === 'Escape' && !confirmation.hidden && !busy) { event.preventDefault(); back.click(); } });
 
   for (const kind of ['approve', 'reject']) {
@@ -28,15 +29,15 @@ export function reviewActions(claim, csrfToken, onSuccess) {
   for (const conflict of claim.conflicts) root.append(element('p', 'section-note', `Overlaps ${conflict.kind === 'assigned' ? 'assigned shift' : 'pending claim'}: ${conflict.title}`));
   root.append(confirmation);
   submit.addEventListener('click', async () => {
-    if (busy) return; busy = true; submit.disabled = back.disabled = true; error.hidden = true;
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000); const label = submit.textContent; submit.textContent = 'Saving decision…';
+    if (busy || uncertain) return; busy = true; submit.disabled = back.disabled = true; error.hidden = true;
+     const label = submit.textContent; submit.textContent = 'Saving decision…';
     try {
-      const response = await fetch(`/api/manager/requests/${encodeURIComponent(claim.id)}/${decision}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ revision: claim.revision }), signal: controller.signal });
+      const response = await requestJSON(`/api/manager/requests/${encodeURIComponent(claim.id)}/${decision}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ revision: claim.revision }) });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
-      const result = await response.json();
+      const result = response.data;
       if (!response.ok) { error.textContent = result.message || 'Could not save this decision. Refresh approvals.'; error.hidden = false; error.focus(); return; }
       await onSuccess(result.message);
-    } catch { error.textContent = 'We couldn’t confirm the result. Refresh approvals before retrying.'; error.hidden = false; error.focus(); }
-    finally { clearTimeout(timeout); busy = false; submit.disabled = back.disabled = false; submit.textContent = label; }
+    } catch { uncertain = true; error.textContent = 'We couldn’t confirm the result. Refresh approvals before retrying.'; error.hidden = false; error.focus(); }
+    finally { busy = false; submit.disabled = uncertain; back.disabled = false; submit.textContent = label; }
   }); return root;
 }

@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { mountCoverageHistory } from './coverage-history.js';
 import { mountOpenShifts } from './open-shifts.js';
 import { mountWorkerRequests } from './worker-requests.js';
@@ -15,10 +16,10 @@ const routes = {
 function showError(message) { errorBox.textContent = message; errorBox.hidden = false; errorBox.focus(); }
 async function load() {
   try {
-    const response = await fetch('/api/session', { cache: 'no-store' });
+    const response = await requestJSON('/api/session', { cache: 'no-store' });
     if (response.status === 401) { location.replace('/login?expired=1'); return; }
     if (!response.ok) throw new Error();
-    const account = await response.json();
+    const account = response.data;
     const { user, business } = account;
     csrfToken = account.csrfToken;
     const roleRoutes = routes[user.role];
@@ -52,10 +53,10 @@ async function load() {
 logout.addEventListener('click', async () => {
   logout.disabled = true; errorBox.hidden = true;
   try {
-    const response = await fetch('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: '{}' });
+    const response = await requestJSON('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: '{}' });
     if (!response.ok && response.status !== 401) throw new Error();
     csrfToken = undefined; location.replace('/login');
-  } catch { showError('We couldn’t sign you out. Refresh the page and try again.'); logout.disabled = false; }
+  } catch { showError('We couldn’t confirm sign-out. Refresh the page to check your session before trying again.'); logout.disabled = false; }
 });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
 load();
