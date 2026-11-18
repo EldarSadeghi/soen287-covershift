@@ -19,8 +19,9 @@ export async function mountWorkerRequests(main, csrfToken) {
       for (const request of result.requests) {
         const article = element('article', 'panel coverage-request');
         const head = element('div', 'panel-head'); const labels = { open: 'Open · waiting for a teammate', pending: 'Pending manager approval', approved: 'Approved', rejected: 'Claim rejected · coverage reopened', cancelled: 'Cancelled' };
-        head.append(element('h2', '', labels[request.status])); article.append(head, shiftCard(request.shift, result.timezone));
+        head.append(element('h2', '', request.displayStatus === 'expired' ? 'Expired' : labels[request.status])); article.append(head, shiftCard(request.shift, result.timezone));
         const details = element('div', 'coverage-details');
+        if (request.displayStatus === 'expired') details.append(element('p', 'stale-claim', `Coverage expired when the shift started. Saved status: ${request.status === 'pending' ? 'Pending approval' : 'Open'}. This request did not transfer the assignment. See History for the original events.`));
         if (request.claimantName) details.append(element('p', '', `${request.status === 'cancelled' ? 'Previous claimant' : 'Claimed by'}: ${request.claimantName}`));
         details.append(element('p', 'section-note', request.stillAssigned ? 'You are still assigned to this shift.' : 'You are no longer assigned to this shift.'));
         if (request.canCancel) {
@@ -35,9 +36,9 @@ export async function mountWorkerRequests(main, csrfToken) {
       if (!result.claims.length) { const empty = element('section','panel empty'); empty.append(element('p','','You haven’t claimed any coverage yet. Browse Open shifts to help a teammate.')); const link = element('a','text-link','Browse Open shifts →'); link.href='/workspace/worker/open';empty.append(link);content.append(empty); }
       for (const claim of result.claims) {
         const article = element('article','panel coverage-request'); const head=element('div','panel-head');const labels={pending:'Your claim · Pending manager approval',approved:'Your claim · Approved',rejected:'Your claim · Rejected',cancelled:'Your claim · Request cancelled',open:'Your claim · Open'};
-        head.append(element('h2','',labels[claim.status]));article.append(head,shiftCard(claim.shift,result.timezone));const details=element('div','coverage-details');
-        details.append(element('p','',`Original worker: ${claim.originalWorkerName}`),element('p','section-note',claim.status==='pending'?'Your claim is awaiting manager approval. The original worker remains assigned. This time is reserved when checking your other claims.':claim.assignedToYou?'This shift is now assigned to you.':'This claim does not assign the shift to you.'));
-        if(claim.status==='pending'&&claim.shift.status!=='upcoming')details.append(element('p','section-note','This shift has started or ended while awaiting review. Contact your manager.'));
+        head.append(element('h2','',claim.displayStatus === 'expired' ? 'Your claim · Expired' : labels[claim.status]));article.append(head,shiftCard(claim.shift,result.timezone));const details=element('div','coverage-details');
+        details.append(element('p','',`Original worker: ${claim.originalWorkerName}`),element('p','section-note',claim.displayStatus==='expired'?'This claim expired when the shift started. It did not transfer the assignment. The original events are kept in History.':claim.status==='pending'?'Your claim is awaiting manager approval. The original worker remains assigned. This time is reserved when checking your other claims.':claim.assignedToYou?'This shift is now assigned to you.':'This claim does not assign the shift to you.'));
+        if (claim.displayStatus === 'expired') details.append(element('p', 'section-note', 'Saved status: Pending approval.'));
         article.append(details);content.append(article);
       }
       updated.textContent = `${result.requests.length} request${result.requests.length === 1 ? '' : 's'} · ${result.claims.length} claim${result.claims.length === 1 ? '' : 's'} · Times shown in ${result.timezone}. Refresh to check for changes.`;
