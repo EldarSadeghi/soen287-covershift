@@ -1,0 +1,252 @@
+{
+  "issues": [
+    {
+      "number": 36,
+      "title": "CS-019: Remove and deactivate employees",
+      "body": "Acceptance criteria:\n- [x] Manager can delete an employee only when no shift, coverage or history references exist.\n- [x] Manager can deactivate employees while retaining history; revoke sign-in/session/setup access and remove them from assignment options.\n- [x] Block deactivation while current/upcoming assignments or pending claims need resolution; show concrete blockers.\n- [x] Scoped authorization, Origin/JSON/CSRF, fresh revision and atomic rechecks prevent foreign, stale or concurrent unsafe removal.\n- [x] Clear confirmation, active/inactive team views, keyboard/mobile feedback and relevant tests/local fictional preview.\n- [x] User approval before pushing or merging.\n\nCS-018 Deployment and submission is explicitly the final step, after this and remaining implementation work. CS-017 remains awaiting review; CS-019 uses a separate branch from main. Todo -> In Progress -> Your review -> Done after approved merge.\n\nReady for user review: 108 tests plus syntax checks pass; diff clean. Browser verified deletion confirmation/Escape, fictional deactivation and inactive roster; 390px no horizontal overflow. Preview http://localhost:3012/workspace/manager/team. Implemented in /private/tmp/covershift-cs019-worktree from merged CS-017 PR #37. CS-018 remains final. No CS-019 push/merge.\n\nUser approved; merged in PR #38.",
+      "state": "closed"
+    },
+    {
+      "number": 35,
+      "title": "CS-017: Accessibility and responsive polish",
+      "body": "Acceptance criteria:\n- [x] Core manager/worker flows have visible keyboard focus, labels and useful error/status announcements.\n- [x] Confirmation, validation and refresh flows preserve useful focus.\n- [x] Phone layouts and zoom/reflow avoid clipped content; controls remain usable with long names/titles.\n- [x] Authentication/setup and workspace respect reduced motion and readable contrast where issues are found.\n- [x] Relevant automated checks and desktop/mobile keyboard browser verification with fictional local preview.\n- [x] User approval before pushing or merging.\n\nTodo -> In Progress -> Your review -> Done after approved merge. Depends on CS-015/016 (#31/#33).\n\nReady for review, 2026-11-17. npm run verify: 101 passing tests plus syntax checks; diff clean. Keyboard checks verified skip link, focused errors/Tab, edit/request/claim/review Escape return, refresh focus. 320px/390px manager and employee reflow checked with long fictional content; visible 44px navigation targets and 16px phone inputs. Selected contrast ratios calculated. Full screen-reader/zoom conformance not claimed; details in docs/accessibility-review.md. Preview http://localhost:3011/workspace/manager/approvals. No push/merge.\n\nApproved and merged in PR #37.",
+      "state": "closed"
+    },
+    {
+      "number": 33,
+      "title": "CS-016: Security and workflow verification",
+      "body": "Acceptance criteria:\n- [x] Review current server authorization, business isolation, strict input, session/CSRF/Origin, secret exposure and persistence controls.\n- [x] Verify a full HTTP coverage lifecycle across both roles and businesses, including rejection/reclaim/approval/cancellation/history.\n- [x] Add meaningful missing regressions for tampered/foreign IDs, overlapping shifts, races, stale approvals, account/session changes and malformed requests.\n- [x] Fix confirmed findings and document evidence, test commands and remaining deployment limits.\n- [x] Run the full suite and syntax checks; provide local review evidence and a fictional preview.\n- [x] User approval before pushing or merging.\n\nTodo -> In Progress -> Your review -> Done after approved merge. Depends on CS-015 (#31, PR #32).\n\nReady for user review on 2026-11-17. npm run verify: syntax checks and 101 passing tests (nine new HTTP integration tests). Diff check passed. No bypass identified in tested scope; production behavior unchanged. Evidence matrix/reproduction/deployment limits: docs/security-verification.md. Isolated fictional browser preview http://localhost:3010/workspace/manager/history; approval, assignment, history and literal HTML-like input verified. No push/merge.\n\nUser approved and merged in PR #34 on 2026-11-17.",
+      "state": "closed"
+    },
+    {
+      "number": 31,
+      "title": "CS-015: Coverage status and history",
+      "body": "Acceptance criteria:\n- [x] Workers see status and event timelines for their requests/claims; managers see business coverage history.\n- [x] Record request, claim, approval, rejection, reopening and cancellation actor/time atomically with successful changes; failed/stale actions add nothing.\n- [x] Preserve existing data with honest legacy history where prior event times are unknown.\n- [x] Clear current assignment and open/pending/approved/rejected/cancelled outcomes, business timezone and status filtering.\n- [x] Server enforces role, business and participant scope; no credentials or unrelated worker histories exposed.\n- [x] Relevant tests, refresh/empty/error/mobile states and fictional running preview.\n- [x] User approval before push or merge.\n\nWorkflow: Todo -> In Progress -> Your review -> Done. Depends on CS-014 (#29, PR #30).\n\nReady for user review, 2026-11-17. 92 tests pass; syntax/diff checks pass. Browser verified manager timelines/status filter/refresh and employee participant-only records, rejected outcome, phone layout and filtered empty state. Fictional isolated preview http://localhost:3009/workspace/manager/history. No feature branch pushed or merged.\n\nApproved by user and merged in PR #32 on 2026-11-17.",
+      "state": "closed"
+    },
+    {
+      "number": 29,
+      "title": "CS-014: Manager approval and rejection",
+      "body": "Implement manager decisions on pending coverage claims.\n\nAcceptance criteria:\n- [x] Approval atomically rechecks manager/business, pending revision, future start, original assignment, claimant eligibility and assigned/pending conflicts; transfers assignment exactly once.\n- [x] Rejection preserves the rejected claim and reviewer/time, leaves original assignment unchanged and reopens coverage.\n- [x] Stale, concurrent, foreign, wrong-role and tampered decisions cannot mutate data.\n- [x] Session, Origin, JSON, CSRF and query protections apply.\n- [x] Manager confirmation, loading, error/refresh and mobile/keyboard states; worker views reflect decisions.\n- [x] Relevant tests and running fictional local preview.\n- [x] User approval before push/merge.\n\nWorkflow: Todo -> In Progress -> Your review -> Done after approval and merge. Depends on CS-013 (#27, PR #28). Full history presentation remains CS-015.\n\nReady for user review (2026-11-17). 86 tests pass; syntax and diff checks pass. Browser verified approval, rejection, post-claim assignment conflict and 390px confirmation layout. Isolated fictional manager preview: http://localhost:3008/workspace/manager/approvals. No branch pushed or merged.\n\nUser approved and merged in PR #30 on 2026-11-17.",
+      "state": "closed"
+    },
+    {
+      "number": 27,
+      "title": "CS-013: Claim coverage with live conflict detection",
+      "body": "Let workers claim eligible teammate coverage requests with immediate inline schedule warnings and atomic server validation.\n\nWorkflow: Todo \u2192 In Progress \u2192 Your review \u2192 Done after explicit approval and merge.\n\nAcceptance criteria:\n- [x] Open board checks assigned shifts and other pending claims for true interval overlap; touching boundaries are allowed, including overnight/DST cases.\n- [x] Clicking claim/check shows an immediate no-page-reload warning from the current schedule snapshot; a fresh server preflight independently rechecks eligibility/conflicts before confirmation.\n- [x] Confirm claim atomically rechecks current worker/business, request revision/status, future start, ownership and conflicts, then sets claimant from session and status pending.\n- [x] Original worker remains assigned until manager approval (CS-014).\n- [x] Concurrent claims on one request yield exactly one claimant; overlapping requests claimed by one worker cannot both succeed.\n- [x] Own, foreign, expired, cancelled, approved and already-claimed requests are rejected; tampered identity/status fields are refused.\n- [x] Worker can see pending claims in My requests; original owner and manager see updated pending status.\n- [x] Session/Origin/JSON/CSRF, current account and query-scope protections apply to check/claim.\n- [x] Loading, confirmation/cancel, stale/error/retry, keyboard/mobile states and tests/local preview provided.\n- [x] User approval before push/merge.\n\nDepends on CS-012 (#25, PR #26). Pending claims reserve time for subsequent claim checks; they do not transfer assignments. Manager approval/rejection and broader history remain CS-014/015.\n\nReady for Your review locally. Validation: all 80 tests pass; nine claiming tests rerun with exact-boundary adjacency also pass; syntax and diff checks pass. Browser verified immediate assigned/pending overlap warnings, fresh preflight, successful pending claim and My requests visibility, Keep browsing/focus restoration, stale final rejection after owner cancellation, and 390px mobile confirmation. Preview: http://localhost:3007/workspace/worker/open signed in as fictional Jamie. No CS-013 push or merge; user approval pending.\n\nUser approved merge. Completed in PR #28.",
+      "state": "closed"
+    },
+    {
+      "number": 25,
+      "title": "CS-012: Open-shift board",
+      "body": "Replace the worker Open shifts placeholder with saved, eligible coverage requests from teammates.\n\nWorkflow: Todo \u2192 In Progress \u2192 Your review \u2192 Done after explicit approval and merge.\n\nAcceptance criteria:\n- [x] Worker sees only open future coverage requests from other workers in the same business.\n- [x] Own, started/ended, pending/already-claimed, approved and cancelled requests are excluded server-side.\n- [x] Cards show title, business-timezone date/time, duration and original worker; earliest shifts first with stable ordering.\n- [x] Session/worker/business checks are server-enforced; client query selectors cannot change scope and DTOs omit private account fields.\n- [x] Refresh reflects new requests/cancellations and exact shift-start expiry; board reads do not modify data or assignments.\n- [x] Loading, honest empty, error/retry, responsive and keyboard states work.\n- [x] Claiming is clearly identified as CS-013 and no claim action is presented as functional.\n- [x] Automated tests and local worker preview provided.\n- [x] User approval before push/merge.\n\nDepends on CS-011 (#23, PR #24). This increment is read-only; conflict detection and atomic claiming belong to CS-013.\n\nReady for Your review locally. Validation: 71 passing tests, syntax and diff checks. Browser verified eligible teammate requests, overnight details, cancellation/new-request refresh, honest empty state, service-error/retry recovery and 390px mobile layout. Preview: http://localhost:3006/workspace/worker/open signed in as fictional worker Jamie. Claiming remains CS-013. No push or merge; user approval pending.\n\nUser approved merge. Completed in PR #26.",
+      "state": "closed"
+    },
+    {
+      "number": 23,
+      "title": "CS-011: Request and cancel coverage",
+      "body": "Allow workers to request coverage for their own future shifts and manage their requests.\n\nWorkflow: Todo \u2192 In Progress \u2192 Your review \u2192 Done after explicit approval and merge.\n\nAcceptance criteria:\n- [x] My shifts offers coverage requests only for own future assigned shifts without an active open/pending request.\n- [x] My requests lists only the signed-in worker\u2019s own requests, with status, shift times and cancellation eligibility.\n- [x] Original worker can cancel open or pending requests before shift start while still assigned; pending cancellation preserves claimant information and never transfers assignment.\n- [x] Cancelled requests remain saved; a fresh request may be created after refresh with a new ID.\n- [x] Atomic checks reject duplicate/concurrent/stale requests, foreign or other-worker shifts/requests, started shifts and closed/approved cancellations.\n- [x] Session, worker role, Origin, JSON and CSRF protect mutations; request bodies cannot select owner/business/status.\n- [x] Clear confirmation, loading, empty, error/retry, mobile and keyboard states; assignment stays unchanged.\n- [x] Tests and working local worker preview provided.\n- [x] User approves before push/merge.\n\nDepends on CS-010 (#21, PR #22). Open-shift discovery and claiming remain CS-012/013; approval remains CS-014. Cancellation policy: owner may cancel open or pending requests before start while still assigned; history is retained.\n\nReady for Your review locally. Validation: 66 passing tests, syntax and diff checks. Browser verified request confirmation/create, scoped My requests, pending cancellation retaining claimant/assignment, Keep as is/focus restoration, persisted records after server restart, and 390px mobile cancellation layout. Preview: http://localhost:3005/workspace/worker/requests signed in as fictional worker Jamie. No push or merge; user approval pending.\n\nUser approved merge. Completed in PR #24.",
+      "state": "closed"
+    },
+    {
+      "number": 21,
+      "title": "CS-010: Manager shift editing and deletion",
+      "body": "Edit or delete eligible future shifts from the manager Schedule page.\n\nWorkflow: Todo \u2192 In Progress \u2192 Your review \u2192 Done after explicit approval and merge.\n\nAcceptance criteria:\n- [x] Manager can edit title, assigned worker and business-local start/end times of their business\u2019s future shifts.\n- [x] Manager can delete eligible future shifts with an explicit confirmation.\n- [x] Shifts with any linked coverage request are locked for editing/deletion, preserving active requests and history; started/ended shifts are also locked.\n- [x] Server rechecks manager/business, eligibility, dates, assignment and overlaps atomically; stale edits/deletes are rejected instead of overwriting newer changes.\n- [x] Writes enforce session, Origin, JSON and CSRF; foreign/worker access rejected.\n- [x] Manager schedule/counts and worker views reflect persisted edits, reassignment and deletion.\n- [x] Loading, validation/error/retry, cancel and mobile/keyboard states work.\n- [x] Automated checks and local preview provided before push/merge.\n- [x] User approves publication.\n\nDepends on CS-009 (#19, PR #20). Coverage request creation remains CS-011; locking linked shifts is the conservative policy for this increment.\n\nReady for Your review. Validation: 59 passing tests, syntax and diff checks. Browser verified overnight edit/reassignment, prefilled form, overlap feedback retaining draft, deletion confirmation/cancel/focus restoration and 390px mobile layout. Actual deletion covered in HTTP integration tests. Preview: http://localhost:3004/workspace/manager/schedule (fictional manager data). No push or merge; user approval pending.\n\nUser approved merge. Completed in PR #22.",
+      "state": "closed"
+    },
+    {
+      "number": 19,
+      "title": "CS-009: Manager shift creation and assignment",
+      "body": "Create shifts from the manager Schedule page and assign workers within the signed-in business.\n\nWorkflow: Todo \u2192 In Progress \u2192 Your review \u2192 Done after explicit user approval and merge.\n\nAcceptance criteria:\n- [x] Manager can create a titled shift assigned to an existing worker in their own business.\n- [x] Dates/times are interpreted in business timezone, saved as UTC, and support overnight shifts with an explicit end date.\n- [x] Server rejects malformed/past/reversed times, nonexistent or ambiguous daylight-saving times, foreign workers, extra fields, and overlapping assignments.\n- [x] Session, manager role, same-origin JSON, CSRF and atomic assignment checks protect writes.\n- [x] Saved shifts appear in manager schedule/counts and assigned worker My shifts; persist after restart.\n- [x] Form includes loading, empty-roster, success, validation and retry states; mobile and keyboard use checked.\n- [x] Automated checks and local preview provided.\n- [x] User approval before push/merge.\n\nDepends on CS-008 (#17). Editing/deletion remains CS-010.\n\nReady for Your review locally. Validation: 50 tests passed, JavaScript syntax and git diff checks passed. Browser checked create/save/reload, assigned worker view, overlap error with entries preserved, keyboard focus and 390px responsive layout. Preview: http://localhost:3003/workspace/manager/schedule . Isolated fictional data only. No push or merge; user approval pending.\n\nUser approved merge. Completed in PR #20.",
+      "state": "closed"
+    },
+    {
+      "number": 17,
+      "title": "CS-008: Worker management and account setup",
+      "body": "Let managers add workers and view their own business roster, with a secure local account setup flow.\n\nWorkflow: Todo first, In Progress, Your review, Done after confirmation and approved merge.\n\n## Acceptance criteria\n- [x] Manager Team page shows only their own business\u2019s saved workers and account setup status.\n- [x] Manager can add a worker with validated name/email; role and business are server-selected.\n- [x] Duplicate emails/concurrent submissions cannot create duplicate workers.\n- [x] Worker sets their own password through a single-use, expiring setup link; no email delivery or plaintext password storage.\n- [x] Manager-only mutations require a valid session, same-origin JSON, and CSRF token.\n- [x] Worker and cross-business access are rejected server-side; setup tokens are stored hashed and never included in roster responses.\n- [x] Responsive loading, empty, error/retry, and setup confirmation states.\n- [x] Automated and browser checks cover roster, add-worker, setup, expiry/reuse, and role/business boundaries.\n- [x] User reviews before push or merge.\n\nDepends on CS-007 (#13). Branch: codex/CS-008-worker-management. Scope excludes editing/deleting workers, role changes, email delivery, and shift creation.\n\nLocal implementation ready for Your review. Validation: npm run check, git diff --check, 43 passing tests. Browser verified add-worker, saved roster and setup landing page on isolated fictional data. Preview: http://localhost:3003/workspace/manager/team . No branch push or merge; awaiting user approval.\n\nUser approved merge. Completed in PR #18.",
+      "state": "closed"
+    },
+    {
+      "number": 16,
+      "title": "CS-008: Worker management:",
+      "body": "Duplicate tracking stub. Implementation and acceptance criteria are tracked in #17.",
+      "state": "closed"
+    },
+    {
+      "number": 15,
+      "title": "CS-008: Worker management:",
+      "body": "Duplicate tracking stub. Implementation and acceptance criteria are tracked in #17.",
+      "state": "closed"
+    },
+    {
+      "number": 13,
+      "title": "CS-007: Manager dashboard and milestone walkthrough",
+      "body": "Connect the manager workspace to saved business shifts and pending coverage, then verify the milestone walkthrough.\n\nWorkflow: Todo first, In Progress, Your review, Done after user confirmation and approved merge.\n\n## Acceptance criteria\n- [x] Manager overview shows only their business\u2019s saved current/upcoming shifts and pending coverage claims.\n- [x] Read-only schedule and approvals pages are connected to those same scoped records.\n- [x] Pending claims show original worker, claimant, shift time, and status; approval/rejection remain clearly unavailable until CS-014.\n- [x] Responsive loading, empty, refresh, and error/retry states; dates use business timezone.\n- [x] Manager/worker and cross-business boundaries are tested server-side.\n- [x] Both-role walkthrough documents what works and what remains upcoming; all proposed pages are reachable.\n- [x] Automated tests and browser walkthrough pass.\n- [x] User reviews before push or merge.\n\nDepends on CS-005 (#9) and CS-006 (#11). Branch: codex/CS-007-manager-dashboard. No worker/shift CRUD or approval mutations in this increment.\n\nReady for user review (November 13). Tracking: Todo first, then In Progress, now Your review. Local manager preview: http://localhost:3001/workspace/manager/overview, signed into isolated fictional saved records in Chrome.\n\nSyntax checks, diff checks, and all 36 tests pass. Browser completed desktop/390px manager overview, schedule, approvals and Team navigation; pending participants and disabled actions; saved refresh/reload; empty panels; retry/recovery after temporarily unreadable isolated storage; worker navigation/regression; and worker denial from manager pages. Fixture restored; normal records unchanged.\n\nWalkthrough and scope: docs/manager-dashboard.md. Approval/rejection, worker management, and shift CRUD remain upcoming. No CS-007 push or merge until user confirmation.",
+      "state": "closed"
+    },
+    {
+      "number": 11,
+      "title": "CS-006: Worker upcoming shifts from saved data",
+      "body": "Connect the authenticated worker shift page to persistent JSON records.\n\nWorkflow: Todo first, In Progress, Your review, Done after confirmation and merge.\n\n## Acceptance criteria\n- [x] Worker sees only assigned shifts in their own business; role and identity enforced server-side.\n- [x] Upcoming/current shifts are ordered by start time; completed shifts are excluded.\n- [x] Dates/times display in the business timezone, including overnight shifts.\n- [x] Responsive loading, error/retry, and empty states; no fake shifts in private workspace.\n- [x] Saved changes appear after refresh; no shift mutation or coverage actions added.\n- [x] Automated tests cover filtering, business/role isolation, ordering, and time boundaries; browser checks pass.\n- [x] User reviews before push or merge.\n\nDepends on CS-005 (#9). Branch: codex/CS-006-worker-shifts.\n\nReady for user review. Tracked Todo first, then In Progress, now Your review. Worker review preview: http://localhost:3001/workspace/worker/shifts (Chrome signed into isolated fictional saved records). Normal local records were unchanged.\n\nAll 30 tests and syntax checks passed. Browser verified current/future/overnight rows, saved updates after Refresh/reload, empty results, retry after a temporarily unreadable fixture, recovery, and 390px layout. The isolated review data was restored and its server is left running for review.\n\nSee docs/worker-shifts.md. No CS-006 push or merge until user approval.",
+      "state": "closed"
+    },
+    {
+      "number": 9,
+      "title": "CS-005: Login, logout, sessions, and protected access",
+      "body": "Implement session authentication for manager and worker accounts.\n\nTracking: Todo first, then In Progress, then Your review; Done after user confirmation and approved merge.\n\n## Acceptance criteria\n- [x] Responsive login page verifies hashed passwords with generic failure feedback.\n- [x] Opaque server-side sessions use HttpOnly SameSite cookies, expiration, and rotation on login.\n- [x] Logout invalidates the server session; missing/expired sessions cannot access protected routes.\n- [x] Server enforces manager/worker roles and business boundaries; preview role switching grants no access.\n- [x] Mutating authenticated requests require CSRF protection.\n- [x] Both fictional demo roles can be tested locally through an explicit development account setup.\n- [x] Automated tests and browser checks cover login, logout, session and role boundaries.\n- [x] User reviews before push or merge.\n\nDepends on CS-004 (#7). Branch: codex/CS-005-session-auth. Worker shift data wiring remains CS-006.\n\nReady for user review. Tracked through Todo first, then In Progress, now Your review. Local preview: http://127.0.0.1:3000/login. Use a previously created signup account.\n\nAll 24 tests and syntax checks passed. Browser checks covered invalid credentials, manager and worker login, refresh, navigation, logout, rejected manager access for a worker, public-demo role isolation, new signup-to-login, and 390px layout. Browser checks used isolated localhost:3001 data; normal local accounts were unchanged.\n\nSession details and optional demo-account setup are in docs/authentication.md. Sessions expire after 30 minutes idle / 8 hours absolute and reset on server restart. Private workspace identity is connected; saved shift views remain CS-006. No CS-005 push or merge until approval.",
+      "state": "closed"
+    },
+    {
+      "number": 7,
+      "title": "CS-004: Manager signup and business creation",
+      "body": "Create a responsive manager signup page backed by JSON storage.\n\nWorkflow: add to Todo first, move to In Progress for implementation, then Your review. Mark Done only after user confirmation and approved merge.\n\n## Acceptance criteria\n- [x] Signup form collects manager name, email, password, and business name.\n- [x] Server validates inputs and stores a salted password hash, never plaintext.\n- [x] Business and manager are created atomically with new IDs; clients cannot choose their role or join another business.\n- [x] Duplicate emails and invalid requests are rejected without partial records.\n- [x] Responsive form has accessible errors and a clear success state.\n- [x] Signup does not imply a working login/session; CS-005 follows.\n- [x] Relevant automated and browser checks pass.\n- [x] User reviews and confirms before pushing or merging.\n\nDepends on CS-002 (#3) and CS-003 (#5). Branch: codex/CS-004-manager-signup.\n\nTracking: verified Todo first, then In Progress; now Your review.\n\nLocal preview: http://127.0.0.1:3000/signup. Signup saves a business and manager account; login/sessions remain CS-005. All 15 tests and syntax checks passed. Browser checked invalid form errors, password visibility, successful signup, duplicate email feedback, mobile width, navigation entry, and keyboard skip focus. Browser mutations used isolated test data. No feature push or merge until user confirmation.",
+      "state": "closed"
+    },
+    {
+      "number": 5,
+      "title": "CS-003: JSON data model and storage adapter",
+      "body": "Build file-backed storage for the next authentication and shift increments.\n\n## Acceptance criteria\n- [x] Businesses, users, shifts, coverage requests have stable IDs and documented relationships.\n- [x] Fictional seed data loads without overwriting existing records.\n- [x] Saved data survives restart.\n- [x] Read-modify-write operations are serialized and persisted using atomic file replacement.\n- [x] Invalid data and broken cross-business references are rejected.\n- [x] Storage tests cover persistence, concurrency, rollback, and corrupt files.\n- [x] Provide a local review method; no unauthenticated access to stored data.\n- [x] User reviews before push or merge.\n\nDepends on CS-001 (#2). Branch: codex/CS-003-json-storage. No accounts or shift mutation UI in this increment.\n\nReady for user review locally. Run `npm run data:inspect` from the project folder to see persisted fictional records (1 business, 5 users, 5 shifts, 2 requests). `npm run data:seed` preserves existing records. Nine storage tests passed, including fresh-process persistence, concurrency, rollback, corrupt files, locks, and cross-business references. HTTP checks confirmed runtime JSON and source files are not served. See docs/data-model.md. No CS-003 push or merge until approval.",
+      "state": "closed"
+    },
+    {
+      "number": 3,
+      "title": "CS-002: Responsive worker and manager navigation",
+      "body": "Build the responsive application shell and navigable role screens with fictional demo data.\n\n## Acceptance criteria\n- [x] Worker: My shifts, Open shifts, My requests.\n- [x] Manager: Overview, Schedule, Approvals, Team.\n- [x] Role preview switch, active navigation, and direct links work.\n- [x] Layout works at desktop and phone widths with keyboard-accessible navigation.\n- [x] Demo data and unavailable actions are clearly labeled; role preview grants no authorization.\n- [x] Syntax, route, and browser checks pass.\n- [x] User reviews local preview before push or merge.\n\nDepends on CS-001 (#2). Branch: codex/CS-002-role-navigation.\n\nReady for user review. Local preview: http://127.0.0.1:3000. Syntax and HTTP asset/404/405 checks passed; all seven screens, direct-link refresh, active navigation, keyboard skip focus, and 390px phone layout checked in browser. No feature branch pushed; no PR or merge until user approval.",
+      "state": "closed"
+    },
+    {
+      "number": 2,
+      "title": "CS-001: Project foundation",
+      "body": "Set up the shared starting point for CoverShift.\n\n## Acceptance criteria\n- [x] Minimal Node server and visible local start page.\n- [x] Frontend, server, runtime data, and documentation folders.\n- [x] README setup instructions and environment example.\n- [x] Ignore rules for secrets and runtime data.\n- [x] Traceable implementation plan and approval workflow.\n- [x] Syntax and local HTTP checks passed.\n- [x] User reviewed and approved the feature.\n- [x] Merged into main through PR #1.\n\nCompleted retrospectively after user approval. Implementation: #1; merge commit f9788c8b5bf3e64d51e975ddf3cae2041ced401b.",
+      "state": "closed"
+    }
+  ],
+  "merged_prs": [
+    {
+      "number": 38,
+      "title": "CS-019: Remove and deactivate employees",
+      "merged_at": "2026-11-17T19:29:21Z",
+      "merge_commit_sha": "0043def050c1edc85b0a72fd78531219dd3a1fc0",
+      "body": "Managers can delete employees without work references or deactivate eligible employees while preserving history. Team shows active/inactive filters, confirmations and unresolved assignment/claim blockers. Deactivation revokes login/session/setup access and excludes inactive employees from new assignments. Scoped atomic revision checks prevent unsafe stale or concurrent removals; schema v5 preserves historical references.\n\nValidation: 108 tests plus syntax checks pass; diff clean. Browser verified deletion confirmation/Escape, fictional deactivation, inactive roster and phone reflow. User explicitly approved push and merge. CS-018 remains the final step.\n\nCloses #36"
+    },
+    {
+      "number": 37,
+      "title": "CS-017: Accessibility and responsive polish",
+      "merged_at": "2026-11-17T19:17:29Z",
+      "merge_commit_sha": "e2efe9570bc129dd67a1835fae8ee3052badf304",
+      "body": "Improves shared focus and contrast, mobile controls/navigation/reflow, password/setup labels, associated shift validation errors, inline confirmation Escape behavior and refresh focus. Concise status announcements replace entire-list live regions.\n\nValidation: 101 tests and syntax checks pass; diff clean. Browser verified keyboard skip/error/confirmation/refresh focus and 320px/390px reflow with long fictional content. Review limits documented. User explicitly approved push and merge.\n\nCloses #35"
+    },
+    {
+      "number": 34,
+      "title": "CS-016: Security and workflow verification",
+      "merged_at": "2026-11-17T18:17:57Z",
+      "merge_commit_sha": "55f59787559aa8ea1c6ca33e4b3f5c109eded10e",
+      "body": "Adds nine HTTP integration tests for the complete coverage lifecycle, cross-business record access, role/CSRF/Origin restrictions, races, stale approvals, malformed input, session expiry/revocation, private paths, production-origin headers and throttling. Adds npm run verify and a review report with evidence and deployment limits. Production behavior is unchanged.\n\nValidation: 101 tests pass; syntax and diff checks pass. Browser approval, assignment/history and literal HTML-like title checks completed with isolated fictional data. User explicitly approved push and merge.\n\nCloses #33"
+    },
+    {
+      "number": 32,
+      "title": "CS-015: Coverage status and history",
+      "merged_at": "2026-11-17T18:05:57Z",
+      "merge_commit_sha": "60c9e1cf4401a9870d9db707d28b702bbac35d42",
+      "body": "Managers can view business coverage history and employees can view records they requested or claimed. History includes status filters, current assignment and chronological actor/time events. Successful coverage mutations record events atomically; legacy records explicitly show missing earlier details. Schema v4 preserves existing records and worker setup compatibility.\n\nValidation: 92 tests pass; syntax and diff checks pass. Browser checks covered manager timelines/filter/refresh and employee scope, rejected outcome, phone layout and filtered empty state. User explicitly approved push and merge.\n\nCloses #31"
+    },
+    {
+      "number": 30,
+      "title": "CS-014: Manager approval and rejection",
+      "merged_at": "2026-11-17T17:48:54Z",
+      "merge_commit_sha": "e909c20c34a0ed7451098453869e524cb6f8568b",
+      "body": "Managers can approve pending claims to transfer assignment after fresh authorization, revision, eligibility and conflict checks. Rejecting preserves the claimant/reviewer outcome and atomically reopens coverage with the original worker assigned. Confirmation UI and worker outcome labels reflect decisions. Schema v3 retains rejected records and remains compatible with worker setup.\n\nValidation: 86 tests pass; syntax and diff checks pass. Desktop approval/rejection, post-claim conflict and phone confirmation verified. User explicitly approved push and merge.\n\nCloses #29"
+    },
+    {
+      "number": 28,
+      "title": "CS-013: Claim coverage with live conflict detection",
+      "merged_at": "2026-11-16T20:08:35Z",
+      "merge_commit_sha": "db5ecd9321d6c700bb8b2313980ea9c38916db3f",
+      "body": "Workers can check and claim eligible teammate coverage with immediate inline overlap warnings and a fresh server preflight. Final claiming atomically rechecks availability, assigned shifts and pending claims, then saves a pending claim without transferring assignment. My requests shows the worker\u2019s claimed coverage.\n\nValidation: 80 passing tests, nine claiming tests rerun with exact-boundary adjacency, syntax and diff checks, desktop/mobile browser checks of conflicts, successful pending claim, confirmation focus and stale request rejection. User explicitly approved push and merge.\n\nCloses #27"
+    },
+    {
+      "number": 26,
+      "title": "CS-012: Open-shift board",
+      "merged_at": "2026-11-16T19:46:01Z",
+      "merge_commit_sha": "67d05829e427273b04807d37429ff7ffee313493",
+      "body": "Workers can browse future open coverage requests from teammates in their own business, with timezone-aware dates, duration, original worker, stable ordering and refresh. Own, expired, claimed and closed requests are excluded server-side. The board is read-only; claiming follows in CS-013.\n\nValidation: 71 passing tests, syntax and diff checks, desktop/mobile browser verification including populated/empty board and service-error retry recovery. User reviewed the preview and explicitly approved push and merge.\n\nCloses #25"
+    },
+    {
+      "number": 24,
+      "title": "CS-011: Request and cancel coverage",
+      "merged_at": "2026-11-16T19:25:51Z",
+      "merge_commit_sha": "8a8cfab8a3316a33a474444596b99ca72230cda6",
+      "body": "Workers can request coverage for their own future shifts, view their own requests, and cancel eligible open or pending requests before start. Cancellation preserves request and claimant history without transferring assignment. Atomic ownership, duplicate and stale-state checks protect both operations.\n\nValidation: 66 passing tests, syntax and diff checks, plus desktop/mobile browser verification of request creation, pending cancellation, retained assignment/history, confirmation focus and restart persistence. User reviewed the local preview and explicitly approved push and merge.\n\nCloses #23"
+    },
+    {
+      "number": 22,
+      "title": "CS-010: Manager shift editing and deletion",
+      "merged_at": "2026-11-16T19:10:18Z",
+      "merge_commit_sha": "4c2b141a497cc7a0e58782f044b88e43d4c8e1c1",
+      "body": "Managers can edit, reassign and delete eligible future shifts from Schedule. Started shifts and shifts with any linked coverage request remain locked. Atomic revision checks reject stale changes and shared time/assignment checks prevent overlaps. Deletion requires explicit confirmation in the UI.\n\nValidation: 59 passing tests, JavaScript syntax checks, git diff --check, and desktop/mobile browser checks of editing, reassignment, overlap feedback, delete confirmation and cancellation; HTTP tests cover persisted deletion and role views. User reviewed the manager preview and explicitly approved push and merge.\n\nCloses #21"
+    },
+    {
+      "number": 20,
+      "title": "CS-009: Manager shift creation and assignment",
+      "merged_at": "2026-11-16T18:59:04Z",
+      "merge_commit_sha": "f2bc1acbc4cb7a4a1515ce3caf80f019f3219f92",
+      "body": "Managers can create shifts from Schedule and assign workers within their business. Business-local dates are converted to UTC, including overnight shifts, with server-side calendar/DST validation and atomic overlap prevention. Saved shifts appear in manager and worker views.\n\nValidation: 50 passing tests, JavaScript syntax checks, git diff --check, and desktop/mobile browser checks of creation, persisted schedule, worker visibility and overlap feedback. User reviewed the manager preview and explicitly approved push and merge.\n\nCloses #19"
+    },
+    {
+      "number": 18,
+      "title": "CS-008: Worker management and secure account setup",
+      "merged_at": "2026-11-13T19:02:14Z",
+      "merge_commit_sha": "580c21a6ee0b4af28746e7e1030c6a347d3bd992",
+      "body": "Managers can view their own business roster and add workers by name and email. Workers choose their own password through a single-use, 24-hour setup link; managers can replace pending links. Setup tokens are stored hashed and consumed atomically, with backward-compatible JSON schema support.\n\nValidation: 43 passing tests, JavaScript syntax checks, git diff --check, and local browser checks of add-worker, roster, and setup landing page. User reviewed the local preview and explicitly approved push and merge.\n\nCloses #17"
+    },
+    {
+      "number": 14,
+      "title": "CS-007: saved manager dashboard and milestone walkthrough",
+      "merged_at": "2026-11-13T18:39:50Z",
+      "merge_commit_sha": "181f26fdca76ba8dcde9b8207f36ae19fbeaa475",
+      "body": "Connects manager Overview, Schedule, and read-only Approvals to saved business records. Shows worker/shift/claim counts, assigned workers, original workers and claimants, business-timezone dates, and warnings for unresolved claims on completed shifts. Reuses safe shift cards across roles and adds refresh/empty/error/retry states. Approval/rejection controls remain disabled until their planned increment.\n\nValidation: syntax checks, diff checks, and all 36 tests passed. Browser verified both roles, mobile layout, saved refresh/reload, empty panels, retry/recovery, role denial, and disabled actions using isolated data. Adds the milestone walkthrough document. Runtime data is excluded from Git.\n\nUser reviewed the populated local preview and explicitly requested merge.\n\nCloses #13"
+    },
+    {
+      "number": 12,
+      "title": "CS-006: assigned upcoming worker shifts",
+      "merged_at": "2026-11-11T22:02:03Z",
+      "merge_commit_sha": "0b594e3eae365029af92eaeb752565c8257e558b",
+      "body": "Connects the worker My shifts page to saved JSON records. The server derives worker/business identity from the session, includes current and future assigned shifts, excludes completed shifts, and orders results by start time. Adds business-timezone dates, overnight/DST formatting, refresh, and honest loading/empty/error/retry states. No shift mutations or coverage actions are added.\n\nValidation: syntax checks and all 30 tests passed. Browser verified saved updates after Refresh/reload, current/overnight rows, empty results, recovery after unreadable isolated storage, and mobile layout. Normal user data was unchanged and runtime files are excluded from Git.\n\nUser reviewed the local preview and explicitly requested merge.\n\nCloses #11"
+    },
+    {
+      "number": 10,
+      "title": "CS-005: session login and protected workspaces",
+      "merged_at": "2026-11-11T21:28:46Z",
+      "merge_commit_sha": "73b9d926eebade2a09fd280f623dfabe5897ae41",
+      "body": "Adds responsive login, logout, expiring opaque server-side sessions, role-specific protected workspaces, and business-scoped account context. Signup accounts can sign in using their existing hashes. Logout requires the session CSRF token and same-origin JSON. The public role-switching demo is separate at /demo and grants no account access. Includes explicit development-only demo account setup and HTTPS cookie/origin configuration.\n\nValidation: syntax checks and all 24 tests passed, covering passwords, session rotation and expiry, CSRF/logout, role/business isolation, and existing signup/storage behavior. Browser checked both roles, invalid credentials, refresh, logout, role denial, demo isolation, signup-to-login, and 390px layout with isolated data. Runtime account records are excluded from Git.\n\nUser reviewed the local preview and explicitly requested merge. Sessions are single-server/in-memory and reset on restart. Saved shift views remain CS-006.\n\nCloses #9"
+    },
+    {
+      "number": 8,
+      "title": "CS-004: manager signup and business creation",
+      "merged_at": "2026-11-11T21:05:57Z",
+      "merge_commit_sha": "9baf6e3bd57aeb161c496cb5dc53d7fc60e0a2df",
+      "body": "Adds a responsive signup page that atomically saves a new business and its manager account. Server validates inputs, rejects duplicate emails and client-selected roles/business IDs, and stores salted scrypt password hashes. Includes accessible error/success states, a demo-workspace signup link, same-origin JSON request checks, request size/rate limits, and updated Todo-first task tracking.\n\nValidation: syntax checks and all 15 signup/storage tests passed. Browser checked blank-field errors, password visibility, successful signup, duplicate email, keyboard access, and 390px layout using isolated data. Runtime account records remain excluded from Git.\n\nUser reviewed locally and explicitly requested merge. Login, sessions, and protected access remain CS-005.\n\nCloses #7"
+    },
+    {
+      "number": 6,
+      "title": "CS-003: validated persistent JSON storage",
+      "merged_at": "2026-11-11T20:49:02Z",
+      "merge_commit_sha": "bc2d35369e63c18849f22f66910904eac422f317",
+      "body": "Adds a versioned JSON model for businesses, users, shifts, and coverage requests; serialized transactions with atomic file replacement; business-scoped read repositories; and non-destructive fictional seed and inspection commands. Server startup validates or initializes private storage. Runtime records remain ignored by Git and unavailable through HTTP.\n\nValidation: syntax checks and all nine storage tests passed, covering restart persistence, concurrent updates, rollback, corrupt files, writer locks, complete reads, and cross-business references. HTTP checks confirmed the app loads and private data paths return 404. User approved publishing and merging.\n\nDeployment: one server instance with persistent local disk. Signup/authentication and connecting the demo UI to records remain subsequent tasks.\n\nCloses #5"
+    },
+    {
+      "number": 4,
+      "title": "CS-002: responsive worker and manager navigation",
+      "merged_at": "2026-11-11T20:38:43Z",
+      "merge_commit_sha": "a347e5bb73f535c24c46a7ed8a41f93764042e06",
+      "body": "Adds seven responsive worker and manager preview screens, active navigation, role preview switching, and public CSS/JS assets. Demo data is labeled and future actions are disabled. Records the agreed issue/board/review workflow.\n\nValidation: JavaScript syntax, HTTP assets/404/405, all seven screens, direct-link refresh, keyboard skip link, and phone layout checked. User approved the preview and explicitly requested merge.\n\nCloses #3"
+    },
+    {
+      "number": 1,
+      "title": "CS-001: establish project foundation",
+      "merged_at": "2026-11-11T20:19:47Z",
+      "merge_commit_sha": "f9788c8b5bf3e64d51e975ddf3cae2041ced401b",
+      "body": "Adds the approved Node server and start page, setup instructions, data ignore rules, and task/review documentation. Preserves existing repository history and Node ignore rules.\n\nValidation: syntax check passed; local preview returned 200 for the start page and 404 for an unknown path. User reviewed CS-001, approved it, and explicitly requested merging.\n\nCloses #2"
+    }
+  ]
+}
