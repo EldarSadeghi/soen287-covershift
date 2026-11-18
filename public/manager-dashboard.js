@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { reviewActions } from './review-claim.js';
 import { managedShiftCard } from './manage-shift.js';
 import { mountCreateShift } from './create-shift.js';
@@ -45,7 +46,8 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
   let loading = false;
   if (page === 'schedule') {
     const creator = element('div'); content.before(creator);
-    await mountCreateShift(creator, account, csrfToken, () => load());
+    // Roster availability must never hold the saved schedule or Refresh hostage.
+    void mountCreateShift(creator, account, csrfToken, () => load());
   }
   async function load(event) {
     const restoreFocus = Boolean(event?.currentTarget);
@@ -53,12 +55,12 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
     loading = true; main.setAttribute('aria-busy', 'true'); refresh.disabled = true;
     summary.hidden = true; summary.replaceChildren(); timezone.textContent = ''; updated.textContent = '';
     const status = element('p', 'shift-loading', 'Loading your business dashboard…'); status.setAttribute('role', 'status'); content.replaceChildren(status);
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
-      const response = await fetch('/api/manager/dashboard', { cache: 'no-store', signal: controller.signal });
+      const response = await requestJSON('/api/manager/dashboard', { cache: 'no-store' });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error();
-      const result = await response.json();
+      const result = response.data;
       timezone.textContent = `All times shown in your business timezone: ${result.timezone}.`;
       for (const [label, value, detail] of [['Team members', result.summary.workers, 'workers in your business'], ['Upcoming & current', result.summary.shifts, 'assigned shifts'], ['Awaiting approval', result.summary.pendingClaims, 'pending coverage claims']]) {
         const card = element('article', 'stat'); card.append(element('p', 'stat-title', label), element('strong', '', String(value)), element('small', '', detail)); summary.append(card);
@@ -82,11 +84,12 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
         content.replaceChildren(claimPanel()); content.append(element('p', 'section-note', 'Approval transfers assignment after fresh conflict checks. Rejection keeps the original assignment and reopens coverage. Refresh to check for changes.'));
       }
       updated.textContent = `Updated ${new Intl.DateTimeFormat('en-US', { timeZone: result.timezone, hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(new Date(result.asOf))}. Refresh to check for changes.`;
+      return true;
     } catch {
       const error = element('div', 'panel shift-load-error');
       const message = element('p', '', 'We couldn’t load your business dashboard. Please try again.'); message.setAttribute('role', 'alert');
-      const retry = element('button', 'solid-link', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); error.append(message, retry); content.replaceChildren(error);
-    } finally { clearTimeout(timeout); loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
+      const retry = element('button', 'solid-link', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); error.append(message, retry); content.replaceChildren(error); return false;
+    } finally { loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
   refresh.addEventListener('click', load); await load();
 }

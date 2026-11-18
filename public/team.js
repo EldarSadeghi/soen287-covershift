@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { removalActions } from './remove-worker.js';
 import { element } from './shift-card.js';
 export async function mountTeam(main, account, csrf) {
@@ -5,11 +6,12 @@ export async function mountTeam(main, account, csrf) {
   const find = id => main.querySelector(`#${id}`);
   const error = message => { find('team-error').textContent = message; find('team-error').hidden = false; find('team-error').focus(); };
   const clear = () => { find('team-error').hidden = true; };
-  let loading = false;
+  let loading = false; let saving = false; let uncertain = false;
+  const addButton = find('add-worker').querySelector('button');
   async function api(url, body) {
-    const response = await fetch(url, body === undefined ? { cache: 'no-store' } : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify(body) });
+    const response = await requestJSON(url, body === undefined ? { cache: 'no-store' } : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify(body) });
     if (response.status === 401) { location.replace('/login?expired=1'); throw new Error('Please sign in again.'); }
-    const data = await response.json();
+    const data = response.data;
     if (!response.ok) throw new Error(data.message || 'We couldn’t complete this request. Try again.');
     return data;
   }
@@ -24,9 +26,11 @@ export async function mountTeam(main, account, csrf) {
   async function refresh(event) {
     const restoreFocus = event?.currentTarget?.id;
     if (loading) return; loading = true; find('refresh-team').disabled = true; find('worker-list').setAttribute('aria-busy', 'true');
-    find('worker-list').replaceChildren(element('p', 'section-note', 'Loading your team…'));
+    find('worker-count').textContent = ''; find('worker-list').replaceChildren(element('p', 'section-note', 'Loading your team…'));
     try {
       const { workers } = await api('/api/manager/workers');
+      // Only a successful fresh roster read unlocks an uncertain add attempt.
+      uncertain = false; addButton.disabled = saving;
       const active=workers.filter(w=>w.status!=='inactive').length; find('worker-count').textContent = `${active} active · ${workers.length-active} inactive`;
       const filter=find('team-filter').value; const visible=workers.filter(w=>filter==='all'||(filter==='inactive'?w.status==='inactive':w.status!=='inactive'));
       find('worker-list').replaceChildren();
@@ -41,7 +45,7 @@ export async function mountTeam(main, account, csrf) {
           button.addEventListener('click', async () => {
             clear(); button.disabled = true;
             try { showLink(await api(`/api/manager/workers/${encodeURIComponent(worker.id)}/setup`, {})); await refresh(); }
-            catch (e) { error(e.message); button.disabled = false; }
+            catch (e) { error(e.uncertain ? 'We couldn’t confirm the setup link. Refresh Team before generating another link.' : e.message); button.disabled = Boolean(e.uncertain); }
           }); row.append(button);
         }
         row.append(removalActions(worker,account.business.timezone,csrf,async message=>{ find('setup-link').value='';find('open-setup').removeAttribute('href');find('setup-link-panel').hidden=true;await refresh();const result=find('team-result');result.textContent=message;result.hidden=false;result.focus(); }));
@@ -51,10 +55,10 @@ export async function mountTeam(main, account, csrf) {
     finally { loading = false; find('refresh-team').disabled = false; find('worker-list').setAttribute('aria-busy', 'false'); main.setAttribute('aria-busy', 'false'); if (restoreFocus) (restoreFocus==='team-filter'?find('team-filter'):find('refresh-team')).focus(); }
   }
   find('add-worker').addEventListener('submit', async event => {
-    event.preventDefault(); clear(); const button = event.currentTarget.querySelector('button'); button.disabled = true;
+    event.preventDefault(); if (saving || uncertain) return; saving = true; clear(); const button = event.currentTarget.querySelector('button'); button.disabled = true;
     try { const data = await api('/api/manager/workers', { name: find('worker-name').value, email: find('worker-email').value }); find('add-worker').reset(); showLink(data); await refresh(); }
-    catch (e) { error(e.message); }
-    finally { button.disabled = false; }
+    catch (e) { uncertain = Boolean(e.uncertain); error(e.uncertain ? 'We couldn’t confirm whether the worker was added. Your entries are kept. Refresh Team and check the roster before trying again.' : e.message); }
+    finally { saving = false; button.disabled = uncertain; }
   });
   find('copy-setup').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(find('setup-link').value); find('copy-status').textContent = 'Link copied. Share it privately with this worker.'; }

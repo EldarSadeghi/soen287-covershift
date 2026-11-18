@@ -1,7 +1,9 @@
+import { requestJSON } from './request.js';
 const form = document.querySelector('#signup-form');
 const summary = document.querySelector('#form-errors');
 const submit = document.querySelector('#signup-submit');
 const password = document.querySelector('#password');
+let uncertain = false;
 const fields = ['name', 'email', 'password', 'businessName', 'timezone'];
 function clearErrors() {
   summary.hidden = true;
@@ -31,6 +33,7 @@ document.querySelector('#show-password').addEventListener('click', event => {
 });
 form.addEventListener('submit', async event => {
   event.preventDefault();
+  if (uncertain || submit.disabled) return;
   clearErrors();
   const errors = {};
   for (const name of fields) {
@@ -43,11 +46,11 @@ form.addEventListener('submit', async event => {
   submit.textContent = 'Creating your account…';
   form.setAttribute('aria-busy', 'true');
   try {
-    const response = await fetch('/api/signup', {
+    const response = await requestJSON('/api/signup', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(Object.fromEntries(new FormData(form))),
     });
-    const result = await response.json();
+    const result = response.data;
     if (!response.ok) { showErrors(result.message || 'Account creation failed. Please try again.', result.fields); return; }
     form.reset();
     password.type = 'password';
@@ -59,10 +62,11 @@ form.addEventListener('submit', async event => {
     success.hidden = false;
     document.title = 'Account created · CoverShift';
     success.focus();
-  } catch {
-    showErrors('We couldn’t reach the server. Check your connection and try again.');
+  } catch (error) {
+    uncertain = Boolean(error.uncertain);
+    showErrors(error.uncertain ? 'We couldn’t confirm whether your account was created. Try signing in before submitting signup again. Your entries are kept.' : error.message);
   } finally {
-    submit.disabled = false;
+    submit.disabled = uncertain;
     submit.innerHTML = 'Create account <span aria-hidden="true">↗</span>';
     form.removeAttribute('aria-busy');
   }

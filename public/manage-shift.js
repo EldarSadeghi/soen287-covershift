@@ -1,3 +1,4 @@
+import { requestJSON } from './request.js';
 import { element, shiftCard } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
 export function businessLocal(instant, timezone) {
@@ -16,12 +17,12 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   actions.append(editButton, deleteButton); wrapper.append(actions);
   const editor = element('section', 'shift-editor'); editor.hidden = true; wrapper.append(editor);
   editor.setAttribute('role', 'group'); editor.setAttribute('aria-label', `Manage shift ${shift.title}`);
-  let busy = false; let trigger;
+  let busy = false; let uncertain = false; let trigger;
   editor.addEventListener('keydown', event => { if (event.key === 'Escape' && !busy) { event.preventDefault(); reset(); } });
-  const reset = () => { editor.replaceChildren(); editor.hidden = true; editButton.disabled = false; deleteButton.disabled = false; trigger?.focus(); };
+  const reset = () => { editor.replaceChildren(); editor.hidden = true; editButton.disabled = uncertain; deleteButton.disabled = uncertain; (uncertain ? document.querySelector('#refresh-dashboard') : trigger)?.focus(); };
   function message(text) { const error = editor.querySelector('.manage-error'); error.textContent = text; error.hidden = false; error.focus(); }
   function start(button) {
-    if (busy) return false; trigger = button;
+    if (busy || uncertain) return false; trigger = button;
     editor.replaceChildren(); editor.hidden = false; editButton.disabled = true; deleteButton.disabled = true; return true;
   }
   function errorBox() { const error = element('p', 'team-message manage-error'); error.setAttribute('role', 'alert'); error.tabIndex = -1; error.hidden = true; editor.append(error); }
@@ -29,13 +30,13 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   async function mutate(action, values, submit, cancel, markErrors = () => {}) {
     busy = true; submit.disabled = true; cancel.disabled = true; submit.textContent = action === 'edit' ? 'Saving changes…' : 'Deleting…';
     try {
-      const response = await fetch(`/api/manager/shifts/${encodeURIComponent(shift.id)}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ ...values, revision: shift.revision }) });
+      const response = await requestJSON(`/api/manager/shifts/${encodeURIComponent(shift.id)}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ ...values, revision: shift.revision }) });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
-      const result = await response.json();
+      const result = response.data;
       if (!response.ok) { markErrors(result.fields || {}); message(result.message || 'The change could not be saved. Try again.'); return; }
       await onChanged(action === 'edit' ? `“${result.shift.title}” was updated and assigned to ${result.shift.assignedWorker.name}.` : `“${shift.title}” was deleted.`);
-    } catch { message('We couldn’t confirm the result. Cancel and refresh the schedule before retrying.'); }
-    finally { busy = false; submit.disabled = false; cancel.disabled = false; submit.textContent = action === 'edit' ? 'Save changes' : 'Delete this shift'; }
+    } catch { uncertain = true; message('We couldn’t confirm the result. Your entries are kept. Cancel and refresh the schedule to check the saved shift before trying again.'); }
+    finally { busy = false; submit.disabled = uncertain; cancel.disabled = false; submit.textContent = action === 'edit' ? 'Save changes' : 'Delete this shift'; }
   }
   editButton.addEventListener('click', async () => {
     if (!start(editButton)) return;
@@ -43,10 +44,10 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
     const state = element('p', 'section-note', 'Loading your workers…'); state.setAttribute('role', 'status'); editor.append(state);
     const cancel = cancelButton(); editor.append(cancel); cancel.focus();
     try {
-      const response = await fetch('/api/manager/workers', { cache: 'no-store' });
+      const response = await requestJSON('/api/manager/workers', { cache: 'no-store' });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error();
-      const { workers } = await response.json();
+      const { workers } = response.data;
       // Cancel may have closed/reopened the editor while this read was pending.
       if (!state.isConnected) return;
       state.remove(); cancel.remove();
