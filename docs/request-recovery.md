@@ -42,3 +42,5 @@ Acceptance evidence and final check results are recorded below after verificatio
 Preview: http://localhost:3015/workspace/manager/schedule, fictional temporary store `/tmp/covershift-acceptance-CFWyAr`. Fictional manager `manager_morgan@example.test`, employee `worker_jamie@example.test`; test password `Fictional acceptance review access!`. Faults are disabled for user review. The test wrapper and configuration live only under `/tmp`; the product has no fault-injection API.
 
 Not every authentication or coverage action was fault-injected in the browser. All frontend request sites use the tested shared transport; existing HTTP workflow/security tests cover their server behavior. No real account data was seeded, reset or changed. Waiting for explicit user approval before any push/merge.
+
+User explicitly approved CS-020 push and merge on 2026-11-18. CS-018 remains the final step.

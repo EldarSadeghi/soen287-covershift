@@ -111,3 +111,5 @@ User explicitly approved CS-019 push and merge on 2026-11-17. CS-018 remains the
 CS-020: issue #40, branch `codex/CS-020-request-recovery`. Todo verified, then In Progress on 2026-11-18. Acceptance-report F-01 recovery fix; shared 15-second JSON deadlines and independent Schedule loading, no automatic mutation retries. Review evidence: request-recovery.md. CS-018 remains last.
 
 CS-020 ready for Your review: 118 tests and syntax checks pass; browser delayed roster, working Schedule/Refresh, uncertain saved response with preserved draft and explicit reconciliation, Team timeout/filter/draft retry, cancelled-editor late response, bodyless logout, employee preflight and 320px recovery checks completed. No push/merge.
+
+User explicitly approved CS-020 push and merge on 2026-11-18. CS-018 remains the final step.
