@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-21",
+  "provider": "OpenAI GPT-6 Luna",
+  "fixedBusinessNow": "2026-11-21T11:00:00 America/Toronto",
+  "fictionalData": true,
+  "databaseUnchanged": true,
+  "cases": [
+    {
+      "message": "Find an open shift Thursday.",
+      "expected": {
+        "kind": "matches",
+        "total": 3
+      },
+      "kind": "matches",
+      "matches": 3,
+      "criteria": {
+        "date": "2026-11-26",
+        "startLocal": "",
+        "endLocal": "",
+        "title": ""
+      },
+      "question": null,
+      "pass": true
+    },
+    {
+      "message": "Find an open shift next Thursday between 9 AM and 3 PM.",
+      "expected": {
+        "kind": "matches",
+        "total": 1
+      },
+      "kind": "matches",
+      "matches": 1,
+      "criteria": {
+        "date": "2026-11-26",
+        "startLocal": "2026-11-26T09:00",
+        "endLocal": "2026-11-26T15:00",
+        "title": ""
+      },
+      "question": null,
+      "pass": true
+    },
+    {
+      "message": "Find a shift next Thursday 9 to 3.",
+      "expected": {
+        "kind": "clarification"
+      },
+      "kind": "clarification",
+      "matches": null,
+      "criteria": null,
+      "question": "What hours do you mean by 9 to 3\u2014AM or PM?",
+      "pass": true
+    },
+    {
+      "message": "Find me an open shift.",
+      "expected": {
+        "kind": "clarification"
+      },
+      "kind": "clarification",
+      "matches": null,
+      "criteria": null,
+      "question": "What date should I search for?",
+      "pass": true
+    },
+    {
+      "message": "Automatically request any shift that opens up every Thursday.",
+      "expected": {
+        "kind": "clarification"
+      },
+      "kind": "clarification",
+      "matches": null,
+      "criteria": null,
+      "question": "I can only search for existing open shifts for one specific day; I can\u2019t automatically request future openings. Which Thursday would you like to search?",
+      "pass": true
+    },
+    {
+      "message": "Find an open Night service shift on November 26, 2026 from 10 PM overnight until 6 AM on November 27.",
+      "expected": {
+        "kind": "matches",
+        "total": 1
+      },
+      "kind": "matches",
+      "matches": 1,
+      "criteria": {
+        "date": "2026-11-26",
+        "startLocal": "2026-11-26T22:00",
+        "endLocal": "2026-11-27T06:00",
+        "title": "Night service"
+      },
+      "question": null,
+      "pass": true
+    },
+    {
+      "message": "Find an open shift on November 28, 2026.",
+      "expected": {
+        "kind": "matches",
+        "total": 0
+      },
+      "kind": "matches",
+      "matches": 0,
+      "criteria": {
+        "date": "2026-11-28",
+        "startLocal": "",
+        "endLocal": "",
+        "title": ""
+      },
+      "question": null,
+      "pass": true
+    }
+  ]
+}

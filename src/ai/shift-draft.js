@@ -1,3 +1,4 @@
+import { structuredResponse } from './structured-response.js';
 import { HttpError } from '../auth/errors.js';
 import { managerBusiness, assignmentFields, validateShiftInput } from '../shifts/create.js';
 
@@ -48,32 +49,9 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
       instructions, input: JSON.stringify(context), text: { format: { type: 'json_schema', name: 'shift_draft', strict: true, schema: schema(workers) } } });
     if (Buffer.byteLength(body) > 16000) throw new HttpError(422, 'This description and team are too large for AI drafting. Use a shorter description or the manual form.');
     active.add(managerId);
-    const controller = new AbortController(); let timer;
     try {
       await allowance.reserve(managerId, now);
-      const work = async () => {
-        const response = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body, signal: controller.signal });
-        if (!response.ok) throw unavailable(); // Never return provider errors or keys.
-        // Bound response bytes as well as output tokens. Body consumption is in deadline.
-        const reader = response.body.getReader(); const chunks = []; let size = 0;
-        try {
-          while (true) {
-            const { done, value } = await reader.read(); if (done) break;
-            size += value.byteLength;
-            if (size > 65536) { void reader.cancel(); throw unavailable(); }
-            chunks.push(Buffer.from(value));
-          }
-        } finally { reader.releaseLock(); }
-        const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-        if (data.status !== 'completed' || !Array.isArray(data.output)) throw unavailable();
-        const content = data.output.filter(item => item.type === 'message').flatMap(item => item.content || []);
-        if (content.some(part => part.type === 'refusal')) throw new HttpError(422, 'AI could not draft that request. Rephrase it as one work shift, or use the manual form.');
-        const parts = content.filter(part => part.type === 'output_text');
-        if (parts.length !== 1 || typeof parts[0].text !== 'string') throw unavailable();
-        return JSON.parse(parts[0].text);
-      };
-      const deadline = new Promise((_, reject) => { timer = setTimeout(() => { controller.abort(); reject(unavailable()); }, timeoutMs); });
-      const result = await Promise.race([work(), deadline]);
+      const result = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
       if (!result || Array.isArray(result) || Object.keys(result).length !== keys.length || !keys.every(key => typeof result[key] === 'string')) throw unavailable();
       // Recheck current membership after inference; model output never authorizes access.
       db = await store.read(); business = managerBusiness(db, managerId);
@@ -92,6 +70,6 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
     } catch (error) {
       if (error instanceof HttpError) throw error;
       throw unavailable();
-    } finally { clearTimeout(timer); active.delete(managerId); }
+    } finally { active.delete(managerId); }
   };
 }

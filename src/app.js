@@ -1,3 +1,4 @@
+import { searchExistingShifts } from './ai/shift-search.js';
 import { removeWorker } from './manager/offboarding.js';
 import { coverageHistory } from './requests/history.js';
 import { reviewCoverage } from './requests/review.js';
@@ -17,6 +18,8 @@ import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
   ['/request.js', ['request.js', 'text/javascript; charset=utf-8']],
+  ['/ai-employee-request.js', ['ai-employee-request.js', 'text/javascript; charset=utf-8']],
+  ['/ai-employee-state.js', ['ai-employee-state.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-state.js', ['ai-chat-state.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-draft.js', ['ai-shift-draft.js', 'text/javascript; charset=utf-8']],
   ['/remove-worker.js', ['remove-worker.js', 'text/javascript; charset=utf-8']],
@@ -89,7 +92,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history'], worker: ['shifts', 'open', 'requests', 'history'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null }) {
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
   const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
   const limitTeam = createSignupLimiter({ limit: 20, message: 'Too many worker changes. Please wait 10 minutes and try again.' });
@@ -164,6 +167,19 @@ export function createAppServer({ store, signup = registerManager, login = authe
         limitShifts(account.user.id);
         const parts = pathname.split('/');
         sendJson(response, 200, await manageShift(store, account.user.id, parts[4], parts[5], await readJson(request), shiftClock)); return;
+      }
+      if (['/api/worker/ai-shift-search', '/api/worker/shift-search'].includes(pathname)) {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Search uses your signed-in business.');
+        const input = await readJson(request);
+        if (pathname === '/api/worker/ai-shift-search') {
+          limitAi(account.user.id);
+          if (!aiSearch) throw new HttpError(503, 'AI search is not configured. Use Open shifts.');
+          sendJson(response, 200, await aiSearch(store, account.user.id, input, shiftClock));
+        } else { limitCoverage(account.user.id); sendJson(response, 200, await searchExistingShifts(store, account.user.id, input, shiftClock)); }
+        return;
       }
       if (pathname === '/api/manager/ai-shift-draft') {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);

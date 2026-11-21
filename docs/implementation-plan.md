@@ -136,3 +136,10 @@ CS-031A-US05 / F01 correction, 2026-11-21: user requested fix; issue #44 accepta
 CS-031A-US05 correction returned to Your review after final checks on 2026-11-21; local real-provider preview3017 shows the saved completion. No push/merge.
 
 User explicitly approved CS-031A, including the US05 completion fix and review evidence, for push and merge on 2026-11-21. Next increment: CS-031B employee availability rules; CS-031C/D remain separate and CS-018 remains last.
+
+
+CS-031A was merged in PR #45 on 2026-11-21; issue #44 is closed and Done. The user split the employee work into CS-031B-1 (existing-shift search/request) and CS-031B-2 (confirmed future availability rules). CS-031C matching and CS-031D notifications remain separate. CS-018 stays last.
+
+CS-031B-1: issue #46, branch `codex/CS-031B-1-chat-shift-requests`. Acceptance criteria/user stories recorded before implementation. Todo verified before moving to In Progress on 2026-11-21. Worker chat extracts one business-local day with optional explicit availability bounds/title, deterministically searches current saved openings and excludes own/conflicting requests. Separate Review request → Cancel / Confirm request uses protected read-only preflight and existing atomic claim workflow. Manager approval remains required; no new notifications, future rules, auto-assignment or database schema. Pending/uncertain receipts, fresh matching after navigation, same-tab isolation, shared provider transport and persistent allowance. See `docs/acceptance/cs031b-1/USER-STORIES.md` for validation and preview.
+
+CS-031B-1 moved to Your review after 161 passing tests, seven real-provider cases, and documented browser/keyboard/mobile/recovery checks. The issue remains open; no branch push or merge. Preview: http://localhost:3020/workspace/worker/shifts.
