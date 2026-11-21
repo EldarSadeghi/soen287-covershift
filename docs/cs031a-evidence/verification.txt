@@ -1,0 +1,17 @@
+CS-031A verification — 2026-11-20
+
+npm run verify: syntax checks passed; 136 tests passed, 0 failed.
+git diff --check: passed.
+
+Optional paid fictional-provider evaluation: 6/6 passed.
+PASS: complete explicit shift
+PASS: next weekday with explicit hours
+PASS: overnight explicit next-day end
+PASS: ambiguous hours and missing title
+PASS: worker not in roster
+PASS: employee availability is not an assignment
+
+Browser: real provider suggestion/apply (no writes), explicit edited final save, exactly one new shift visible to manager/employee; ambiguity clarification; Escape focus return; 320px width, document scrollWidth 305.
+Fake-provider browser: failure and timeout preserve description/manual fields and re-enable Generate; cancelled late reply never applies or displays a suggestion.
+
+Limitations: finite evaluation examples, not a universal natural-language correctness guarantee or full accessibility audit. Request allowances do not replace provider billing limits.

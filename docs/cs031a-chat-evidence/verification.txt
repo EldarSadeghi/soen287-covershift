@@ -1,0 +1,13 @@
+CS-031A chat revision — 2026-11-20
+
+npm run verify: syntax passed; 141 tests passed, 0 failed.
+Original extraction/provider/authorization/limits coverage retained; five new conversation/state tests.
+Two new paid fictional evaluations: PASS short answer completes prior shift; PASS correction preserves worker/date.
+Original six paid extraction examples passed in initial increment.
+
+Real-provider browser: Overview request -> clarification -> short answer -> validated draft; Review shift carries to Schedule, focuses input, saves nothing; history survives navigation/reload; current manual entries protected by Replace/Keep confirmation; sign-out and worker scope verified.
+Keyboard: Tab from last control focuses Close, Shift+Tab from Close focuses last control; Escape closes and returns focus to launcher.
+Mobile: viewport 320x760, root scrollWidth 305, dialog width305 height760, composer visible.
+Fake-provider browser: failure/timeout retain composer with no fabricated assistant turn; New chat during delayed response leaves new composer intact, transcript empty and suggestion hidden after completion.
+
+No push/merge. Finite examples do not establish universal language correctness or a full accessibility audit. Provider hard billing limit remains independent.
