@@ -134,3 +134,5 @@ CS-031A user-story audit: 14 stories in `docs/acceptance/cs031a/USER-STORIES.md`
 CS-031A-US05 / F01 correction, 2026-11-21: user requested fix; issue #44 acceptance criteria updated, Your review -> In Progress. Added correlated confirmed-save receipts and explicit uncertainty in chat, with final edited values and removal of stale Review action. 149 tests pass, targeted browser scenarios pass; story report now records 14/14 passing within checked scope. Same unpushed branch, pending user review.
 
 CS-031A-US05 correction returned to Your review after final checks on 2026-11-21; local real-provider preview3017 shows the saved completion. No push/merge.
+
+User explicitly approved CS-031A, including the US05 completion fix and review evidence, for push and merge on 2026-11-21. Next increment: CS-031B employee availability rules; CS-031C/D remain separate and CS-018 remains last.
