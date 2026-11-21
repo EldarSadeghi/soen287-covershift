@@ -17,6 +17,7 @@ import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
   ['/request.js', ['request.js', 'text/javascript; charset=utf-8']],
+  ['/ai-chat-state.js', ['ai-chat-state.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-draft.js', ['ai-shift-draft.js', 'text/javascript; charset=utf-8']],
   ['/remove-worker.js', ['remove-worker.js', 'text/javascript; charset=utf-8']],
   ['/accessibility.css', ['accessibility.css', 'text/css; charset=utf-8']],

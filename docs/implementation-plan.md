@@ -123,3 +123,8 @@ User explicitly approved CS-022 push and merge on 2026-11-18. CS-021 remains an 
 CS-031A: issue #44, branch `codex/CS-031A-ai-shift-drafts`. Todo verified then In Progress on 2026-11-20. User selected OpenAI GPT-6 Luna and privately configured a project key; US$5 usage target, auto-reload off. Manager-only single-shift drafting; CS-031B employee availability remains separate. CS-022 was merged in PR #43. CS-018 remains last.
 
 CS-031A ready for Your review: 136 tests and syntax/diff checks; six real-provider fictional evaluation cases passed; browser generation/apply/save/employee, clarification, cancellation, failure/timeout and 320px checks documented in ai-shift-drafting.md. Local preview 3017; no push/merge without explicit approval.
+
+
+CS-031A chat revision: user approved the revised interface and roadmap on 2026-11-20. Issue #44 updated before work, returned from Your review to In Progress (original Todo verification retained). Persistent bottom-left launcher, desktop/mobile dialog, bounded natural follow-up conversation, scoped tab-session history and explicit editable Schedule review, protecting manual entries. Same local branch; no push/merge approval. Five new conversation/state tests bring the full suite to 141; two live multi-turn cases passed. CS-031B/C/D are separate future increments: confirmed employee rules, deterministic matching with manager approval, then both-role in-app notifications. CS-018 stays last.
+
+CS-031A chat revision returned to Your review after the documented checks. Final preview 3017; no push or merge.

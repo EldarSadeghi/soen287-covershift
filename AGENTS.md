@@ -9,3 +9,5 @@
 - The GitHub connector has denied writes. Local Git authentication works; never print, persist, or expose credentials. GitHub Projects API access lacks project scopes; the signed-in browser can manage the board.
 
 - User preference (2026-11-17): CS-018 Deployment and submission must be the very last step, after CS-019 and any remaining approved implementation work. CS-017 and CS-019 are merged. CS-020 is merged. CS-022 is merged. CS-031A is the current manager AI drafting increment; employee availability is separate CS-031B. CS-021 remains an unstarted suggestion for possible future consideration.
+
+- Approved AI roadmap: CS-031A persistent bottom-left chat and manager shift drafts; CS-031B employee confirmed availability/claim rules; CS-031C deterministic matching with manager approval and earliest confirmed eligible rule first; CS-031D in-app notifications for managers and employees. Implement/review/merge one increment at a time. User approved starting the CS-031A chat revision, not pushing or merging it.

@@ -75,4 +75,4 @@ CS-020 local review improves request recovery and loads saved Schedule independe
 
 CS-022 local review separates **Expired** coverage from actionable Approvals and adds an Expired filter to both-role History. Stored decisions/events and assignments remain intact. See [expired coverage](docs/expired-coverage.md). Awaiting user approval before push/merge.
 
-Optional manager AI drafting (CS-031A): [setup, usage, budget controls and validation](docs/ai-shift-drafting.md). Manual scheduling works without an API key.
+Persistent AI chat and manager shift drafting (CS-031A): [setup, usage, budget controls and validation](docs/ai-shift-drafting.md). Manual scheduling works without an API key.
