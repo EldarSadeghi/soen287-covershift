@@ -1,6 +1,7 @@
 import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
-import { createChatState, openAiReview } from './ai-chat-state.js';
+import { formatShiftTime } from './shift-time.js';
+import { createChatState, openAiReview, createdShiftMessage } from './ai-chat-state.js';
 
 export function mountAiChat(account, csrfToken) {
   let storage;
@@ -46,7 +47,8 @@ export function mountAiChat(account, csrfToken) {
   launcher.addEventListener('click', () => { dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); if (manager) composer.focus(); else find('.ai-chat-close').focus(); });
   composer.addEventListener('input', () => { chat.value.composer = composer.value; chat.save(); });
   function reviewSuggestion(data) {
-    chat.value.pending = { draft: data.draft, timezone: data.timezone, createdAt: Date.now() };
+    if (chat.value.completion || chat.value.uncertainDraftId || data.id !== chat.value.suggestion?.id) return;
+    chat.value.pending = { id: data.id, draft: data.draft, timezone: data.timezone, createdAt: Date.now() };
     const persisted = chat.save();
     if (location.pathname === '/workspace/manager/schedule') {
       reviewing = true; close();
@@ -58,6 +60,21 @@ export function mountAiChat(account, csrfToken) {
   function showSuggestion(data) {
     card.replaceChildren(); card.hidden = !data;
     if (!data) return;
+    const completion = chat.value.completion;
+    if (completion && completion.draftId === data.id) {
+      const time = formatShiftTime(completion.shift, completion.timezone);
+      card.append(element('p', 'ai-chat-card-label', 'SHIFT CREATED'), element('h3', '', completion.shift.title));
+      const details = document.createElement('dl');
+      for (const [label, value] of [['Worker', completion.shift.assignedWorker.name], ['Starts', `${time.date} at ${time.startTime}`], ['Ends', `${time.endDate || time.date} at ${time.endTime}`], ['Timezone', completion.timezone]]) details.append(element('dt', '', label), element('dd', '', value));
+      const schedule = element('a', 'ai-chat-review', 'View schedule'); schedule.href = '/workspace/manager/schedule';
+      card.append(details, element('p', '', 'Saved successfully. This shift is available in the worker’s My shifts page.'), schedule);
+      return;
+    }
+    if (chat.value.uncertainDraftId === data.id) {
+      card.append(element('p', 'ai-chat-card-label', 'SAVE NOT CONFIRMED'), element('h3', '', 'Check your saved schedule'), element('p', '', 'The reviewed shift may have been saved. Check the saved schedule before entering or submitting it again.'));
+      const schedule = element('a', 'ai-chat-review', 'View schedule'); schedule.href = '/workspace/manager/schedule';
+      card.append(schedule); return;
+    }
     card.append(element('p', 'ai-chat-card-label', 'DRAFT · NOT SAVED'), element('h3', '', data.draft.title));
     const details = document.createElement('dl');
     for (const [label, value] of [['Worker', data.workerName], ['Starts', data.draft.startLocal.replace('T', ' at ')], ['Ends', data.draft.endLocal.replace('T', ' at ')], ['Timezone', data.timezone]]) details.append(element('dt', '', label), element('dd', '', value));
@@ -66,6 +83,21 @@ export function mountAiChat(account, csrfToken) {
     card.append(details, element('p', '', 'Review and edit the form before creating this shift.'), review);
   }
   showSuggestion(chat.value.suggestion);
+  if (chat.value.completion) notice(createdShiftMessage(chat.value.completion));
+  else if (chat.value.uncertainDraftId) notice('Save not confirmed. Check the saved schedule before trying again.');
+  document.addEventListener('ai:shift-created', event => {
+    if (!chat.markCreated(event.detail?.draftId, event.detail?.result)) return;
+    // Replace the old proposed/unsaved reply, keeping bounded alternating history.
+    messages.replaceChildren();
+    for (const message of chat.value.messages) say(message.role, message.text);
+    showSuggestion(chat.value.suggestion); notice(createdShiftMessage(chat.value.completion));
+  });
+  document.addEventListener('ai:shift-save-uncertain', event => {
+    if (!chat.markUncertain(event.detail?.draftId)) return;
+    messages.replaceChildren();
+    for (const message of chat.value.messages) say(message.role, message.text);
+    showSuggestion(chat.value.suggestion); notice('Save not confirmed. Check the saved schedule before trying again.');
+  });
   find('.ai-chat-new').addEventListener('click', () => {
     revision++; chat.reset(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';
     notice(busy ? 'New chat started. The earlier request may still count toward your allowance; wait for it to finish before sending.' : 'New chat started. What shift would you like to create?'); composer.focus();
@@ -78,7 +110,7 @@ export function mountAiChat(account, csrfToken) {
     const body = JSON.stringify({ description: text, history });
     if (history.length >= 10 || new TextEncoder().encode(JSON.stringify(history)).length > 4500 || new TextEncoder().encode(body).length > 8000) { notice('This chat has reached its context limit. Start a new chat and include the shift details again.'); return; }
     const version = ++revision; busy = true; send.disabled = true; send.textContent = 'Thinking…';
-    chat.value.suggestion = null; chat.value.pending = null; chat.save(); showSuggestion(null);
+    chat.value.suggestion = null; chat.value.pending = null; chat.value.completion = null; chat.value.uncertainDraftId = null; chat.save(); showSuggestion(null);
     const pendingBubble = say('user', text);
     notice('Preparing a reply… You can close this panel and keep working.');
     try {
@@ -90,7 +122,7 @@ export function mountAiChat(account, csrfToken) {
       if (!['draft', 'clarification'].includes(data.kind)) throw new Error('AI could not prepare a reply.');
       const reply = data.kind === 'clarification' ? data.question : `Proposed shift: ${data.draft.title} for ${data.workerName}, ${data.draft.startLocal} to ${data.draft.endLocal}, ${data.timezone}. Nothing has been saved. You can ask me to change it or select Review shift.`;
       chat.value.messages.push({ role: 'user', text }, { role: 'assistant', text: reply }); say('assistant', reply);
-      chat.value.suggestion = data.kind === 'draft' ? data : null; showSuggestion(chat.value.suggestion);
+      chat.value.suggestion = data.kind === 'draft' ? { ...data, id: crypto.randomUUID() } : null; showSuggestion(chat.value.suggestion);
       // Preserve anything the user typed while waiting, without sending it yet.
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();

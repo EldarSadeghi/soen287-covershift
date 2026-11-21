@@ -130,3 +130,7 @@ CS-031A chat revision: user approved the revised interface and roadmap on 2026-1
 CS-031A chat revision returned to Your review after the documented checks. Final preview 3017; no push or merge.
 
 CS-031A user-story audit: 14 stories in `docs/acceptance/cs031a/USER-STORIES.md`; 13 pass, US05 partial due to stale unsaved chat card after confirmed creation (CS-031A-F01). Recommend correcting that completion feedback before merging; audit adds no product changes. 141 regression tests pass.
+
+CS-031A-US05 / F01 correction, 2026-11-21: user requested fix; issue #44 acceptance criteria updated, Your review -> In Progress. Added correlated confirmed-save receipts and explicit uncertainty in chat, with final edited values and removal of stale Review action. 149 tests pass, targeted browser scenarios pass; story report now records 14/14 passing within checked scope. Same unpushed branch, pending user review.
+
+CS-031A-US05 correction returned to Your review after final checks on 2026-11-21; local real-provider preview3017 shows the saved completion. No push/merge.

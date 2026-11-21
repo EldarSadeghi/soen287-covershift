@@ -7,7 +7,8 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
   const form = find('create-shift-form');
   find('create-timezone').textContent = `Enter all dates and times in ${account.business.timezone}, your business timezone.`;
   const fieldIds = { title: 'shift-title', assignedWorkerId: 'shift-worker', startLocal: 'shift-start', endLocal: 'shift-end' };
-  document.addEventListener('ai:cancel-review', () => find('ai-replace-confirmation')?.remove());
+  let aiDraftId = null;
+  document.addEventListener('ai:cancel-review', () => { aiDraftId = null; find('ai-replace-confirmation')?.remove(); });
   registerAiReviewer(suggestion => {
     if (saving || uncertain || form.hidden) return false;
     const draft = suggestion.draft;
@@ -16,6 +17,7 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
     let confirmation = find('ai-replace-confirmation');
     if (confirmation) confirmation.remove();
     const apply = () => {
+      aiDraftId = suggestion.id || null;
       for (const [field, id] of Object.entries(fieldIds)) {
         find(id).value = draft[field]; find(id).removeAttribute('aria-invalid'); find(`${field}-error`).hidden = true;
       }
@@ -73,6 +75,7 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
     event.preventDefault(); if (saving || uncertain) return; find('create-feedback').hidden = true;
     for (const [field, id] of Object.entries(fieldIds)) { find(id).removeAttribute('aria-invalid'); find(`${field}-error`).hidden = true; }
     const values = Object.fromEntries(new FormData(form));
+    const submittedDraftId = aiDraftId;
     const invalid = {};
     for (const [field, id] of Object.entries(fieldIds)) {
       const input = find(id);
@@ -92,10 +95,12 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
         for (const [field, message] of Object.entries(result.fields || {})) if (fieldIds[field]) { find(fieldIds[field]).setAttribute('aria-invalid', 'true'); find(`${field}-error`).textContent = message; find(`${field}-error`).hidden = false; }
         feedback(result.message || 'The shift could not be saved. Please try again.'); return;
       }
+      aiDraftId = null;
+      document.dispatchEvent(new CustomEvent('ai:shift-created', { detail: { draftId: submittedDraftId, result } }));
       form.reset();
       feedback(`“${result.shift.title}” is saved and assigned to ${result.shift.assignedWorker.name}. It is now available in their My shifts page.`, true);
       await onCreated();
-    } catch (error) { uncertain = true; reviewed = false; reconcile.textContent = 'Check saved shifts'; reconcile.hidden = false; feedback('We couldn’t confirm whether the shift was saved. Your entries are kept. Check the saved schedule before trying again.'); }
+    } catch (error) { document.dispatchEvent(new CustomEvent('ai:shift-save-uncertain', { detail: { draftId: submittedDraftId } })); uncertain = true; reviewed = false; reconcile.textContent = 'Check saved shifts'; reconcile.hidden = false; feedback('We couldn’t confirm whether the shift was saved. Your entries are kept. Check the saved schedule before trying again.'); }
     finally { saving = false; submit.disabled = uncertain; submit.textContent = 'Create and assign shift →'; }
   });
   find('retry-roster').addEventListener('click', loadWorkers);

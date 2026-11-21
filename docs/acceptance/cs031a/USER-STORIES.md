@@ -6,7 +6,9 @@ Task: [CS-031A / issue #44](https://github.com/EldarSadeghi/soen287-covershift/i
 
 CS-031A provides the persistent chat shell and **manager single-shift drafting**. Employee availability rules, automatic coverage claims and notifications are CS-031B/C/D, not missing CS-031A functionality. Manager approval for coverage remains required. Deployment CS-018 remains last.
 
-**Result: 13 stories pass; 1 is partially met (US05). CS-031A does not yet meet every criterion below.** Saving works, but chat does not acknowledge the successful save. No application code was changed during this audit.
+**Original audit (2026-11-20): 13 stories passed; US05 was partial.** The audit itself changed no application code.
+
+**US05 retest (2026-11-21): all 14 stories now pass within the checked scenarios.** F01 is fixed locally on the same unmerged branch. The remaining 13 stories retain their prior evidence; the expanded regression suite now has 149 passing tests. See the dated retest below.
 
 | ID | Story summary | Result |
 | --- | --- | --- |
@@ -14,7 +16,7 @@ CS-031A provides the persistent chat shell and **manager single-shift drafting**
 | CS-031A-US02 | Open/close chat without losing page work | Pass |
 | CS-031A-US03 | Describe a single shift and receive a validated draft | Pass |
 | CS-031A-US04 | Answer follow-ups and correct prior details | Pass |
-| CS-031A-US05 | Review/edit, explicitly save, and see consistent completion status | **Partial** |
+| CS-031A-US05 | Review/edit, explicitly save, and see consistent completion status | **Pass after F01 fix** |
 | CS-031A-US06 | Protect existing manual entries | Pass |
 | CS-031A-US07 | Continue bounded chat across navigation/reload | Pass |
 | CS-031A-US08 | Reset chat without late-response interference | Pass |
@@ -83,7 +85,7 @@ Evidence: committed live evaluation evidence covers short-answer completion and 
 
 ### CS-031A-US05 — Review and explicitly save
 
-**Result: Partial — F01 below.**
+**Result: Pass after the 2026-11-21 F01 correction/retest.**
 
 **As a manager, I want to review and edit the proposed shift, explicitly save it, and see its completion status, so I remain in control and know whether the task is finished.**
 
@@ -93,7 +95,7 @@ Acceptance criteria:
 - Only explicit Create and assign shift saves; current permissions and conflicts are rechecked at that point.
 - After a successful save, the assistant clears or marks the handed-off draft as completed rather than continuing to say nothing was saved. This criterion makes the expected end-to-end completion feedback explicit; it was not covered by the earlier button/hand-off checks.
 
-Evidence: prior browser cross-page handoff/input-focus/no-save check; service and HTTP creation tests verify explicit save, duplicate/overlap rejection and persistence. Fresh audit completed the chat-to-save path: saved the edited fictional title “CS-031A acceptance — Opening service” for Jamie Lee on November 26, 09:00–15:00, and saw the manager count increase from 1 to 2. Schedule confirmed success, but reopening chat still displayed “DRAFT · NOT SAVED,” “Nothing has been saved,” and Review shift. Therefore this story is **Partial**, not a save failure. See finding CS-031A-F01 below.
+Evidence: prior browser cross-page handoff/input-focus/no-save check; service and HTTP creation tests verify explicit save, duplicate/overlap rejection and persistence. Fresh audit completed the chat-to-save path: saved the edited fictional title “CS-031A acceptance — Opening service” for Jamie Lee on November 26, 09:00–15:00, and saw the manager count increase from 1 to 2. Schedule confirmed success, but reopening chat still displayed “DRAFT · NOT SAVED,” “Nothing has been saved,” and Review shift. This made the story **Partial in the original audit**, not a save failure. The dated F01 correction/retest below resolves that finding.
 
 ### CS-031A-US06 — Protect manual entries
 
@@ -219,7 +221,7 @@ Automated and browser checks use fictional records. The 141-test suite is rerun 
 
 ## Finding and proposed correction
 
-### CS-031A-F01 — Chat retains an unsaved draft after successful manual creation
+### CS-031A-F01 — Chat retains an unsaved draft after successful manual creation (resolved locally 2026-11-21)
 
 **Affected story:** CS-031A-US05. **Priority:** usability improvement to complete before merging CS-031A. No unauthorized assignment, lost saved record or duplicate write was observed.
 
@@ -233,7 +235,7 @@ Expected: the assistant acknowledges that its handed-off draft was created (usin
 
 Observed: the assistant still shows the original draft as “DRAFT · NOT SAVED,” repeats “Nothing has been saved,” and offers Review shift. It is not linked to the successful save. Source confirms the normal form's success handler refreshes the dashboard but sends no success event/state update to the chat.
 
-Proposed correction (not implemented by this audit): carry an opaque draft/handoff identifier through the review flow; after a confirmed successful save, update only the matching chat card to “Shift created” with the returned actual title/worker/times and a relevant link, or remove its Review action. Manual unrelated shift creation must not mark another AI suggestion as created. If a save is uncertain, retain uncertainty until reconciliation instead of claiming success. Add a regression check for successful edited draft, unrelated manual save, and failed/uncertain save outcomes.
+Original proposed correction (the Nov 20 audit did not implement it; Nov 21 correction below does): carry an opaque draft/handoff identifier through the review flow; after a confirmed successful save, update only the matching chat card to “Shift created” with the returned actual title/worker/times and a relevant link, or remove its Review action. Manual unrelated shift creation must not mark another AI suggestion as created. If a save is uncertain, retain uncertainty until reconciliation instead of claiming success. Add a regression check for successful edited draft, unrelated manual save, and failed/uncertain save outcomes.
 
 Evidence: [saved Schedule confirmation](saved.png), [chat still says not saved](post-save-chat.png). The first is a full-page screenshot, the second shows the reopened assistant after that save.
 
@@ -253,6 +255,25 @@ Evidence: [saved Schedule confirmation](saved.png), [chat still says not saved](
 
 These do not represent reproduced failures: VoiceOver/screen-reader walkthrough, Safari/Firefox keyboard scrolling/focus checks, and a physical-phone virtual-keyboard walkthrough. Consider an explicit named focusable chat-history region for consistent keyboard access across engines, but the existing region was keyboard-scrollable in this audit's browser. AI language coverage remains finite; retain human review and deterministic server validation.
 
-## Decision
+## US05 correction and retest — 2026-11-21
 
-**Does CS-031A meet every story? Not completely: 13 pass and US05 is partial because completion status in chat is stale after saving.** Recommend fixing F01 and rerunning that story before merge. The 141 automated tests passing does not cover the missing chat-completion behavior. Task remains Your review, with no source push or merge. CS-031B/C/D remain separate, and CS-018 remains last.
+User explicitly requested the F01 fix after reviewing the audit. An opaque client draft ID now travels with the explicit Review/apply handoff; the form captures that ID when submitting and emits a completion only after receiving a confirmed successful save. The ID is client-only metadata, never added to the protected server save payload or database schema.
+
+Chat accepts a completion only for its current matching suggestion. It replaces the old proposed/unsaved assistant reply with the confirmed outcome, renders **Shift created** using the server's actual final title/worker/start/end/timezone, and replaces Review shift with View schedule. Completion is retained in the existing scoped tab session. New chat/logout clears it, and another account cannot restore it. Older cached suggestions are assigned a stable identity; a matching old pending handoff is migrated.
+
+Failed/uncertain outcomes do not create receipts. A timeout/network/server-failure path produces **Save not confirmed**, replaces the old misleading "nothing saved" reply, and removes the Review action while the Schedule/form is reconciled. A later authoritative successful response can complete only the same current draft. Duplicate responses cannot overwrite a completed receipt or downgrade it to uncertainty.
+
+Verification:
+- `npm run verify`: **149 tests pass** plus syntax checks. Eight new regressions cover edited real-HTTP save/receipt/reload, unrelated or stale IDs, reset/logout/account changes, idempotence, uncertainty/promotion, invalid success payload, legacy migration and corrupted/expired receipts.
+- Separate fake-provider browser: applied a draft originally for Jamie/09:00–15:00, then changed title to "US05 reviewed late service", worker to Sam Rivera, hours to15:00–21:00. Confirmed save produced the final Sam/title/hours in chat with no Review action. Closing, reload and View schedule navigation preserved it.
+- Unrelated manual save after declining AI replacement did not complete the current AI card.
+- A definite422 rejection left the card unsaved/editable, without false success.
+- A save committed once while its response was delayed past the browser deadline. Chat showed Save not confirmed, not Shift created, and retained that state after reload. The fixture contained exactly one matching saved record.
+- Started New chat while a successful earlier save response was delayed; the late completion left the new transcript empty, card hidden and newly typed message intact.
+- Real-provider preview also exercises the normal edited-review/confirmed-save path; the provider integration and deterministic backend save/authorization rules are unchanged.
+
+Evidence: [confirmed edited save](../../cs031a-us05-evidence/created.png), [unrelated manual save](../../cs031a-us05-evidence/unrelated.png), [rejected save](../../cs031a-us05-evidence/rejected.png), [timeout](../../cs031a-us05-evidence/uncertain.png), [uncertainty after reload](../../cs031a-us05-evidence/uncertain-reload.png), [late save after reset](../../cs031a-us05-evidence/reset-late-save.png). Current preview and test summary are in `docs/cs031a-us05-evidence/`.
+
+## Current decision
+
+**CS-031A now meets all 14 documented stories in the checked scenarios; F01 is resolved locally.** The original audit finding and evidence remain above as history. This is not a guarantee for all natural-language inputs or full screen-reader/cross-browser certification. Task returns to Your review; no push or merge without separate user approval. CS-031B/C/D remain separate, and CS-018 remains last.

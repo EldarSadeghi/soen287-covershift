@@ -71,4 +71,15 @@ Official implementation references: [Conversation state](https://developers.open
 
 ## User-story acceptance audit
 
-[Fourteen user stories and acceptance results](acceptance/cs031a/USER-STORIES.md) were checked against application commit `f95cc9c`. Thirteen pass within the documented scenarios; US05 is partial because the chat retains its unsaved draft after the manager successfully creates the shift through the review form. The normal save succeeds and Schedule confirms it. Finding CS-031A-F01 recommends synchronizing the matching chat card after confirmed success before merge; no product fix is included in the audit.
+[Fourteen user stories and acceptance results](acceptance/cs031a/USER-STORIES.md) were checked against application commit `f95cc9c`. The original Nov20 audit found thirteen passing stories and a partial US05 because the chat retains its unsaved draft after the manager successfully creates the shift through the review form. The normal save succeeds and Schedule confirms it. The original audit proposed F01 without changing product code; the Nov21 correction and retest below now resolve it locally.
+
+
+## CS-031A-US05 completion feedback — 2026-11-21
+
+The audited F01 gap is fixed locally. Review handoffs now carry a client-only opaque ID. Only a confirmed successful save of the current matching handoff changes chat to **Shift created**, using the server-returned final reviewed fields, and replaces Review shift with View schedule. The assistant reply is updated too, preserving bounded alternating history. The receipt is a snapshot of confirmed creation, not a live view of subsequent edits/deletion; View schedule shows the current records.
+
+Keeping unrelated manual entries does not attach the new AI handoff; saving an unrelated form or an older draft does not complete a newer suggestion. New chat/logout/account change isolates late outcomes. Repeated success events are idempotent. Receipts restore within the existing tab-session lifetime, with safe legacy-draft identity migration and validation of cached completion fields.
+
+Definite validation failures remain unsaved/editable. Uncertain save responses show **Save not confirmed** with a schedule link instead of claiming either success or no save. The existing form reconciliation flow remains required; no response is inferred merely from a refresh. No server schema/authorization/provider/request-budget changes were made for this fix, and it does not introduce automatic retries or writes.
+
+Verification: 149 passing tests (eight new completion cases) plus syntax checks; browser edited title/worker/hours, persistence/navigation, unrelated Keep/manual save, rejection, committed-but-response-timed-out single save, and reset during late save. Updated user-story report: [all 14 stories pass within the checked scenarios](acceptance/cs031a/USER-STORIES.md). Current screenshots and logs: `cs031a-us05-evidence/`. Awaiting user review; no push/merge.
