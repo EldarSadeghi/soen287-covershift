@@ -47,6 +47,7 @@ M2 means proposed next-milestone scope; Final means the complete MVP after M2. E
 | CS-019 | Remove and deactivate employees | Final | CS-017 | Delete only unreferenced employees; deactivate with access revoked and history retained; block unresolved assignments/claims; confirm scoped atomic changes. |
 | CS-020 | Request recovery and independent Schedule loading | Final | CS-019 | Saved schedule/Refresh independent of roster; bounded reads/writes and body parsing; draft retention, explicit uncertain-save reconciliation, late-response isolation and regression/browser checks. |
 | CS-022 | Expired coverage handling | Final | CS-020 | Derive expiry at shift start, separate actionable approval count/list from expired History, preserve stored status/events/assignment and verify exact boundaries and scope. |
+| CS-031A | AI-assisted manager shift drafting | Extension | CS-009, CS-020 | Manager-only bounded structured AI suggestions, clarification, explicit apply/review/save, current validation, private key and persisted usage allowance; manual fallback, provider evaluation and mobile/keyboard checks. |
 | CS-018 | Deployment and final submission package | Final | CS-016, CS-017, CS-019 | Deployment supports persistent JSON storage and sessions; documented demo works; report, actual AI collaboration log, security review, and approved release tag are ready. Release publication requires user approval. |
 
 ## Milestone priority
@@ -69,7 +70,7 @@ The proposal explicitly says JSON files rather than SQL are required. Supabase P
 
 If the instructor permits Supabase and the team chooses it, integrate it before implementing persistent business workflows. Establish schema, migrations, authentication, business membership, and row-level security at that point. Do not postpone authorization until deployment.
 
-Out of MVP scope: automatic scheduling, payroll, payments/subscriptions, SMS/email notifications, cross-business coverage, live AI features, and worker reliability scoring. Pricing and future moat ideas in the proposal do not imply implementation tasks.
+Original MVP exclusions: automatic scheduling, payroll, payments/subscriptions, SMS/email notifications, cross-business coverage, and worker reliability scoring. User-approved extension CS-031A adds manager AI drafting with review before saving; employee availability remains a separate future CS-031B increment. Pricing and future moat ideas in the proposal do not imply implementation tasks.
 
 ## Tracking template
 
@@ -118,3 +119,7 @@ User explicitly approved CS-020 push and merge on 2026-11-18. CS-018 remains the
 CS-022: issue #42, branch `codex/CS-022-expired-coverage`. Todo verified, then In Progress on 2026-11-18. Derived Expired status for unresolved started coverage; actionable manager queue and expired History filter/deep links; both-role request labels; no data rewrite. 125 tests plus syntax/diff checks pass; fictional preview port 3016. Awaiting review before push/merge. CS-021 remains a suggestion, and CS-018 remains last.
 
 User explicitly approved CS-022 push and merge on 2026-11-18. CS-021 remains an unstarted suggestion; CS-018 remains the final step.
+
+CS-031A: issue #44, branch `codex/CS-031A-ai-shift-drafts`. Todo verified then In Progress on 2026-11-20. User selected OpenAI GPT-6 Luna and privately configured a project key; US$5 usage target, auto-reload off. Manager-only single-shift drafting; CS-031B employee availability remains separate. CS-022 was merged in PR #43. CS-018 remains last.
+
+CS-031A ready for Your review: 136 tests and syntax/diff checks; six real-provider fictional evaluation cases passed; browser generation/apply/save/employee, clarification, cancellation, failure/timeout and 320px checks documented in ai-shift-drafting.md. Local preview 3017; no push/merge without explicit approval.

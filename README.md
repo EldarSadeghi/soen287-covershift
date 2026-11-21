@@ -74,3 +74,5 @@ The [2026-11-18 acceptance report and proposed tasks](docs/acceptance/2026-11-18
 CS-020 local review improves request recovery and loads saved Schedule independently of the worker selector. See [request recovery](docs/request-recovery.md) for timeout, retry and uncertain-save behavior. User approval is required before push/merge.
 
 CS-022 local review separates **Expired** coverage from actionable Approvals and adds an Expired filter to both-role History. Stored decisions/events and assignments remain intact. See [expired coverage](docs/expired-coverage.md). Awaiting user approval before push/merge.
+
+Optional manager AI drafting (CS-031A): [setup, usage, budget controls and validation](docs/ai-shift-drafting.md). Manual scheduling works without an API key.
