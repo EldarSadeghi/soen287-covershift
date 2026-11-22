@@ -37,6 +37,6 @@ export async function reviewCoverage(store, managerId, requestId, decision, inpu
       db.coverageRequests.push(reopened);
     }
     recordCoverageEvent(db, request, decision === 'approve' ? 'approved' : 'rejected', managerId, updatedAt, previous);
-    return { request: { id: request.id, status: request.status }, message: decision === 'approve' ? 'Coverage approved. The shift is now assigned to the claimant.' : 'Claim rejected. The original worker remains assigned and coverage is open again.' };
+    return { request: { id: request.id, status: request.status }, message: decision === 'approve' ? 'Coverage approved. The shift is now assigned to the claimant.' : 'Claim rejected. The original worker remains assigned. Coverage was reopened; check the queue for any new eligible request.' };
   });
 }

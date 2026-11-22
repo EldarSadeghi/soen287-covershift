@@ -21,7 +21,7 @@ export function mountAiChat(account, csrfToken) {
   const messages = find('.ai-chat-messages'); const card = find('.ai-chat-suggestion'); const status = find('.ai-chat-status');
   const composer = find('textarea'); const send = find('.ai-chat-send'); const form = find('form');
   const intro = find('#ai-chat-intro');
-  intro.textContent = manager ? 'Let’s make the working week easier. Tell me which shift you need, and I’ll prepare it for your review. You can answer my questions here.' : 'Find an existing shift or prepare dated availability using Chat task below. Review and confirm before saving or requesting. Automatic matching is not running yet; shift requests still need manager approval.';
+  intro.textContent = manager ? 'Let’s make the working week easier. Tell me which shift you need, and I’ll prepare it for your review. You can answer my questions here.' : 'Find an existing shift or prepare dated availability using Chat task below. Review and confirm before saving or requesting. Confirmed availability can request matching openings automatically; shift requests still need manager approval.';
   if (!manager) { composer.placeholder = 'Find an open shift next Thursday…'; find('#ai-chat-privacy').textContent = 'Chat stays in this tab. Messages are sent to OpenAI; saved shift records stay on this server. Avoid sensitive information. Confirm before requesting.'; }
   let busy = false; let revision = 0; let reviewing = false;
   let mode = chat.value.mode || 'search';
@@ -41,7 +41,7 @@ export function mountAiChat(account, csrfToken) {
   composer.value = chat.value.composer;
   function updateMode() { if (!manager) composer.placeholder=mode==='availability'?'I can take up to 1 shift next Thursday, 9 AM to 5 PM…':'Find an open shift next Thursday…'; }
   updateMode();
-  modeSelect?.addEventListener('change',()=>{if(busy)return;revision++;mode=modeSelect.value;employeeRequests.reset();availability.reset();chat.reset();chat.value.mode=mode;chat.save();messages.replaceChildren();composer.value='';updateMode();notice(mode==='availability'?'Describe one dated availability window. Nothing saves until you confirm. Automatic matching is not running yet.':'Find existing openings. Review and confirm before requesting.');composer.focus();});
+  modeSelect?.addEventListener('change',()=>{if(busy)return;revision++;mode=modeSelect.value;employeeRequests.reset();availability.reset();chat.reset();chat.value.mode=mode;chat.save();messages.replaceChildren();composer.value='';updateMode();notice(mode==='availability'?'Describe one dated availability window. Nothing saves until you confirm. Confirming enables automatic requests; assignment still needs manager approval.':'Find existing openings. Review and confirm before requesting.');composer.focus();});
   rulesButton?.addEventListener('click',()=>{if(busy)return;revision++;employeeRequests.reset();availability.list();});
   function say(role, text) {
     const bubble = element('div', `ai-chat-bubble ai-chat-${role}`);
@@ -151,7 +151,7 @@ export function mountAiChat(account, csrfToken) {
       // Preserve anything the user typed while waiting, without sending it yet.
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
-      notice(data.kind === 'availability' ? 'Review this availability, then explicitly confirm to save it. Automatic matching is not running yet.' : data.kind === 'matches' ? 'Review a match, then confirm your request. Nothing has been requested.' : data.kind === 'draft' ? 'Your shift draft is ready to review. Nothing has been saved.' : 'Reply below to continue. Nothing has been saved.');
+      notice(data.kind === 'availability' ? 'Review this availability, then explicitly confirm to save it. Confirming enables automatic requests; assignment still needs manager approval.' : data.kind === 'matches' ? 'Review a match, then confirm your request. Nothing has been requested.' : data.kind === 'draft' ? 'Your shift draft is ready to review. Nothing has been saved.' : 'Reply below to continue. Nothing has been saved.');
       if (dialog.open) composer.focus();
     } catch (error) {
       if (version === revision) {

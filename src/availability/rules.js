@@ -1,3 +1,5 @@
+import { matchesForRule } from './matching.js';
+import { coverageDisplayState } from '../requests/status.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpError } from '../auth/errors.js';
 import { coverageAccount } from '../requests/coverage.js';
@@ -20,10 +22,17 @@ export function availabilityFields(input, timezone, now, requireFuture = true) {
   if (requireFuture && (Date.parse(startsAt) <= now || Date.parse(startsAt) > now + 90 * 86400000)) throw new HttpError(422, 'Availability must start in the future, within the next 90 days.');
   return { startsAt, endsAt, timezone, title: input.title.trim(), maxClaims: input.maxClaims };
 }
-const dto = (rule, now) => ({ ...rule, status: ruleStatus(rule, now), revision: ruleRevision(rule) });
+const dto = (db,rule,now) => {
+  const matches=matchesForRule(db,rule.id).map(match=>{
+    const request=db.coverageRequests.find(r=>r.id===match.requestId);
+    const shift=db.shifts.find(s=>s.id===match.shiftId);
+    return {requestId:match.requestId,title:shift.title,startsAt:shift.startsAt,endsAt:shift.endsAt,status:coverageDisplayState(request,shift,now).displayStatus,matchedAt:match.createdAt};
+  });
+  return {...rule,status:ruleStatus(rule,now),revision:ruleRevision(rule),usedClaims:matches.length,remainingClaims:rule.maxClaims-matches.length,matches};
+};
 export async function listAvailability(store, userId, clock = Date.now) {
   const db = await store.read(); const {user,business} = availabilityAccount(db,userId); const now = clock();
-  return { rules: (db.availabilityRules || []).filter(r => r.workerId === user.id && r.businessId === business.id).sort((a,b) => b.confirmedAt.localeCompare(a.confirmedAt) || b.id.localeCompare(a.id)).map(r => dto(r,now)), timezone: business.timezone, matchingEnabled: false };
+  return { rules: (db.availabilityRules || []).filter(r => r.workerId === user.id && r.businessId === business.id).sort((a,b) => b.confirmedAt.localeCompare(a.confirmedAt) || b.id.localeCompare(a.id)).map(r => dto(db,r,now)), timezone: business.timezone, matchingEnabled: true };
 }
 export async function confirmAvailability(store, userId, input, clock = Date.now) {
   if (!input || Array.isArray(input) || Object.keys(input).length !== 2 || typeof input.confirmationId !== 'string' || !/^[a-f0-9-]{36}$/.test(input.confirmationId) || !input.draft) throw new HttpError(422, 'Confirm only the availability draft shown in this chat.');
@@ -33,7 +42,7 @@ export async function confirmAvailability(store, userId, input, clock = Date.now
     const existing=(db.availabilityRules || []).find(r => r.workerId === user.id && r.confirmationId === input.confirmationId);
     if (existing) {
       if (existing.businessId !== business.id || Object.keys(values).some(k => existing[k] !== values[k])) throw new HttpError(409,'This confirmation was already used for different availability. Refresh saved rules.');
-      return {rule:dto(existing,now),matchingEnabled:false,message:'This availability confirmation was already saved. Check its current status.'};
+      return {rule:dto(db,existing,now),matchingEnabled:true,message:'This availability confirmation was already saved. Check its current status.'};
     }
     availabilityFields(input.draft,business.timezone,now);
     const mine=(db.availabilityRules || []).filter(r=>r.workerId===user.id && r.businessId===business.id);
@@ -42,7 +51,7 @@ export async function confirmAvailability(store, userId, input, clock = Date.now
     const at=new Date(Math.max(now,last+1)).toISOString();
     const rule={id:randomUUID(),businessId:business.id,workerId:user.id,...values,confirmationId:input.confirmationId,status:'active',confirmedAt:at,createdAt:at,updatedAt:at};
     db.schemaVersion=Math.max(db.schemaVersion,6);db.availabilityRules ||= []; db.availabilityRules.push(rule);
-    return {rule:dto(rule,now),matchingEnabled:false,message:'Availability saved. Automatic matching is not running yet; manager approval will be required for future claims.'};
+    return {rule:dto(db,rule,now),matchingEnabled:true,message:'Availability saved. Eligible openings can now be requested automatically, within this rule’s limit. Manager approval is required before assignment.'};
   });
 }
 export async function changeAvailability(store,userId,ruleId,action,input,clock=Date.now) {
@@ -56,6 +65,6 @@ export async function changeAvailability(store,userId,ruleId,action,input,clock=
     if(['cancelled','expired'].includes(state) || action==='pause' && state!=='active' || action==='resume' && state!=='paused')throw new HttpError(409,'This action is no longer available. Refresh saved rules.');
     if(action==='resume' && rule.timezone!==business.timezone)throw new HttpError(409,'Your business timezone changed. Cancel this rule and confirm a new window.');
     rule.status={pause:'paused',resume:'active',cancel:'cancelled'}[action];rule.updatedAt=new Date(Math.max(now,Date.parse(rule.updatedAt)+1)).toISOString();
-    return {rule:dto(rule,now),matchingEnabled:false,message:`Availability ${action==='resume'?'resumed':action==='pause'?'paused':'cancelled'}. Automatic matching is not running yet.`};
+    return {rule:dto(db,rule,now),matchingEnabled:true,message:`Availability ${action==='resume'?'resumed':action==='pause'?'paused':'cancelled'}. Pending requests already submitted are unchanged; check My requests.`};
   });
 }

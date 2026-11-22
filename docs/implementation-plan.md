@@ -151,3 +151,9 @@ CS-031B-1 merged in PR #47 on 2026-11-22; issue #46 closed as completed and boar
 CS-031B-2 local implementation ready for Your review: 174 tests and syntax pass; eight real-provider fictional cases; browser lifecycle, rejected/uncertain saves and mobile/keyboard checks documented in docs/acceptance/cs031b-2. Preview port3022, no push/merge.
 
 User explicitly approved CS-031B-2 push and merge on 2026-11-22. Next increment is CS-031C: deterministic availability matching and automatic coverage requests, with fresh conflict checks and manager approval before assignment. CS-031D notifications remains separate; CS-018 stays last.
+
+CS-031B-2 merged in PR #49; issue #48 closed and Done verified. CS-031C started as issue #50 after Todo verification then In Progress, on `codex/CS-031C-automatic-matching`. Deterministic eligible-rule matching uses earliest confirmation order; same atomic final claim checks; persistent v7 ledger for capacity/no repeat; transaction adapter plus startup/30-second reconciliation; saved availability shows used/remaining and current matched request status. 189 tests pass (15 new). Browser validates rejection to next employee, approval-only assignment and newly opened coverage. See docs/automatic-matching.md / docs/acceptance/cs031c. No push/merge before explicit user approval. CS-031D and final CS-018 remain separate.
+
+CS-031C is ready in Your review (2026-11-22): 189 tests pass, fictional browser/restart/mobile checks documented in `docs/acceptance/cs031c/`. Preview port3024. Issue #50 remains open; no feature push or merge before explicit user approval.
+
+User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: CS-031D employee and manager notifications. CS-018 deployment/submission remains last.
