@@ -1,3 +1,4 @@
+import { listAvailability, confirmAvailability, changeAvailability } from './availability/rules.js';
 import { searchExistingShifts } from './ai/shift-search.js';
 import { removeWorker } from './manager/offboarding.js';
 import { coverageHistory } from './requests/history.js';
@@ -18,6 +19,7 @@ import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
   ['/request.js', ['request.js', 'text/javascript; charset=utf-8']],
+  ['/ai-availability.js', ['ai-availability.js', 'text/javascript; charset=utf-8']],
   ['/ai-employee-request.js', ['ai-employee-request.js', 'text/javascript; charset=utf-8']],
   ['/ai-employee-state.js', ['ai-employee-state.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-state.js', ['ai-chat-state.js', 'text/javascript; charset=utf-8']],
@@ -92,7 +94,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history'], worker: ['shifts', 'open', 'requests', 'history'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null }) {
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
   const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
   const limitTeam = createSignupLimiter({ limit: 20, message: 'Too many worker changes. Please wait 10 minutes and try again.' });
@@ -167,6 +169,26 @@ export function createAppServer({ store, signup = registerManager, login = authe
         limitShifts(account.user.id);
         const parts = pathname.split('/');
         sendJson(response, 200, await manageShift(store, account.user.id, parts[4], parts[5], await readJson(request), shiftClock)); return;
+      }
+      if (pathname === '/api/worker/availability-rules' || /^\/api\/worker\/availability-rules\/[a-zA-Z0-9_-]{1,80}\/(pause|resume|cancel)$/.test(pathname) || pathname === '/api/worker/ai-availability-draft') {
+        const list = pathname === '/api/worker/availability-rules' && request.method === 'GET';
+        requireMethod(request, response, list ? 'GET' : 'POST');
+        const account = await requireAccount(store,sessions,request.headers.cookie,'worker');
+        if (new URL(request.url,'http://localhost').search) throw new HttpError(400,'Availability uses your signed-in account.');
+        if (list) { sendJson(response,200,await listAvailability(store,account.user.id,shiftClock)); return; }
+        protectMutation(request,publicOrigin);
+        if (!sessions.validCsrf(account.session,request.headers['x-csrf-token'])) throw new HttpError(403,'Refresh the page and try again.');
+        const input=await readJson(request);
+        if (pathname === '/api/worker/ai-availability-draft') {
+          limitAi(account.user.id);
+          if (!aiAvailability) throw new HttpError(503,'AI availability drafting is not configured.');
+          sendJson(response,200,await aiAvailability(store,account.user.id,input,shiftClock));
+        } else {
+          limitCoverage(account.user.id);
+          if (pathname === '/api/worker/availability-rules') sendJson(response,200,await confirmAvailability(store,account.user.id,input,shiftClock));
+          else { const parts=pathname.split('/'); sendJson(response,200,await changeAvailability(store,account.user.id,parts[4],parts[5],input,shiftClock)); }
+        }
+        return;
       }
       if (['/api/worker/ai-shift-search', '/api/worker/shift-search'].includes(pathname)) {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);

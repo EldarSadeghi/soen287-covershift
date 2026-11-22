@@ -16,8 +16,8 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5].includes(db.schemaVersion), 'unsupported schema version');
-  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key)), 'unknown collection');
+  requireValue([1, 2, 3, 4, 5, 6].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules'), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
@@ -105,6 +105,25 @@ export function validateDatabase(db) {
     if (request.status === 'open') requireValue(request.claimantId === null, 'open request cannot have a claimant');
     if (request.status === 'pending') requireValue(request.claimantId !== null, 'pending request needs a claimant');
     if (['approved', 'rejected'].includes(request.status)) requireValue(request.claimantId !== null && request.reviewerId !== null, 'reviewed request needs a claimant and reviewer');
+  }
+  if (db.schemaVersion >= 6) {
+    requireValue(Array.isArray(db.availabilityRules), 'availabilityRules must be an array');
+    const seen = new Set(); const confirmations = new Set(); const orders = new Set();
+    const ruleFields = ['id','businessId','workerId','startsAt','endsAt','timezone','title','maxClaims','confirmationId','status','confirmedAt','createdAt','updatedAt'];
+    for (const rule of db.availabilityRules) {
+      requireValue(rule && !Array.isArray(rule) && Object.keys(rule).length === ruleFields.length && ruleFields.every(k => Object.hasOwn(rule,k)), 'invalid availability fields');
+      const worker = users.get(rule.workerId);
+      requireValue(id(rule.id) && !seen.has(rule.id) && businesses.has(rule.businessId) && worker?.businessId === rule.businessId && worker.role === 'worker', 'invalid availability identity or scope');
+      seen.add(rule.id);
+      requireValue(typeof rule.confirmationId === 'string' && /^[a-f0-9-]{36}$/.test(rule.confirmationId) && !confirmations.has(rule.workerId + ':' + rule.confirmationId), 'duplicate or invalid availability confirmation');
+      confirmations.add(rule.workerId + ':' + rule.confirmationId);
+      requireValue(timestamp(rule.startsAt) && timestamp(rule.endsAt) && rule.endsAt > rule.startsAt && Date.parse(rule.endsAt)-Date.parse(rule.startsAt)<=25*3600000, 'invalid availability window');
+      requireValue(timestamp(rule.confirmedAt) && rule.confirmedAt === rule.createdAt && timestamp(rule.updatedAt) && rule.updatedAt >= rule.createdAt && !orders.has(rule.confirmedAt), 'invalid availability confirmation order');
+      orders.add(rule.confirmedAt);
+      try { new Intl.DateTimeFormat('en', {timeZone:rule.timezone}); } catch { throw new Error('Invalid database: availability timezone'); }
+      requireValue(text(rule.timezone) && typeof rule.title === 'string' && rule.title === rule.title.trim() && rule.title.length <= 100 && !/[\x00-\x1f]/.test(rule.title) && Number.isInteger(rule.maxClaims) && rule.maxClaims >= 1 && rule.maxClaims <= 5 && ['active','paused','cancelled'].includes(rule.status), 'invalid availability limits or status');
+      requireValue(!worker.deactivation || rule.status === 'cancelled', 'inactive employee has actionable availability');
+    }
   }
   return db;
 }

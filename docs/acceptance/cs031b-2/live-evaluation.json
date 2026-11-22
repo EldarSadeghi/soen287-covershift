@@ -1,0 +1,186 @@
+{
+  "date": "2026-11-22",
+  "provider": "OpenAI GPT-6 Luna",
+  "fictionalData": true,
+  "databaseUnchanged": true,
+  "cases": [
+    {
+      "message": "I can take up to 2 shifts next Thursday between 9 AM and 5 PM.",
+      "expected": {
+        "description": "I can take up to 2 shifts next Thursday between 9 AM and 5 PM.",
+        "kind": "availability",
+        "start": "2026-11-26T09:00",
+        "end": "2026-11-26T17:00",
+        "count": 2
+      },
+      "actual": {
+        "kind": "availability",
+        "draft": {
+          "startLocal": "2026-11-26T09:00",
+          "endLocal": "2026-11-26T17:00",
+          "title": "",
+          "maxClaims": 2,
+          "timezone": "America/Toronto"
+        },
+        "window": {
+          "startsAt": "2026-11-26T14:00:00.000Z",
+          "endsAt": "2026-11-26T22:00:00.000Z",
+          "timezone": "America/Toronto",
+          "title": "",
+          "maxClaims": 2
+        },
+        "matchingEnabled": false
+      },
+      "pass": true
+    },
+    {
+      "message": "I can take any shift next Thursday.",
+      "expected": {
+        "description": "I can take any shift next Thursday.",
+        "kind": "availability",
+        "start": "2026-11-26T00:00",
+        "end": "2026-11-27T00:00",
+        "count": 1
+      },
+      "actual": {
+        "kind": "availability",
+        "draft": {
+          "startLocal": "2026-11-26T00:00",
+          "endLocal": "2026-11-27T00:00",
+          "title": "",
+          "maxClaims": 1,
+          "timezone": "America/Toronto"
+        },
+        "window": {
+          "startsAt": "2026-11-26T05:00:00.000Z",
+          "endsAt": "2026-11-27T05:00:00.000Z",
+          "timezone": "America/Toronto",
+          "title": "",
+          "maxClaims": 1
+        },
+        "matchingEnabled": false
+      },
+      "pass": true
+    },
+    {
+      "message": "I am available next Thursday 9 to 3.",
+      "expected": {
+        "description": "I am available next Thursday 9 to 3.",
+        "kind": "clarification"
+      },
+      "actual": {
+        "kind": "clarification",
+        "question": "What hours do you mean by “9 to 3”—AM or PM?",
+        "timezone": "America/Toronto"
+      },
+      "pass": true
+    },
+    {
+      "message": "I can work every Thursday from 9 AM to 5 PM.",
+      "expected": {
+        "description": "I can work every Thursday from 9 AM to 5 PM.",
+        "kind": "clarification"
+      },
+      "actual": {
+        "kind": "clarification",
+        "question": "I can draft only one dated availability window, not a recurring weekly rule. Which single Thursday would you like to offer?",
+        "timezone": "America/Toronto"
+      },
+      "pass": true
+    },
+    {
+      "message": "I can take shifts.",
+      "expected": {
+        "description": "I can take shifts.",
+        "kind": "clarification"
+      },
+      "actual": {
+        "kind": "clarification",
+        "question": "Which date and hours are you available? If you can take any shift on one specific date, tell me the date and I can use the full local day.",
+        "timezone": "America/Toronto"
+      },
+      "pass": true
+    },
+    {
+      "message": "I can take 6 shifts on November 26, 2026 between 9 AM and 5 PM.",
+      "expected": {
+        "description": "I can take 6 shifts on November 26, 2026 between 9 AM and 5 PM.",
+        "kind": "clarification"
+      },
+      "actual": {
+        "kind": "clarification",
+        "question": "The maximum number of shifts must be between 1 and 5. How many shifts can you take on November 26, 2026, between 9:00 AM and 5:00 PM?",
+        "timezone": "America/Toronto"
+      },
+      "pass": true
+    },
+    {
+      "message": "I can take one Night service shift on November 26, 2026 from 10 PM overnight until 6 AM November 27.",
+      "expected": {
+        "description": "I can take one Night service shift on November 26, 2026 from 10 PM overnight until 6 AM November 27.",
+        "kind": "availability",
+        "start": "2026-11-26T22:00",
+        "end": "2026-11-27T06:00",
+        "count": 1
+      },
+      "actual": {
+        "kind": "availability",
+        "draft": {
+          "startLocal": "2026-11-26T22:00",
+          "endLocal": "2026-11-27T06:00",
+          "title": "Night service",
+          "maxClaims": 1,
+          "timezone": "America/Toronto"
+        },
+        "window": {
+          "startsAt": "2026-11-27T03:00:00.000Z",
+          "endsAt": "2026-11-27T11:00:00.000Z",
+          "timezone": "America/Toronto",
+          "title": "Night service",
+          "maxClaims": 1
+        },
+        "matchingEnabled": false
+      },
+      "pass": true
+    },
+    {
+      "message": "9 AM to 5 PM",
+      "expected": {
+        "description": "9 AM to 5 PM",
+        "history": [
+          {
+            "role": "user",
+            "text": "I can take one shift on November 26, 2026 in the morning."
+          },
+          {
+            "role": "assistant",
+            "text": "What exact hours can you work?"
+          }
+        ],
+        "kind": "availability",
+        "start": "2026-11-26T09:00",
+        "end": "2026-11-26T17:00",
+        "count": 1
+      },
+      "actual": {
+        "kind": "availability",
+        "draft": {
+          "startLocal": "2026-11-26T09:00",
+          "endLocal": "2026-11-26T17:00",
+          "title": "",
+          "maxClaims": 1,
+          "timezone": "America/Toronto"
+        },
+        "window": {
+          "startsAt": "2026-11-26T14:00:00.000Z",
+          "endsAt": "2026-11-26T22:00:00.000Z",
+          "timezone": "America/Toronto",
+          "title": "",
+          "maxClaims": 1
+        },
+        "matchingEnabled": false
+      },
+      "pass": true
+    }
+  ]
+}
