@@ -23,3 +23,5 @@ User explicitly approved CS-031B-1 push and merge on 2026-11-22. Next proposed i
 - CS-031B-1 is complete: issue #46, merged PR #47 on 2026-11-22. CS-031B-2 is issue #48, branch `codex/CS-031B-2-availability-rules`. Todo verified then In Progress on 2026-11-22. Dated rule drafts require explicit employee confirmation; saved private rules support pause/resume/cancel. Matching CS-031C and notifications CS-031D remain separate. No push or merge without explicit approval.
 
 - CS-031B-2 ready for Your review: 174 tests and eight real-provider cases pass; browser confirmation/lifecycle/recovery/mobile evidence in `docs/acceptance/cs031b-2/`. Local preview 3022. Issue #48 stays open; wait for explicit user approval before push or merge.
+
+User explicitly approved CS-031B-2 push and merge on 2026-11-22. Next increment is CS-031C: deterministic availability matching and automatic coverage requests, with fresh conflict checks and manager approval before assignment. CS-031D notifications remains separate; CS-018 stays last.
