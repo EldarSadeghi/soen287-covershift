@@ -1,3 +1,4 @@
+import { createAiShiftSearcher } from './ai/shift-search.js';
 import { store } from './storage/index.js';
 import { createAppServer } from './app.js';
 import { SessionStore } from './auth/sessions.js';
@@ -16,11 +17,10 @@ const sessions = new SessionStore({ secure: publicOrigin?.startsWith('https://')
 
 // Startup validates records or creates empty storage; demo seeding is explicit.
 await store.initialize();
-const aiDraft = createAiShiftDrafter({
-  apiKey: process.env.OPENAI_API_KEY,
-  model: process.env.OPENAI_MODEL || 'gpt-6-luna',
-  allowance: new AiAllowance(join(dirname(store.filename), 'ai-usage')),
-});
-createAppServer({ store, sessions, publicOrigin, aiDraft }).listen(port, host, () => {
+const allowance = new AiAllowance(join(dirname(store.filename), 'ai-usage'));
+const aiOptions = { apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-6-luna', allowance };
+const aiSearch = createAiShiftSearcher(aiOptions);
+const aiDraft = createAiShiftDrafter(aiOptions);
+createAppServer({ store, sessions, publicOrigin, aiDraft, aiSearch }).listen(port, host, () => {
   console.log(`CoverShift is running at http://${host}:${port}`);
 });

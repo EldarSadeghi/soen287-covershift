@@ -1,6 +1,6 @@
 # CS-031A — AI-assisted manager shift creation
 
-Issue: [#44](https://github.com/EldarSadeghi/soen287-covershift/issues/44). Branch: `codex/CS-031A-ai-shift-drafts`. Local implementation; user approval required before pushing or merging. Employee availability (CS-031B) is separate. CS-018 remains the final step.
+Issue: [#44](https://github.com/EldarSadeghi/soen287-covershift/issues/44). Branch: `codex/CS-031A-ai-shift-drafts`. Merged in PR #45 on 2026-11-21. Employee existing-shift search is the separate CS-031B-1 increment; future availability rules are CS-031B-2. CS-018 remains the final step.
 
 ## How it works
 
@@ -18,7 +18,7 @@ Closing/reopening, reload and workspace navigation preserve the same account's b
 
 Up to ten prior messages (five user/assistant pairs), 4,500 UTF-8 bytes of serialized history, and a 1,500-character current message can be supplied. The HTTP body is capped at 8,192 bytes and the client checks 8,000 bytes before sending. The conversation is never silently truncated: when full, start a new chat and include the relevant details again. Each message sent to AI uses one allowance reservation, including follow-up answers. Errors retain the unsent composer text; they do not append fake successful assistant turns. New chat and logout invalidate in-flight replies so late results cannot overwrite a newer chat. Closing alone retains the reply for reopening.
 
-Employee pages show the same launcher with an honest explanation that employee assistance is a later increment; no manager composer/draft actions or AI requests are available to workers. The protected manager endpoint still rejects workers.
+In the original CS-031A increment, workers saw a future-capability explanation. CS-031B-1 now adds a separate employee search/request composer through this launcher; see [employee workflow](ai-employee-shift-search.md). Workers still cannot use manager drafting or creation actions, and the protected manager endpoint rejects workers.
 
 “Next Thursday” is defined in the model instructions as the next Thursday strictly after today's business date; “next week” is the next Monday–Sunday calendar week. Always review the returned exact dates: language models are probabilistic, not a proof of the user's intended date or meaning.
 
@@ -65,7 +65,7 @@ The normal final-save endpoint independently rechecks everything atomically agai
 
 ## Agreed next increments (not included here)
 
-CS-031B: employee availability and explicitly confirmed dated automatic-claim rules, with view/pause/cancel controls. CS-031C: deterministic matching and conflict checks when coverage opens, earliest confirmed eligible rule first, respecting date/hours/count/expiry and not repeatedly claiming the same rejected opening. Claims still need manager approval before assignment changes. CS-031D: both-role in-app notification bell/unread count, manager notification for automatic claims and employee notifications for submission/approval/rejection, with relevant links. No emails in the first notification increment. Each increment receives its own issue, acceptance criteria, local review and approved merge. CS-018 stays last.
+CS-031B-1: existing-shift search and explicit employee confirmation before a claim. CS-031B-2: employee availability and explicitly confirmed dated automatic-claim rules, with view/pause/cancel controls. CS-031C: deterministic matching and conflict checks when coverage opens, earliest confirmed eligible rule first, respecting date/hours/count/expiry and not repeatedly claiming the same rejected opening. Claims still need manager approval before assignment changes. CS-031D: both-role in-app notification bell/unread count, manager notification for automatic claims and employee notifications for submission/approval/rejection, with relevant links. No emails in the first notification increment. Each increment receives its own issue, acceptance criteria, local review and approved merge. CS-018 stays last.
 
 Official implementation references: [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses), [Responses create](https://developers.openai.com/api/reference/resources/responses/methods/create), [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna), [spend limits](https://developers.openai.com/api/docs/guides/spend-limits).
 
@@ -83,3 +83,5 @@ Keeping unrelated manual entries does not attach the new AI handoff; saving an u
 Definite validation failures remain unsaved/editable. Uncertain save responses show **Save not confirmed** with a schedule link instead of claiming either success or no save. The existing form reconciliation flow remains required; no response is inferred merely from a refresh. No server schema/authorization/provider/request-budget changes were made for this fix, and it does not introduce automatic retries or writes.
 
 Verification: 149 passing tests (eight new completion cases) plus syntax checks; browser edited title/worker/hours, persistence/navigation, unrelated Keep/manual save, rejection, committed-but-response-timed-out single save, and reset during late save. Updated user-story report: [all 14 stories pass within the checked scenarios](acceptance/cs031a/USER-STORIES.md). Current screenshots and logs: `cs031a-us05-evidence/`. Awaiting user review; no push/merge.
+
+CS-031A, including US05, was subsequently approved and merged in PR #45 on 2026-11-21. The dated local-review entries above preserve that increment’s review history.
