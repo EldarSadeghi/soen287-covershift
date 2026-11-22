@@ -29,3 +29,5 @@ User explicitly approved CS-031B-2 push and merge on 2026-11-22. Next increment 
 - CS-031B-2 is complete: issue #48, merged PR #49 on 2026-11-22. CS-031C is issue #50, branch `codex/CS-031C-automatic-matching`; Todo verified then In Progress. Automatic claims require manager approval; successful match ledger enforces count and no-repeat constraints. Notifications CS-031D and final deployment CS-018 remain separate.
 
 CS-031C is ready in Your review (2026-11-22): 189 tests pass, fictional browser/restart/mobile checks documented in `docs/acceptance/cs031c/`. Preview port3024. Issue #50 remains open; no feature push or merge before explicit user approval.
+
+User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: CS-031D employee and manager notifications. CS-018 deployment/submission remains last.
