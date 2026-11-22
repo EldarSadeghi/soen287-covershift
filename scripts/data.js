@@ -16,6 +16,7 @@ try {
     { collection: 'Users', records: database.users.length },
     { collection: 'Shifts', records: database.shifts.length },
     { collection: 'Coverage requests', records: database.coverageRequests.length },
+    { collection: 'Availability rules', records: (database.availabilityRules || []).length },
   ]);
   // Review metadata only; never print password hashes or future credentials.
   console.table(database.businesses.map(({ id, name, timezone }) => ({ id, name, timezone })));

@@ -36,3 +36,5 @@ The current isolated real-provider preview is [CoverShift employee preview](http
 For a normal checkout with the private `.env` configured, start with `npm run dev` (or `PORT=3002 npm run dev` if needed), sign in with your existing employee account and search an actual saved open coverage request. This unmerged increment is currently in the Documents working checkout, not yet on GitHub main or the Desktop checkout.
 
 Acceptance evidence and limits: [user-story report](acceptance/cs031b-1/USER-STORIES.md). CS-018 deployment remains the final step.
+
+CS-031B-1 was merged in PR #47 on 2026-11-22. CS-031B-2 adds a separate **Save availability** chat task and **Saved availability** controls; see [availability rules](ai-availability-rules.md). Find existing shifts remains the read-only search followed by explicit claim confirmation described above.

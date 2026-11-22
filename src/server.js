@@ -1,3 +1,4 @@
+import { createAiAvailabilityDrafter } from './ai/availability-draft.js';
 import { createAiShiftSearcher } from './ai/shift-search.js';
 import { store } from './storage/index.js';
 import { createAppServer } from './app.js';
@@ -19,8 +20,9 @@ const sessions = new SessionStore({ secure: publicOrigin?.startsWith('https://')
 await store.initialize();
 const allowance = new AiAllowance(join(dirname(store.filename), 'ai-usage'));
 const aiOptions = { apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-6-luna', allowance };
+const aiAvailability = createAiAvailabilityDrafter(aiOptions);
 const aiSearch = createAiShiftSearcher(aiOptions);
 const aiDraft = createAiShiftDrafter(aiOptions);
-createAppServer({ store, sessions, publicOrigin, aiDraft, aiSearch }).listen(port, host, () => {
+createAppServer({ store, sessions, publicOrigin, aiDraft, aiSearch, aiAvailability }).listen(port, host, () => {
   console.log(`CoverShift is running at http://${host}:${port}`);
 });

@@ -145,3 +145,9 @@ CS-031B-1: issue #46, branch `codex/CS-031B-1-chat-shift-requests`. Acceptance c
 CS-031B-1 moved to Your review after 161 passing tests, seven real-provider cases, and documented browser/keyboard/mobile/recovery checks. The issue remains open; no branch push or merge. Preview: http://localhost:3020/workspace/worker/shifts.
 
 User explicitly approved CS-031B-1 push and merge on 2026-11-22. Next proposed increment: CS-031B-2 confirmed employee availability rules (view/pause/cancel); CS-031C matching and CS-031D notifications remain separate. CS-018 remains last.
+
+CS-031B-1 merged in PR #47 on 2026-11-22; issue #46 closed as completed and board Done verified. CS-031B-2 started as issue #48 after Todo verification then In Progress. Local branch `codex/CS-031B-2-availability-rules`; acceptance criteria recorded before implementation. Separate employee chat task prepares one dated window, optional title and bounded claim count; explicit confirmation saves schema-v6 rules. Saved list, pause/resume/cancel, derived expiry, confirmation idempotency/order, scope/revision guards and deactivation integration. No matching/claims or notifications; CS-031C/D and final CS-018 remain separate. Usage/evidence: `docs/ai-availability-rules.md`.
+
+CS-031B-2 local implementation ready for Your review: 174 tests and syntax pass; eight real-provider fictional cases; browser lifecycle, rejected/uncertain saves and mobile/keyboard checks documented in docs/acceptance/cs031b-2. Preview port3022, no push/merge.
+
+User explicitly approved CS-031B-2 push and merge on 2026-11-22. Next increment is CS-031C: deterministic availability matching and automatic coverage requests, with fresh conflict checks and manager approval before assignment. CS-031D notifications remains separate; CS-018 stays last.
