@@ -17,3 +17,5 @@
 - CS-031B-1: issue #46, branch `codex/CS-031B-1-chat-shift-requests`. Todo verified then In Progress on 2026-11-21. Existing open shifts through employee chat, explicit confirmation submits pending manager approval. Future availability rules (CS-031B-2), automatic matching (CS-031C) and notifications (CS-031D) remain separate. No push/merge until explicit user approval.
 
 - CS-031B-1 is ready in Your review (2026-11-21): 161 tests pass, real-provider and browser evidence in `docs/acceptance/cs031b-1/`. Local preview port 3020. Issue #46 remains open; no push or merge without explicit user approval.
+
+User explicitly approved CS-031B-1 push and merge on 2026-11-22. Next proposed increment: CS-031B-2 confirmed employee availability rules (view/pause/cancel); CS-031C matching and CS-031D notifications remain separate. CS-018 remains last.
