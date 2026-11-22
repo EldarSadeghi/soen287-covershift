@@ -23,7 +23,7 @@ const confirm=(store,worker='worker_jamie',changes={},confirmationId=randomUUID(
 test('confirmation upgrades legacy storage without touching business/users/shifts/coverage, scopes listing and survives reopen',async t=>{
  const {store}=await fixture(t);const before=await store.read();const result=await confirm(store);
  const db=await new JsonStore(store.filename).read();assert.equal(db.schemaVersion,6);for(const key of ['businesses','users','shifts','coverageRequests'])assert.deepEqual(db[key],before[key]);
- assert.equal(db.availabilityRules.length,1);assert.equal(result.rule.workerId,'worker_jamie');assert.equal(result.rule.status,'active');assert.equal(result.matchingEnabled,false);assert.equal(result.rule.startsAt,'2026-11-26T14:00:00.000Z');assert.equal(result.rule.confirmedAt,result.rule.createdAt);
+ assert.equal(db.availabilityRules.length,1);assert.equal(result.rule.workerId,'worker_jamie');assert.equal(result.rule.status,'active');assert.equal(result.matchingEnabled,true);assert.equal(result.rule.startsAt,'2026-11-26T14:00:00.000Z');assert.equal(result.rule.confirmedAt,result.rule.createdAt);
  assert.equal((await listAvailability(store,'worker_jamie',clock)).rules.length,1);assert.equal((await listAvailability(store,'worker_alex',clock)).rules.length,0);
 });
 test('same confirmation is idempotent even concurrently and after cancellation; changed payload cannot reuse it',async t=>{

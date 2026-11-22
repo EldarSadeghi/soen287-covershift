@@ -16,8 +16,8 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5, 6].includes(db.schemaVersion), 'unsupported schema version');
-  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules'), 'unknown collection');
+  requireValue([1, 2, 3, 4, 5, 6, 7].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches'), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
@@ -123,6 +123,23 @@ export function validateDatabase(db) {
       try { new Intl.DateTimeFormat('en', {timeZone:rule.timezone}); } catch { throw new Error('Invalid database: availability timezone'); }
       requireValue(text(rule.timezone) && typeof rule.title === 'string' && rule.title === rule.title.trim() && rule.title.length <= 100 && !/[\x00-\x1f]/.test(rule.title) && Number.isInteger(rule.maxClaims) && rule.maxClaims >= 1 && rule.maxClaims <= 5 && ['active','paused','cancelled'].includes(rule.status), 'invalid availability limits or status');
       requireValue(!worker.deactivation || rule.status === 'cancelled', 'inactive employee has actionable availability');
+    }
+  }
+  if (db.schemaVersion >= 7) {
+    requireValue(Array.isArray(db.availabilityMatches), 'availabilityMatches must be an array');
+    const rules = new Map(db.availabilityRules.map(r => [r.id,r]));
+    const requests = new Map(db.coverageRequests.map(r => [r.id,r]));
+    const seen = new Set(), pairs = new Set(), requestIds = new Set(), counts = new Map();
+    for (const match of db.availabilityMatches) {
+      const expected = ['id','businessId','ruleId','workerId','shiftId','requestId','createdAt','updatedAt'];
+      requireValue(match && !Array.isArray(match) && Object.keys(match).length === expected.length && expected.every(k => Object.hasOwn(match,k)), 'invalid availability match fields');
+      const rule = rules.get(match.ruleId), request = requests.get(match.requestId), shift = shifts.get(match.shiftId);
+      requireValue(id(match.id) && !seen.has(match.id) && !pairs.has(match.workerId+':'+match.shiftId) && !requestIds.has(match.requestId), 'duplicate availability match');
+      seen.add(match.id);pairs.add(match.workerId+':'+match.shiftId);requestIds.add(match.requestId);
+      requireValue(rule && rule.businessId === match.businessId && rule.workerId === match.workerId && shift?.businessId === match.businessId && request?.businessId === match.businessId && request.shiftId === match.shiftId && request.claimantId === match.workerId && request.status !== 'open', 'invalid availability match references');
+      requireValue(timestamp(match.createdAt) && match.updatedAt === match.createdAt && match.createdAt >= rule.confirmedAt && match.createdAt <= request.updatedAt, 'invalid availability match timestamps');
+      counts.set(rule.id,(counts.get(rule.id)||0)+1);
+      requireValue(counts.get(rule.id) <= rule.maxClaims, 'availability match limit exceeded');
     }
   }
   return db;

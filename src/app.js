@@ -1,3 +1,4 @@
+import { withAvailabilityMatching } from './availability/matching.js';
 import { listAvailability, confirmAvailability, changeAvailability } from './availability/rules.js';
 import { searchExistingShifts } from './ai/shift-search.js';
 import { removeWorker } from './manager/offboarding.js';
@@ -95,6 +96,7 @@ const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'sh
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history'], worker: ['shifts', 'open', 'requests', 'history'] };
 
 export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null }) {
+  store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
   const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
   const limitTeam = createSignupLimiter({ limit: 20, message: 'Too many worker changes. Please wait 10 minutes and try again.' });

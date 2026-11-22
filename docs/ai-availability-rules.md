@@ -42,3 +42,7 @@ All routes require a current worker session and reject account/business override
 [Employee preview](http://localhost:3022/workspace/worker/shifts) uses an isolated temporary database with fictional records. Employee `worker_jamie@example.test`, manager `manager_morgan@example.test`; fictional review password `Fictional chat review access!`. Normal checkout: configure private `.env`, run `npm run dev`, sign in as your employee and choose Save availability. This unmerged increment is currently in the Documents checkout, not GitHub main or the Desktop checkout.
 
 Acceptance report: [user stories and evidence](acceptance/cs031b-2/USER-STORIES.md). Natural-language extraction is verified on finite examples, not guaranteed for every possible wording; exact review and explicit confirmation remain essential.
+
+## CS-031C update
+
+CS-031B-2 was merged in PR #49. The separate CS-031C increment enables automatic matching for confirmed active rules, with successful-submission usage and current match status shown in Saved availability. Pause/cancel stops future submissions, not existing pending requests. The original B-2-only no-matching notes above document that increment; current behavior is described in [automatic matching](automatic-matching.md). Notifications remain CS-031D.

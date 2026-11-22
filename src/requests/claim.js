@@ -27,15 +27,17 @@ export async function checkClaim(store, userId, requestId, input, clock = Date.n
   // repeat everything in the exclusive transaction; this result is advisory.
   return { canClaim: result.conflicts.length === 0, conflicts: result.conflicts, commitments: result.commitments, timezone: result.timezone };
 }
+// Shared by explicit employee claims and the deterministic matcher. Caller owns
+// the exclusive transaction; this function always repeats current eligibility.
+export function claimInDatabase(db, userId, requestId, input, now) {
+  const result = inspect(db, userId, requestId, input, now);
+  if (result.conflicts.length) throw new HttpError(409, 'This shift overlaps your assigned shifts or pending claims. You cannot claim it.', { conflicts: result.conflicts });
+  const request = result.request; const previous = { ...request };
+  request.claimantId = result.user.id; request.status = 'pending';
+  request.updatedAt = new Date(Math.max(now, Date.parse(request.updatedAt) + 1)).toISOString();
+  recordCoverageEvent(db, request, 'claimed', result.user.id, request.updatedAt, previous);
+  return { request: { id: request.id, status: request.status }, message: 'Claim submitted for manager approval. The original worker remains assigned until approval.' };
+}
 export async function claimCoverage(store, userId, requestId, input, clock = Date.now) {
-  return store.transaction(db => {
-    const now = clock(); const result = inspect(db, userId, requestId, input, now);
-    if (result.conflicts.length) throw new HttpError(409, 'This shift overlaps your assigned shifts or pending claims. You cannot claim it.', { conflicts: result.conflicts });
-    const request = result.request;
-    const previous = { ...request };
-    request.claimantId = result.user.id; request.status = 'pending';
-    request.updatedAt = new Date(Math.max(now, Date.parse(request.updatedAt) + 1)).toISOString();
-    recordCoverageEvent(db, request, 'claimed', result.user.id, request.updatedAt, previous);
-    return { request: { id: request.id, status: request.status }, message: 'Claim submitted for manager approval. The original worker remains assigned until approval.' };
-  });
+  return store.transaction(db => claimInDatabase(db, userId, requestId, input, clock()));
 }

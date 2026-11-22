@@ -80,3 +80,5 @@ Persistent AI chat and manager shift drafting (CS-031A): [setup, usage, budget c
 Employee AI search and confirmed requests (CS-031B-1): [workflow, scope and acceptance evidence](docs/ai-employee-shift-search.md). Employees review a real opening and explicitly confirm before a request is submitted for manager approval.
 
 Employee confirmed availability (CS-031B-2): [usage, limits and safeguards](docs/ai-availability-rules.md). Rules require explicit confirmation; automatic matching and notifications are later increments.
+
+Automatic availability matching (CS-031C): [execution, limits, approval and verification](docs/automatic-matching.md). Confirmed rules can submit eligible requests while the server runs; managers approve assignment changes.
