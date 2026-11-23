@@ -41,3 +41,5 @@ User explicitly approved CS-031D push and merge on 2026-11-23. Approved scope: i
 - CS-031D is complete: issue #52 closed and Done, merged PR #53 on 2026-11-23. CS-032 (issue #54) selected by user on 2026-11-23; Todo verified then In Progress; branch `codex/CS-032-schedule-questions`. Read-only assigned schedule/next/date/week/hours chat for both roles. Acceptance evidence `docs/acceptance/cs032/`; 214 tests, final 8/8 provider cases. CS-033–040 remain unstarted Todo proposals. No push/merge without explicit approval; CS-018 remains last.
 
 - CS-032 is in Your review (2026-11-23): 214 tests pass, final 8/8 live-provider cases, browser employee/manager answers, preserved-message retry/reload, read-only selected shift links, keyboard/Escape focus and actual manager 320px viewport verified. Preview port3027 with isolated fictional accounts. Nothing pushed/merged; explicit approval required.
+
+User explicitly approved CS-032 push and merge on 2026-11-23. After merge, propose clearer AI response UI options for user selection; do not implement a UI redesign until the user selects/approves it. CS-018 remains last.
