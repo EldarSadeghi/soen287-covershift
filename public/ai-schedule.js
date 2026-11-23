@@ -1,3 +1,4 @@
+import {responseHeader,responseStats,responseFields,responseNote,responseDetails,checkedMeta,localDate,savedShiftFields} from './ai-response-card.js';
 import {formatShiftTime} from './shift-time.js';
 import { element,shiftCard } from './shift-card.js';
 import {requestJSON} from './request.js';
@@ -9,13 +10,24 @@ export function scheduleAnswerMessage(data){
 }
 export function showScheduleAnswer(card,data){
  card.replaceChildren();card.hidden=false;
- card.append(element('p','ai-chat-card-label','SAVED SCHEDULE · READ ONLY'),element('h3','',data.query.kind==='hours'?'Scheduled hours':data.query.kind==='next'?'Next assigned shift':'Assigned schedule'),element('p','',scheduleAnswerMessage(data)));
- card.append(element('p','section-note',data.clippedToWindow?'Hours use actual elapsed time inside the selected dates, including any overlapping overnight portion. Team totals sum employee hours.':'Next means the earliest assigned shift starting at or after the time checked.'));
- if(!data.total)card.append(element('p','','No assigned shifts were found for this question. Pending claims do not assign a shift.'));
- for(const shift of data.shifts){const t=formatShiftTime(shift,data.timezone),item=element('article','ai-chat-opening');item.append(element('h4','',shift.title),element('p','',`${t.date} · ${t.startTime} – ${t.endDate ? t.endDate+' · ' : ''}${t.endTime}`),element('p','',`${t.duration} · Assigned to ${shift.workerName}`));const link=element('a','','View saved shift');link.href=shift.href;item.append(link);card.append(item);}
- if(data.total>data.shifts.length)card.append(element('p','section-note',`Showing the first ${data.shifts.length} of ${data.total}. Totals include all matching saved shifts; ask for a narrower window to see the rest.`));
- const schedule=element('a','ai-chat-review','Open saved schedule');schedule.href=data.scheduleHref;card.append(schedule,element('p','section-note','This answer is a snapshot. Ask again to check for changes. No schedule or coverage changes were made.'));
+ const next=data.query.kind==='next',shift=data.shifts[0];
+ const title=!data.total?'No assigned shifts found.':next?'Here’s your next shift.':`${data.scope==='Entire team'?'Your team':data.scope} is scheduled for ${data.totalHours} hours.`;
+ responseHeader(card,next&&data.total?'Assigned':'Saved schedule · Read only',title);
+ if(next && shift){const t=formatShiftTime(shift,data.timezone);card.append(responseStats([[new Intl.DateTimeFormat(undefined,{timeZone:data.timezone,month:'short',day:'numeric'}).format(new Date(shift.startsAt)),'Next assigned shift'],[t.duration,'Scheduled duration']]),savedShiftFields(shift,data.timezone,shift.workerName));const link=element('a','ai-chat-review','View saved shift');link.href=shift.href;card.append(link);}
+ else {
+  const last=next?null:new Date(Date.parse(data.query.endDate+'T12:00:00Z')-86400000).toISOString().slice(0,10);
+  if(!next)card.append(responseMetaLine(`${localDate(data.query.startDate)} – ${localDate(last)} · ${data.scope}`));
+  card.append(responseStats([[`${data.totalHours} h`,'Assigned hours'],[data.total,'Assigned shifts']]));
+  if(!data.total)card.append(element('p','',next?'No upcoming assigned shift is saved.':'No assigned work overlaps these dates.'));
+  for(const s of data.shifts){const t=formatShiftTime(s,data.timezone),item=element('article','ai-response-shift');const details=element('div','');details.append(element('h4','',s.title),element('p','',t.date),element('p','',`${t.startTime} – ${t.endDate?t.endDate+' · ':''}${t.endTime}`),element('p','ai-response-meta',`Assigned to ${s.workerName}`));const duration=element('span','ai-response-duration',t.duration);const link=element('a','','View saved shift');link.href=s.href;details.append(link);item.append(details,duration);card.append(item);}
+ }
+ if(data.pendingClaims)card.append(responseNote(`${data.pendingClaims} ${next?'upcoming ':''}request${data.pendingClaims===1?'':'s'} awaiting approval. Not included in assigned hours.`));
+ if(data.total>data.shifts.length)card.append(responseMetaLine(`Showing ${data.shifts.length} of ${data.total} shifts. Totals include every matching shift; ask for a narrower window to see the rest.`));
+ card.append(responseDetails('How this answer is calculated',next?'Next means the earliest assigned shift starting at or after the checked time. Pending coverage is not assigned work.':'Hours use actual elapsed time inside these dates, including overlapping overnight portions and daylight-saving changes. Pending claims are excluded. Team totals sum employee hours; break deductions are not applied.'),checkedMeta(data.asOf,data.timezone));
+ if(!next||!shift){const schedule=element('a','ai-chat-review','Open saved schedule');schedule.href=data.scheduleHref;card.append(schedule);}
+ card.append(responseMetaLine('Snapshot of saved work. Ask again to check for changes.'));
 }
+function responseMetaLine(text){return element('p','ai-response-meta',text);}
 export async function mountSelectedScheduleShift(main){
  const id=new URLSearchParams(location.search).get('shift');if(!id)return;
  const box=element('section','panel');box.setAttribute('aria-label','Selected saved shift');main.prepend(box);

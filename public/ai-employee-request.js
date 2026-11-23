@@ -1,3 +1,4 @@
+import {responseHeader,responseFields,responseNote,responseMeta,savedShiftFields,localDate} from './ai-response-card.js';
 import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
@@ -9,12 +10,14 @@ export function employeeSearchMessage(data) {
 export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy, onOutcome, request = requestJSON }) {
   let generation = 0; let busy = false;
   const link = (text, href) => { const node = element('a', 'ai-chat-review', text); node.href = href; return node; };
-  const button = (text, fn) => { const node = element('button', 'ai-chat-review', text); node.type = 'button'; node.addEventListener('click', fn); return node; };
+  const button = (text, fn) => { const node = element('button', 'ai-chat-review', text); node.type = 'button'; if(/^(Cancel|Keep|Refresh)/.test(text))node.classList.add('ai-response-secondary'); node.addEventListener('click', fn); return node; };
   function reset() { generation++; card.replaceChildren(); card.hidden = true; }
   function outcome() {
     reset(); card.hidden = false;
     const value = chat.value.outcome;
-    card.append(element('p', 'ai-chat-card-label', value.kind === 'pending' ? 'REQUEST SUBMITTED' : 'REQUEST NOT CONFIRMED'), element('h3', '', value.title), element('p', '', value.kind === 'pending' ? 'Submitted for manager approval. You are not assigned yet. Check My requests for the current status.' : 'This request may have been submitted. Check My requests and Open shifts before trying again.'), link('View My requests', '/workspace/worker/requests'));
+    const pending=value.kind==='pending';responseHeader(card,pending?'Pending manager approval':'Request not confirmed',pending?'Your request was submitted.':'Check My requests.',pending?'pending':'uncertain');
+    card.append(responseFields([['Shift',value.title]]),responseNote(pending?'You are not assigned yet. The original worker remains assigned until approval.':'This request may have been submitted. Check My requests and Open shifts before trying again.',pending?'pending':'uncertain'),link('View My requests','/workspace/worker/requests'));
+
   }
   async function post(url, body, readOnly = true) {
     const response = await request(url, { method: 'POST', readOnly, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(body) });
@@ -25,13 +28,15 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
   function setWorking(value) { busy = value; setBusy(value); card.querySelectorAll('button').forEach(node => { node.disabled = value; }); }
   function show(data) {
     reset(); chat.value.criteria = data.criteria; chat.value.outcome = null; chat.save(); card.hidden = false;
-    card.append(element('p', 'ai-chat-card-label', 'EXISTING OPENINGS · NOT REQUESTED'), element('p', '', `${data.total} eligible opening${data.total === 1 ? '' : 's'} · ${data.criteria.date} · ${data.timezone}${data.total > data.requests.length ? ` · Showing ${data.requests.length}; browse Open shifts for all results.` : ''}`));
+    responseHeader(card,'Openings · Not requested',data.total===1?'Here’s one matching opening.':data.total?`${data.total} matching openings.`:'No matching openings.');
+    card.append(responseMeta(`${localDate(data.criteria.date)} · ${data.timezone}`));
+    if(data.total>data.requests.length)card.append(responseMeta(`Showing ${data.requests.length} of ${data.total}. Browse Open shifts for all results.`));
     if (!data.requests.length) card.append(element('p', '', 'No matching openings you can request right now. Try another date or check Open shifts.'));
     const version = generation;
     for (const opening of data.requests) {
       const section = element('section', 'ai-chat-opening'); section.setAttribute('aria-label', opening.shift.title);
       const time = formatShiftTime(opening.shift, data.timezone);
-      section.append(element('h3', '', opening.shift.title), element('p', '', `${time.date} · ${time.startTime} – ${time.endDate ? time.endDate + ' · ' : ''}${time.endTime} (${data.timezone})`));
+      section.append(element('h4','',opening.shift.title),savedShiftFields(opening.shift,data.timezone),responseFields([['Current worker',opening.originalWorkerName]]));
       const feedback = element('p', ''); feedback.setAttribute('role', 'status');
       const review = button('Review request', async () => {
         if (busy || version !== generation) return;
@@ -46,7 +51,8 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
       });
       review.setAttribute('aria-label', `Review request for ${opening.shift.title}`);
       const confirm = element('div', 'coverage-confirm'); confirm.hidden = true;
-      confirm.append(element('strong', '', opening.shift.title), element('p', '', `${time.date} · ${time.startTime} – ${time.endDate ? time.endDate + ' · ' : ''}${time.endTime} (${data.timezone})`), element('p', '', 'Request this exact shift? Your time will be reserved while awaiting manager approval. The original worker remains assigned until approval.'));
+      confirm.setAttribute('role','group');confirm.setAttribute('aria-label',`Confirm request for ${opening.shift.title}`);
+      confirm.append(element('p','ai-response-status ai-response-pending','Awaiting your confirmation'),element('strong','',opening.shift.title),responseNote('Your time is reserved after submission. You are assigned only if your manager approves.'));
       const cancel = button('Cancel', () => { if (!busy) { confirm.hidden = true; feedback.textContent = 'Cancelled. Nothing requested.'; review.focus(); } });
       const submit = button('Confirm request', async () => {
         if (busy || version !== generation || confirm.hidden) return;
@@ -59,16 +65,16 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
           if (version !== generation) return;
           if (result.request?.id !== opening.id || result.request?.status !== 'pending') throw new Error('Request not confirmed. Check My requests.');
           chat.value.outcome = { kind: 'pending', title: opening.shift.title }; chat.save();
-          onOutcome('Request submitted for manager approval. The original worker remains assigned until approval.'); outcome(); notice('Request submitted. Manager approval is required before assignment.');
+          onOutcome('Request submitted for manager approval. The original worker remains assigned until approval.'); outcome(); notice('Request submitted.');
         } catch (error) {
           if (version !== generation) return;
           if (error.definite) { chat.value.outcome = null; onOutcome('Request was not submitted. Refresh matches to review current availability.'); chat.save(); confirm.hidden = true; review.hidden = true; feedback.textContent = error.message; notice('Request was not submitted. Refresh matches to check current openings.'); }
           else { onOutcome('Request not confirmed. Check My requests before retrying.'); outcome(); notice('Request not confirmed. Check My requests before trying again.'); }
         } finally { setWorking(false); }
       });
-      confirm.append(cancel, submit); section.append(review, feedback, confirm); card.append(section);
+      const actions=element('div','ai-response-actions');actions.append(cancel,submit);confirm.append(actions); section.append(review, feedback, confirm); card.append(section);
     }
-    card.append(button('Refresh matches', refresh), link('Browse Open shifts', '/workspace/worker/open'));
+    const browse=link('Browse Open shifts','/workspace/worker/open');browse.classList.add('ai-response-secondary');card.append(button('Refresh matches',refresh),browse);
   }
   async function refresh() {
     if (busy || !chat.value.criteria) return;

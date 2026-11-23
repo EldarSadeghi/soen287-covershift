@@ -165,3 +165,7 @@ Issue #52; local branch `codex/CS-031D-notifications`. Private workspace bell, e
 ### CS-032 — Schedule questions through AI chat
 
 Issue #54 selected by user on 2026-11-23. Todo verified, then In Progress. Local `codex/CS-032-schedule-questions`: both-role read-only next/date/week/hour questions, server-calculated scope/totals, pending-claim distinction, saved detail links and clarification/recovery. Fourteen new checks; 214 tests pass. Final live provider cases 8/8 pass after calendar-context correction; initial failures retained in evidence. See `docs/acceptance/cs032/USER-STORIES.md`. Await review approval before push/merge. CS-033–040 remain Todo suggestions and CS-018 remains last. CS-031D is complete, merged PR #53 / issue #52.
+
+### CS-039 — Summary cards and clearer response guidance
+
+Issue #61 selected on 2026-11-23 after user chose Summary cards and approved four response examples. Todo verified then In Progress; branch `codex/CS-039-summary-cards`. Short structured schedule/next, manager draft/completion, availability and coverage cards; separated consent/status, native expandable notes, task-specific prompts, reading space and private conversation preservation. Existing workflow/confirmation services unchanged. See `docs/acceptance/cs039/USER-STORIES.md` for evidence. CS-032 is merged PR #63 / issue #54. CS-018 remains last.

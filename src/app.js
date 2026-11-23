@@ -21,6 +21,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/ai-response-card.js', ['ai-response-card.js', 'text/javascript; charset=utf-8']],
   ['/ai-schedule.js', ['ai-schedule.js', 'text/javascript; charset=utf-8']],
   ['/notifications.js', ['notifications.js', 'text/javascript; charset=utf-8']],
   ['/request.js', ['request.js', 'text/javascript; charset=utf-8']],

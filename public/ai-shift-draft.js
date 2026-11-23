@@ -1,3 +1,4 @@
+import {responseHeader,responseNote,responseDetails,responseMeta,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
 import { createEmployeeChatState } from './ai-employee-state.js';
@@ -16,13 +17,13 @@ export function mountAiChat(account, csrfToken) {
   launcher.innerHTML = '<span class="ai-launcher-icon" aria-hidden="true">✦</span><span>AI assistant</span>';
   launcher.setAttribute('aria-haspopup', 'dialog'); launcher.setAttribute('aria-controls', 'ai-chat'); launcher.setAttribute('aria-expanded', 'false');
   const dialog = document.createElement('dialog'); dialog.className = 'ai-chat'; dialog.id = 'ai-chat'; dialog.setAttribute('aria-labelledby', 'ai-chat-title');
-  dialog.innerHTML = '<div class="ai-chat-header"><div><span class="ai-chat-eyebrow">COVERSHIFT</span><h2 id="ai-chat-title">AI assistant <span aria-hidden="true">✦</span></h2></div><button class="ai-chat-close" type="button" aria-label="Close AI assistant">×</button></div><div class="ai-chat-body"><p class="ai-chat-intro" id="ai-chat-intro"></p><div class="ai-chat-messages" role="log" aria-label="AI conversation" aria-live="polite" aria-relevant="additions"></div><div class="ai-chat-suggestion" hidden></div><p class="ai-chat-status" role="status" tabindex="-1"></p></div><form class="ai-chat-composer"><label for="ai-chat-message">Message AI assistant</label><textarea id="ai-chat-message" rows="2" maxlength="1500" placeholder="Describe a shift, or answer my question…" aria-describedby="ai-chat-privacy"></textarea><div class="ai-chat-controls"><button class="ai-chat-new" type="button">New chat</button><button class="ai-chat-send" type="submit">Send message <span aria-hidden="true">↑</span></button></div><p id="ai-chat-privacy">Chat stays in this tab. Messages and active team names are sent to OpenAI. Avoid sensitive information. Review before saving.</p></form>';
+  dialog.innerHTML = '<div class="ai-chat-header"><div><span class="ai-chat-eyebrow">COVERSHIFT</span><h2 id="ai-chat-title">AI assistant <span aria-hidden="true">✦</span></h2></div><button class="ai-chat-close" type="button" aria-label="Close AI assistant">×</button></div><div class="ai-chat-body"><p class="ai-chat-intro" id="ai-chat-intro"></p><div class="ai-chat-messages" role="log" aria-label="AI conversation" aria-live="polite" aria-relevant="additions"></div><div class="ai-chat-suggestion" hidden></div><p class="ai-chat-status" role="status" tabindex="-1"></p></div><form class="ai-chat-composer"><label for="ai-chat-message">Message AI assistant</label><textarea id="ai-chat-message" rows="1" maxlength="1500" placeholder="Describe a shift, or answer my question…" aria-describedby="ai-chat-privacy"></textarea><div class="ai-chat-controls"><button class="ai-chat-new" type="button">New chat</button><button class="ai-chat-send" type="submit">Send message <span aria-hidden="true">↑</span></button></div><details class="ai-chat-privacy"><summary>Privacy and AI usage</summary><p id="ai-chat-privacy">Chat stays in this tab. Messages and active team names are sent to OpenAI. Avoid sensitive information. Review before saving.</p></details></form>';
   document.body.append(launcher, dialog);
   const find = selector => dialog.querySelector(selector);
   const messages = find('.ai-chat-messages'); const card = find('.ai-chat-suggestion'); const status = find('.ai-chat-status');
   const composer = find('textarea'); const send = find('.ai-chat-send'); const form = find('form');
   const intro = find('#ai-chat-intro');
-  intro.textContent = manager ? 'Let’s make the working week easier. Choose a Chat task to create a shift or ask about saved schedules and hours. You can answer my questions here.' : 'Ask about your schedule and hours, find an existing shift, or prepare dated availability using Chat task below. Review and confirm before saving or requesting. Confirmed availability can request matching openings automatically; shift requests still need manager approval.';
+  intro.textContent = manager ? 'Create a shift or ask about your team’s schedule.' : 'Ask about your work, find an opening, or save availability.';
   if (!manager) { composer.placeholder = 'Find an open shift next Thursday…'; find('#ai-chat-privacy').textContent = 'Chat stays in this tab. Messages are sent to OpenAI; saved shift records stay on this server. Avoid sensitive information. Confirm before requesting.'; }
   let busy = false; let revision = 0; let reviewing = false;
   let mode = chat.value.mode || (manager ? 'draft' : 'search');
@@ -33,6 +34,7 @@ export function mountAiChat(account, csrfToken) {
     for(const [value,text] of (manager ? [['draft','Create a shift'],['questions','Ask about schedules']] : [['search','Find existing shifts'],['availability','Save availability'],['questions','Ask about schedules']])){const option=document.createElement('option');option.value=value;option.textContent=text;modeSelect.append(option);}
     modeSelect.value=mode;rulesButton=element('button','ai-chat-new','Saved availability');rulesButton.type='button';controls.append(label,modeSelect);if(!manager)controls.append(rulesButton);form.prepend(controls);
   }
+  const samples=element('div','ai-chat-samples');samples.setAttribute('aria-label','Suggested messages');intro.after(samples);
   function working(value) { busy=value;send.disabled=value;find('.ai-chat-controls .ai-chat-new').disabled=value;if(modeSelect)modeSelect.disabled=value;if(rulesButton)rulesButton.disabled=value; }
   function outcomeText(text) { if(chat.value.messages.at(-1)?.role==='assistant')chat.value.messages.at(-1).text=text;chat.save();messages.replaceChildren();for(const message of chat.value.messages)say(message.role,message.text); }
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
@@ -40,23 +42,28 @@ export function mountAiChat(account, csrfToken) {
   const employeeRequests = !manager ? createEmployeeRequests({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText }) : null;
 
   composer.value = chat.value.composer;
-  function updateMode() { composer.placeholder=mode==='questions'?'When is my next shift? How many hours next week?':manager?'Create a shift for…':mode==='availability'?'I can take up to 1 shift next Thursday, 9 AM to 5 PM…':'Find an open shift next Thursday…'; }
+  function updateMode() {
+   composer.placeholder=mode==='questions'?'Ask about your schedule…':manager?'Describe a shift…':mode==='availability'?'Describe your availability…':'Which day can you work?';
+   samples.replaceChildren();const prompts=mode==='questions'?(manager?[['Team schedule','Show the entire team’s schedule this week'],['Team hours','How many hours is the entire team scheduled this week?']]:[['My next shift','When is my next shift?'],['My hours this week','How many hours am I working this week?']]):manager?[['Create a shift','Help me create a shift.']]:mode==='availability'?[['Thursday availability','I can take one shift Thursday between 2 PM and 6 PM.']]:[['Thursday openings','Find an open shift Thursday.']];
+   for(const [label,text] of prompts){const b=element('button','',label);b.type='button';b.addEventListener('click',()=>{if(busy)return;composer.value=text;chat.value.composer=text;chat.save();composer.focus();});samples.append(b);}samples.hidden=chat.value.messages.length>0;
+  }
   updateMode();
   modeSelect?.addEventListener('change',()=>{if(busy)return;revision++;mode=modeSelect.value;employeeRequests?.reset();availability?.reset();chat.reset();chat.value.mode=mode;chat.save();messages.replaceChildren();composer.value='';showSuggestion(null);updateMode();notice(mode==='questions'?'Ask about assigned shifts, a date/week, or hours. This task is read-only.':mode==='availability'?'Describe one dated availability window. Nothing saves until you confirm. Confirming enables automatic requests; assignment still needs manager approval.':manager?'Describe a shift to prepare an editable draft. Nothing saves until you review and create it.':'Find existing openings. Review and confirm before requesting.');composer.focus();});
   if(!manager)rulesButton?.addEventListener('click',()=>{if(busy)return;revision++;employeeRequests.reset();availability.list();});
   function say(role, text) {
     const bubble = element('div', `ai-chat-bubble ai-chat-${role}`);
-    bubble.append(element('strong', 'ai-chat-speaker', role === 'user' ? 'You' : 'CoverShift'), element('p', '', text));
-    messages.append(bubble); return bubble;
+    bubble.append(element('strong', 'ai-chat-speaker', role === 'user' ? 'You' : 'CoverShift'));
+    if(role==='assistant' && text.length>180)bubble.append(responseDetails('View earlier reply',text));else bubble.append(element('p','',text));
+    messages.append(bubble);samples.hidden=true; return bubble;
   }
   for (const message of chat.value.messages) say(message.role, message.text);
-  function notice(text) { status.textContent = text; if (dialog.open) status.scrollIntoView({ block: 'nearest' }); }
+  function notice(text,announceOnly=false) { status.textContent = text;status.classList.toggle('ai-response-announcement',announceOnly);if(dialog.open&&(!dialog.contains(document.activeElement)||document.activeElement===dialog))composer.focus({preventScroll:true}); }
   function close() { dialog.close(); }
   dialog.addEventListener('close', () => { launcher.setAttribute('aria-expanded', 'false'); if (!reviewing) launcher.focus(); reviewing = false; });
   find('.ai-chat-close').addEventListener('click', close);
   dialog.addEventListener('keydown', event => {
     if (event.key !== 'Tab') return;
-    const focusable = [...dialog.querySelectorAll('button:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]')].filter(node => node.getClientRects().length);
+    const focusable = [...dialog.querySelectorAll('button:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, a[href]')].filter(node => node.getClientRects().length);
     const first = focusable[0]; const last = focusable.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -66,7 +73,7 @@ export function mountAiChat(account, csrfToken) {
     const box = dialog.getBoundingClientRect();
     if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close();
   });
-  launcher.addEventListener('click', () => { dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); composer.focus(); });
+  launcher.addEventListener('click', () => { dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); composer.focus({preventScroll:true});if(!card.hidden)revealResponse(card); });
   composer.addEventListener('input', () => { chat.value.composer = composer.value; chat.save(); });
   function reviewSuggestion(data) {
     if (chat.value.completion || chat.value.uncertainDraftId || data.id !== chat.value.suggestion?.id) return;
@@ -80,39 +87,35 @@ export function mountAiChat(account, csrfToken) {
     else { chat.value.pending = null; notice('This browser cannot carry a draft between pages. Open Schedule first, then create the suggestion there.'); }
   }
   function showSuggestion(data) {
-    card.replaceChildren(); card.hidden = !data;
-    if (!data) return;
-    const completion = chat.value.completion;
-    if (completion && completion.draftId === data.id) {
-      const time = formatShiftTime(completion.shift, completion.timezone);
-      card.append(element('p', 'ai-chat-card-label', 'SHIFT CREATED'), element('h3', '', completion.shift.title));
-      const details = document.createElement('dl');
-      for (const [label, value] of [['Worker', completion.shift.assignedWorker.name], ['Starts', `${time.date} at ${time.startTime}`], ['Ends', `${time.endDate || time.date} at ${time.endTime}`], ['Timezone', completion.timezone]]) details.append(element('dt', '', label), element('dd', '', value));
-      const schedule = element('a', 'ai-chat-review', 'View schedule'); schedule.href = '/workspace/manager/schedule';
-      card.append(details, element('p', '', 'Saved successfully. This shift is available in the worker’s My shifts page.'), schedule);
-      return;
+    card.replaceChildren();card.hidden=!data;if(!data)return;
+    const completion=chat.value.completion;
+    if(completion && completion.draftId===data.id){
+      responseHeader(card,'Shift created','Your shift is saved.','success');
+      card.append(savedShiftFields(completion.shift,completion.timezone,completion.shift.assignedWorker.name));
+      const schedule=element('a','ai-chat-review','View schedule');schedule.href='/workspace/manager/schedule';
+      card.append(responseNote('Saved successfully. The employee can see this assignment in My shifts.','success'),schedule);return;
     }
-    if (chat.value.uncertainDraftId === data.id) {
-      card.append(element('p', 'ai-chat-card-label', 'SAVE NOT CONFIRMED'), element('h3', '', 'Check your saved schedule'), element('p', '', 'The reviewed shift may have been saved. Check the saved schedule before entering or submitting it again.'));
-      const schedule = element('a', 'ai-chat-review', 'View schedule'); schedule.href = '/workspace/manager/schedule';
-      card.append(schedule); return;
+    if(chat.value.uncertainDraftId===data.id){
+      responseHeader(card,'Save not confirmed','Check your saved schedule.','uncertain');
+      card.append(responseNote('The shift may have been saved. Check the schedule before submitting it again.','uncertain'));
+      const schedule=element('a','ai-chat-review','Check saved schedule');schedule.href='/workspace/manager/schedule';card.append(schedule);return;
     }
-    card.append(element('p', 'ai-chat-card-label', 'DRAFT · NOT SAVED'), element('h3', '', data.draft.title));
-    const details = document.createElement('dl');
-    for (const [label, value] of [['Worker', data.workerName], ['Starts', data.draft.startLocal.replace('T', ' at ')], ['Ends', data.draft.endLocal.replace('T', ' at ')], ['Timezone', data.timezone]]) details.append(element('dt', '', label), element('dd', '', value));
-    const review = element('button', 'ai-chat-review', 'Review shift'); review.type = 'button';
-    review.addEventListener('click', () => reviewSuggestion(data));
-    card.append(details, element('p', '', 'Review and edit the form before creating this shift.'), review);
+    responseHeader(card,'Draft · Not saved','Here’s the shift to review.');
+    card.append(localShiftFields(data.draft,data.workerName,data.timezone));
+    const review=element('button','ai-chat-review','Review shift');review.type='button';review.addEventListener('click',()=>reviewSuggestion(data));
+    card.append(responseNote('Review and edit the Schedule form, then choose Create shift to save.','neutral'),review);
   }
+  function syncResponse(){const bubbles=[...messages.children];for(const bubble of bubbles)bubble.hidden=false;const last=bubbles.at(-1);if(!card.hidden && last?.classList.contains('ai-chat-assistant'))last.hidden=true;}
+  const observer=new MutationObserver(()=>{syncResponse();if(dialog.open&&!card.hidden)requestAnimationFrame(()=>revealResponse(card));});observer.observe(card,{childList:true,attributes:true,attributeFilter:['hidden']});
   if (manager) showSuggestion(chat.value.suggestion); else if (!availability.restore()) employeeRequests.restore();
-  if (chat.value.completion) notice(createdShiftMessage(chat.value.completion));
+  if (chat.value.completion) notice('Shift saved successfully.');
   else if (chat.value.uncertainDraftId) notice('Save not confirmed. Check the saved schedule before trying again.');
   document.addEventListener('ai:shift-created', event => {
     if (!manager || !chat.markCreated(event.detail?.draftId, event.detail?.result)) return;
     // Replace the old proposed/unsaved reply, keeping bounded alternating history.
     messages.replaceChildren();
     for (const message of chat.value.messages) say(message.role, message.text);
-    showSuggestion(chat.value.suggestion); notice(createdShiftMessage(chat.value.completion));
+    showSuggestion(chat.value.suggestion); notice('Shift saved successfully.');
   });
   document.addEventListener('ai:shift-save-uncertain', event => {
     if (!manager || !chat.markUncertain(event.detail?.draftId)) return;
@@ -121,7 +124,7 @@ export function mountAiChat(account, csrfToken) {
     showSuggestion(chat.value.suggestion); notice('Save not confirmed. Check the saved schedule before trying again.');
   });
   find('.ai-chat-controls .ai-chat-new').addEventListener('click', () => {
-    revision++; employeeRequests?.reset(); availability?.reset(); chat.reset(); chat.value.mode=mode;chat.save(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';
+    revision++; employeeRequests?.reset(); availability?.reset(); chat.reset(); chat.value.mode=mode;chat.save(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';updateMode();
     notice(busy ? 'New chat started. The earlier request may still count toward your allowance; wait for it to finish before sending.' : (mode==='questions'?'Ask about your next assigned shift or a dated schedule/hours window.':manager ? 'New chat started. What shift would you like to create?' : (mode==='availability'?'New chat started. Describe one dated availability window.':'New chat started. Which day would you like to find a shift for?'))); composer.focus();
   });
   form.addEventListener('submit', async event => {
@@ -135,6 +138,7 @@ export function mountAiChat(account, csrfToken) {
     if (manager) { chat.value.suggestion = null; chat.value.pending = null; chat.value.completion = null; chat.value.uncertainDraftId = null; showSuggestion(null); }
     else { employeeRequests.reset(); availability.reset(); chat.value.criteria = null; chat.value.outcome = null; }
     chat.save();
+    for(const bubble of messages.children)bubble.hidden=false;
     const pendingBubble = say('user', text);
     notice('Preparing a reply… You can close this panel and keep working.');
     try {
@@ -153,11 +157,12 @@ export function mountAiChat(account, csrfToken) {
       // Preserve anything the user typed while waiting, without sending it yet.
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
-      notice(data.kind === 'schedule_answer' ? 'Answer checked against saved assignments. Nothing changed. Ask again to refresh.' : data.kind === 'availability' ? 'Review this availability, then explicitly confirm to save it. Confirming enables automatic requests; assignment still needs manager approval.' : data.kind === 'matches' ? 'Review a match, then confirm your request. Nothing has been requested.' : data.kind === 'draft' ? 'Your shift draft is ready to review. Nothing has been saved.' : 'Reply below to continue. Nothing has been saved.');
-      if (dialog.open) composer.focus();
+      if(data.kind==='clarification')notice('Reply below to continue.');else notice(card.querySelector('h3')?.textContent||'Your response is ready.',true);
+      syncResponse();if(!card.hidden)revealResponse(card);
+      if (dialog.open) composer.focus({preventScroll:true});
     } catch (error) {
       if (version === revision) {
-        pendingBubble.remove();
+        pendingBubble.remove();card.replaceChildren();card.hidden=true;
         chat.value.composer = composer.value; chat.save();
         notice(error.userMessage || `AI is unavailable or took too long. Your message is preserved. Try sending again later${mode==='questions' ? ' or open your saved schedule' : manager ? ' or use the manual Schedule form' : mode==='availability' ? '; Saved availability remains available' : ' or use Open shifts'}. An attempt may still count toward your allowance.`);
       }
@@ -174,5 +179,5 @@ export function mountAiChat(account, csrfToken) {
       if (openAiReview(pending)) { chat.value.pending = null; chat.save(); }
     }
   });
-  return { clear() { revision++; employeeRequests?.reset(); availability?.reset(); chat.clear(); dialog.remove(); launcher.remove(); } };
+  return { clear() { revision++; observer.disconnect(); employeeRequests?.reset(); availability?.reset(); chat.clear(); dialog.remove(); launcher.remove(); } };
 }
