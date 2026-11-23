@@ -31,7 +31,7 @@ async function fixture(t){
 test('earliest confirmed eligible rule wins existing opening; pending claim and ledger commit together without assignment',async t=>{
  const f=await fixture(t),requestId=await f.opening();const first=await f.rule('worker_sam'),second=await f.rule('worker_jamie');
  const before=await f.store.read();assert.equal(await reconcileAvailability(f.store,clock),1);const db=await f.store.read();
- assert.equal(db.schemaVersion,7);assert.equal(db.availabilityMatches.length,1);assert.equal(db.availabilityMatches[0].ruleId,first.id);assert.equal(db.coverageRequests.find(r=>r.id===requestId).claimantId,'worker_sam');assert.equal(db.coverageRequests.find(r=>r.id===requestId).status,'pending');assert.deepEqual(db.shifts,before.shifts);
+ assert.equal(db.schemaVersion,8);assert.equal(db.availabilityMatches.length,1);assert.equal(db.availabilityMatches[0].ruleId,first.id);assert.equal(db.coverageRequests.find(r=>r.id===requestId).claimantId,'worker_sam');assert.equal(db.coverageRequests.find(r=>r.id===requestId).status,'pending');assert.deepEqual(db.shifts,before.shifts);
  const saved=(await listAvailability(f.store,'worker_sam',clock)).rules[0];assert.equal(saved.usedClaims,1);assert.equal(saved.remainingClaims,0);assert.equal(saved.matches[0].status,'pending');assert.equal((await listAvailability(f.store,'worker_jamie',clock)).rules[0].usedClaims,0);assert.notEqual(saved.revision,first.revision);assert.equal(second.maxClaims,1);
 });
 test('new opening and newly confirmed/resumed rule trigger matching as part of saved mutation',async t=>{

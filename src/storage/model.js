@@ -16,8 +16,8 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5, 6, 7].includes(db.schemaVersion), 'unsupported schema version');
-  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches'), 'unknown collection');
+  requireValue([1, 2, 3, 4, 5, 6, 7, 8].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications'), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
@@ -140,6 +140,21 @@ export function validateDatabase(db) {
       requireValue(timestamp(match.createdAt) && match.updatedAt === match.createdAt && match.createdAt >= rule.confirmedAt && match.createdAt <= request.updatedAt, 'invalid availability match timestamps');
       counts.set(rule.id,(counts.get(rule.id)||0)+1);
       requireValue(counts.get(rule.id) <= rule.maxClaims, 'availability match limit exceeded');
+    }
+  }
+  if (db.schemaVersion >= 8) {
+    requireValue(Array.isArray(db.notifications), 'notifications must be an array');
+    const seen=new Set(), events=new Set();
+    for (const n of db.notifications) {
+      const expected=['id','businessId','userId','requestId','action','createdAt','readAt'];
+      requireValue(n && !Array.isArray(n) && Object.keys(n).length===expected.length && expected.every(k=>Object.hasOwn(n,k)), 'invalid notification fields');
+      const user=users.get(n.userId),r=db.coverageRequests.find(r=>r.id===n.requestId);
+      requireValue(typeof n.id==='string' && /^[a-f0-9]{64}$/.test(n.id) && !seen.has(n.id), 'duplicate or invalid notification ID');seen.add(n.id);
+      requireValue(user && r && r.businessId===n.businessId && user.businessId===n.businessId, 'invalid notification scope');
+      requireValue(['claimed','approved','rejected','cancelled'].includes(n.action) && r.claimantId && r.history?.some(e=>e.action===n.action && e.at===n.createdAt), 'invalid notification event');
+      requireValue(user.role==='manager' ? ['claimed','cancelled'].includes(n.action) : user.id===r.claimantId || ['approved','rejected'].includes(n.action) && user.id===r.originalWorkerId, 'invalid notification recipient');
+      requireValue(timestamp(n.createdAt) && (n.readAt===null || timestamp(n.readAt) && n.readAt>=n.createdAt), 'invalid notification timestamps');
+      const key=[n.requestId,n.action,n.createdAt,n.userId].join(':');requireValue(!events.has(key),'duplicate notification event');events.add(key);
     }
   }
   return db;
