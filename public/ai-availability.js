@@ -1,3 +1,4 @@
+import {responseHeader,responseFields,responseStats,responseNote,responseDetails,responseMeta} from './ai-response-card.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
 import { requestJSON } from './request.js';
@@ -7,7 +8,7 @@ export function availabilitySummary(data) {
 }
 export function createAvailabilityControls({chat,card,notice,csrfToken,setBusy,onOutcome}) {
  let generation=0,busy=false;
- const button=(text,fn)=>{const b=element('button','ai-chat-review',text);b.type='button';b.addEventListener('click',fn);return b;};
+ const button=(text,fn)=>{const b=element('button','ai-chat-review',text);b.type='button';if(/^(Cancel|Keep|Pause|Resume|Refresh)/.test(text))b.classList.add('ai-response-secondary');b.addEventListener('click',fn);return b;};
  function reset(){generation++;card.replaceChildren();card.hidden=true;}
  function working(value){busy=value;setBusy(value);card.querySelectorAll('button').forEach(b=>b.disabled=value);}
  async function call(path,input){
@@ -16,21 +17,28 @@ export function createAvailabilityControls({chat,card,notice,csrfToken,setBusy,o
   if(!response.ok){const e=Error(response.data.message || 'Could not update saved availability.');e.definite=true;throw e;}
   return response.data;
  }
- function receipt(){
+ function receipt(rule=null){
   reset();card.hidden=false;const confirmed=chat.value.outcome?.kind==='availability_saved';
-  card.append(element('p','ai-chat-card-label',confirmed?'AVAILABILITY SAVED':'SAVE NOT CONFIRMED'),element('p','',confirmed?'Your availability was saved. Matching can submit requests automatically within your limit. View saved availability and My requests for current results; assignment requires manager approval.':'The rule may have been saved. Check saved availability before confirming a new draft.'),button('View saved availability',list));
+  responseHeader(card,confirmed?'Availability saved':'Save not confirmed',confirmed?'Your availability was saved.':'Check saved availability.',confirmed?'success':'uncertain');
+  if(rule)card.append(availabilityFields(rule,rule.timezone,rule.maxClaims,rule.title));
+  card.append(responseNote(confirmed?'Eligible openings can produce requests within your limit. Assignment still requires manager approval.':'The rule may have been saved. Check saved availability before confirming a new draft.',confirmed?'pending':'uncertain'),button('View saved availability',list));
+ }
+ function availabilityFields(window,timezone,maxClaims,title=''){
+  const t=formatShiftTime(window,timezone);return responseFields([['Date',t.date],['Available from',t.startTime],['Available until',`${t.endDate?t.endDate+' · ':''}${t.endTime}`],['Maximum requests',maxClaims],['Shift title',title||'Any title'],['Timezone',timezone]]);
  }
  function show(data){
   reset();const version=generation;card.hidden=false;
-  card.append(element('p','ai-chat-card-label','AVAILABILITY DRAFT · NOT SAVED'),element('p','',availabilitySummary(data)));
+  responseHeader(card,'Availability draft · Not saved','Is this availability correct?');
+  card.append(availabilityFields(data.window,data.draft.timezone,data.draft.maxClaims,data.draft.title),responseNote('Confirming enables automatic requests for eligible openings. Your manager still approves assignment.'),responseDetails('How matching works','The full shift must fit inside this window. Existing assignments, pending claims, rule priority and your request limit are checked before submission.'));
   const confirmationId=crypto.randomUUID();
-  card.append(button('Cancel draft',()=>{if(busy)return;reset();onOutcome('Availability draft cancelled. Nothing was saved.');notice('Draft cancelled. Nothing saved.');}),button('Confirm availability',async()=>{
+  const actions=element('div','ai-response-actions');card.append(actions);
+  actions.append(button('Cancel draft',()=>{if(busy)return;reset();onOutcome('Availability draft cancelled. Nothing was saved.');notice('Draft cancelled. Nothing saved.');}),button('Confirm availability',async()=>{
    if(busy||version!==generation)return;working(true);
    chat.value.outcome={kind:'availability_uncertain',title:'Availability'};onOutcome('Availability submission started; confirmation is pending. Check saved availability if interrupted.');chat.save();
    try{
     const result=await call('/api/worker/availability-rules',{confirmationId,draft:data.draft});if(version!==generation)return;
     if(!result.rule?.id || result.rule.confirmationId!==confirmationId)throw Error('Save not confirmed.');
-    chat.value.outcome={kind:'availability_saved',title:'Availability'};chat.save();onOutcome(result.message);receipt();notice(result.message);
+    chat.value.outcome={kind:'availability_saved',title:'Availability'};chat.save();onOutcome('Availability saved. Assignment still requires manager approval.');receipt(result.rule);notice('Availability saved.');
    }catch(error){if(version!==generation)return;
     if(error.definite){chat.value.outcome=null;chat.save();reset();onOutcome('Availability was not saved. Request a fresh draft.');notice(error.message);}
     else{onOutcome('Availability save not confirmed. Check saved availability before retrying.');receipt();notice('Save not confirmed. Check saved availability.');}
@@ -41,11 +49,11 @@ export function createAvailabilityControls({chat,card,notice,csrfToken,setBusy,o
   if(busy)return;reset();const version=generation;working(true);card.hidden=false;card.append(element('p','','Loading saved availability…'));notice('Loading saved availability…');
   try{
    const data=await call('/api/worker/availability-rules');if(version!==generation)return;card.replaceChildren();
-   card.append(element('h3','','Saved availability'),element('p','','Matching is enabled while the server runs. Existing and new eligible openings can be requested automatically. Manager approval is required before assignment.'));
+   responseHeader(card,'Saved rules','Your availability.');card.append(responseNote('Active rules can request matching openings. Assignment still requires manager approval.'));
    if(!data.rules.length)card.append(element('p','','No saved availability. Choose Save availability and describe one date.'));
    for(const rule of data.rules){
     const section=element('section','ai-chat-opening'); const time=formatShiftTime(rule,rule.timezone);
-    section.append(element('h3','',rule.title || 'Any shift'),element('p','',`${time.date} · ${time.startTime} – ${time.endDate || time.date} ${time.endTime} (${rule.timezone})`),element('p','',`${rule.status.toUpperCase()} · ${rule.usedClaims} of ${rule.maxClaims} requests used · ${rule.remainingClaims} remaining`));
+    section.append(element('p','ai-response-status',rule.status),element('h4','',rule.title||'Any shift'),availabilityFields(rule,rule.timezone,rule.maxClaims,rule.title),responseStats([[rule.usedClaims,'Requests used'],[rule.remainingClaims,'Remaining']]));
     for(const match of rule.matches || []) {
       const time=formatShiftTime(match,rule.timezone);
       const details=element('p','',`${match.title} · ${time.date} · ${time.startTime} – ${time.endDate ? time.endDate+' · ' : ''}${time.endTime} · ${match.status === 'pending' ? 'Awaiting manager approval' : match.status}`);
