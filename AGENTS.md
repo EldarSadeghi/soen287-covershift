@@ -35,3 +35,5 @@ User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: C
 - CS-031C is complete: issue #50, merged PR #51. CS-031D is issue #52, branch `codex/CS-031D-notifications`; Todo verified then In Progress on 2026-11-22. In-app employee/manager notifications implemented locally; acceptance in `docs/acceptance/cs031d/`. No push/merge until explicit approval. CS-018 remains last.
 
 - CS-031D is in Your review (2026-11-23): 200 tests pass; browser manual approval, private employee receipt, read/uncertain recovery, empty state, logout, keyboard and 320px mobile checks recorded. Working isolated preview port3025, one afternoon match awaits a manager decision. Nothing pushed or merged; wait for explicit user approval.
+
+User explicitly approved CS-031D push and merge on 2026-11-23. Approved scope: issue #52 employee/manager in-app notifications and its acceptance documentation. CS-018 deployment/submission remains last.
