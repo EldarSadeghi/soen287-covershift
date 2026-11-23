@@ -1,0 +1,239 @@
+[
+  {
+    "description": "When is my next shift?",
+    "pass": true,
+    "result": {
+      "kind": "schedule_answer",
+      "query": {
+        "kind": "next",
+        "startDate": "",
+        "endDate": "",
+        "workerName": ""
+      },
+      "scope": "Jamie Lee",
+      "timezone": "America/Toronto",
+      "asOf": "2026-11-23T16:00:00.000Z",
+      "total": 1,
+      "totalHours": 3,
+      "shifts": [
+        {
+          "id": "d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "title": "Thursday opening",
+          "startsAt": "2026-11-26T14:00:00.000Z",
+          "endsAt": "2026-11-26T17:00:00.000Z",
+          "workerName": "Jamie Lee",
+          "href": "/workspace/worker/shifts?shift=d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "timezone": "America/Toronto"
+        }
+      ],
+      "pendingClaims": 1,
+      "clippedToWindow": false,
+      "scheduleHref": "/workspace/worker/shifts"
+    }
+  },
+  {
+    "description": "How many hours am I working this week?",
+    "pass": true,
+    "result": {
+      "kind": "schedule_answer",
+      "query": {
+        "kind": "hours",
+        "startDate": "2026-11-23",
+        "endDate": "2026-11-30",
+        "workerName": ""
+      },
+      "scope": "Jamie Lee",
+      "timezone": "America/Toronto",
+      "asOf": "2026-11-23T16:00:00.000Z",
+      "total": 2,
+      "totalHours": 7,
+      "shifts": [
+        {
+          "id": "d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "title": "Thursday opening",
+          "startsAt": "2026-11-26T14:00:00.000Z",
+          "endsAt": "2026-11-26T17:00:00.000Z",
+          "workerName": "Jamie Lee",
+          "href": "/workspace/worker/shifts?shift=d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "timezone": "America/Toronto"
+        },
+        {
+          "id": "dd0ba80e-34f8-49f5-9ce2-0c8dde77922b",
+          "title": "Friday service",
+          "startsAt": "2026-11-27T15:00:00.000Z",
+          "endsAt": "2026-11-27T19:00:00.000Z",
+          "workerName": "Jamie Lee",
+          "href": "/workspace/worker/shifts?shift=dd0ba80e-34f8-49f5-9ce2-0c8dde77922b",
+          "timezone": "America/Toronto"
+        }
+      ],
+      "pendingClaims": 1,
+      "clippedToWindow": true,
+      "scheduleHref": "/workspace/worker/shifts"
+    }
+  },
+  {
+    "description": "How many hours am I working next week?",
+    "pass": true,
+    "result": {
+      "kind": "schedule_answer",
+      "query": {
+        "kind": "hours",
+        "startDate": "2026-11-30",
+        "endDate": "2026-12-07",
+        "workerName": ""
+      },
+      "scope": "Jamie Lee",
+      "timezone": "America/Toronto",
+      "asOf": "2026-11-23T16:00:00.000Z",
+      "total": 1,
+      "totalHours": 8,
+      "shifts": [
+        {
+          "id": "6d494277-68ea-4e44-8d52-3f558c88e302",
+          "title": "Next Monday service",
+          "startsAt": "2026-11-30T14:00:00.000Z",
+          "endsAt": "2026-11-30T22:00:00.000Z",
+          "workerName": "Jamie Lee",
+          "href": "/workspace/worker/shifts?shift=6d494277-68ea-4e44-8d52-3f558c88e302",
+          "timezone": "America/Toronto"
+        }
+      ],
+      "pendingClaims": 0,
+      "clippedToWindow": true,
+      "scheduleHref": "/workspace/worker/shifts"
+    }
+  },
+  {
+    "description": "Am I working on November 26, 2026?",
+    "pass": true,
+    "result": {
+      "kind": "schedule_answer",
+      "query": {
+        "kind": "schedule",
+        "startDate": "2026-11-26",
+        "endDate": "2026-11-27",
+        "workerName": ""
+      },
+      "scope": "Jamie Lee",
+      "timezone": "America/Toronto",
+      "asOf": "2026-11-23T16:00:00.000Z",
+      "total": 1,
+      "totalHours": 3,
+      "shifts": [
+        {
+          "id": "d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "title": "Thursday opening",
+          "startsAt": "2026-11-26T14:00:00.000Z",
+          "endsAt": "2026-11-26T17:00:00.000Z",
+          "workerName": "Jamie Lee",
+          "href": "/workspace/worker/shifts?shift=d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "timezone": "America/Toronto"
+        }
+      ],
+      "pendingClaims": 1,
+      "clippedToWindow": true,
+      "scheduleHref": "/workspace/worker/shifts"
+    }
+  },
+  {
+    "description": "How many hours?",
+    "pass": true,
+    "result": {
+      "kind": "clarification",
+      "question": "What date range would you like to know your scheduled hours for?",
+      "timezone": "America/Toronto"
+    }
+  },
+  {
+    "description": "Show Alex Morgan’s schedule this week",
+    "pass": true,
+    "result": {
+      "kind": "schedule_answer",
+      "query": {
+        "kind": "schedule",
+        "startDate": "2026-11-23",
+        "endDate": "2026-11-30",
+        "workerName": "Alex Morgan"
+      },
+      "scope": "Alex Morgan",
+      "timezone": "America/Toronto",
+      "asOf": "2026-11-23T16:00:00.000Z",
+      "total": 1,
+      "totalHours": 3,
+      "shifts": [
+        {
+          "id": "663b588c-81e5-49c8-95cf-ae6cfd79b339",
+          "title": "Thursday afternoon",
+          "startsAt": "2026-11-26T19:00:00.000Z",
+          "endsAt": "2026-11-26T22:00:00.000Z",
+          "workerName": "Alex Morgan",
+          "href": "/workspace/manager/schedule?shift=663b588c-81e5-49c8-95cf-ae6cfd79b339",
+          "timezone": "America/Toronto"
+        }
+      ],
+      "pendingClaims": 0,
+      "clippedToWindow": true,
+      "scheduleHref": "/workspace/manager/schedule"
+    }
+  },
+  {
+    "description": "How many hours is the entire team scheduled this week?",
+    "pass": true,
+    "result": {
+      "kind": "schedule_answer",
+      "query": {
+        "kind": "hours",
+        "startDate": "2026-11-23",
+        "endDate": "2026-11-30",
+        "workerName": ""
+      },
+      "scope": "Entire team",
+      "timezone": "America/Toronto",
+      "asOf": "2026-11-23T16:00:00.000Z",
+      "total": 3,
+      "totalHours": 10,
+      "shifts": [
+        {
+          "id": "d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "title": "Thursday opening",
+          "startsAt": "2026-11-26T14:00:00.000Z",
+          "endsAt": "2026-11-26T17:00:00.000Z",
+          "workerName": "Jamie Lee",
+          "href": "/workspace/manager/schedule?shift=d886dff1-86ea-4f7c-8214-b9b4d2127bcb",
+          "timezone": "America/Toronto"
+        },
+        {
+          "id": "663b588c-81e5-49c8-95cf-ae6cfd79b339",
+          "title": "Thursday afternoon",
+          "startsAt": "2026-11-26T19:00:00.000Z",
+          "endsAt": "2026-11-26T22:00:00.000Z",
+          "workerName": "Alex Morgan",
+          "href": "/workspace/manager/schedule?shift=663b588c-81e5-49c8-95cf-ae6cfd79b339",
+          "timezone": "America/Toronto"
+        },
+        {
+          "id": "dd0ba80e-34f8-49f5-9ce2-0c8dde77922b",
+          "title": "Friday service",
+          "startsAt": "2026-11-27T15:00:00.000Z",
+          "endsAt": "2026-11-27T19:00:00.000Z",
+          "workerName": "Jamie Lee",
+          "href": "/workspace/manager/schedule?shift=dd0ba80e-34f8-49f5-9ce2-0c8dde77922b",
+          "timezone": "America/Toronto"
+        }
+      ],
+      "pendingClaims": 1,
+      "clippedToWindow": true,
+      "scheduleHref": "/workspace/manager/schedule"
+    }
+  },
+  {
+    "description": "Cancel all my shifts",
+    "pass": true,
+    "result": {
+      "kind": "clarification",
+      "question": "I can’t cancel shifts here. Please use the existing shift-management task or page.",
+      "timezone": "America/Toronto"
+    }
+  }
+]

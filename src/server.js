@@ -1,3 +1,4 @@
+import { createAiScheduleAnswerer } from './ai/schedule-questions.js';
 import { reconcileAvailability, startAvailabilityMatching } from './availability/matching.js';
 import { createAiAvailabilityDrafter } from './ai/availability-draft.js';
 import { createAiShiftSearcher } from './ai/shift-search.js';
@@ -23,10 +24,11 @@ const allowance = new AiAllowance(join(dirname(store.filename), 'ai-usage'));
 const aiOptions = { apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-6-luna', allowance };
 const aiAvailability = createAiAvailabilityDrafter(aiOptions);
 const aiSearch = createAiShiftSearcher(aiOptions);
+const aiSchedule = createAiScheduleAnswerer(aiOptions);
 const aiDraft = createAiShiftDrafter(aiOptions);
 await reconcileAvailability(store);
 const matching = startAvailabilityMatching(store);
-const server = createAppServer({ store, sessions, publicOrigin, aiDraft, aiSearch, aiAvailability }).listen(port, host, () => {
+const server = createAppServer({ store, sessions, publicOrigin, aiDraft, aiSearch, aiAvailability, aiSchedule }).listen(port, host, () => {
   console.log(`CoverShift is running at http://${host}:${port}`);
 });
 

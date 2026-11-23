@@ -1,3 +1,4 @@
+import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
 import { withAvailabilityMatching } from './availability/matching.js';
 import { listAvailability, confirmAvailability, changeAvailability } from './availability/rules.js';
@@ -20,6 +21,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/ai-schedule.js', ['ai-schedule.js', 'text/javascript; charset=utf-8']],
   ['/notifications.js', ['notifications.js', 'text/javascript; charset=utf-8']],
   ['/request.js', ['request.js', 'text/javascript; charset=utf-8']],
   ['/ai-availability.js', ['ai-availability.js', 'text/javascript; charset=utf-8']],
@@ -97,7 +99,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history'], worker: ['shifts', 'open', 'requests', 'history'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null }) {
   store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
   const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
@@ -114,7 +116,19 @@ export function createAppServer({ store, signup = registerManager, login = authe
     let pathname;
     try {
       pathname = new URL(request.url, 'http://localhost').pathname;
-      if (pathname === '/api/notifications' || pathname === '/api/notifications/read') {
+      if (/^\/api\/schedule-shifts\/[a-zA-Z0-9_-]{1,80}$/.test(pathname)) {
+        requireMethod(request,response,'GET');const account=await requireAccount(store,sessions,request.headers.cookie);
+        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'This view uses your signed-in schedule.');
+        sendJson(response,200,await scheduleShiftDetails(store,account.user.id,pathname.split('/')[3]));return;
+      }
+      if (pathname === '/api/ai-schedule-question') {
+        requireMethod(request,response,'POST');protectMutation(request,publicOrigin);const account=await requireAccount(store,sessions,request.headers.cookie);
+        if(!sessions.validCsrf(account.session,request.headers['x-csrf-token']))throw new HttpError(403,'Refresh the page and try again.');
+        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Questions use your signed-in schedule.');
+        limitAi(account.user.id);if(!aiSchedule)throw new HttpError(503,'AI schedule questions are not configured.');
+        sendJson(response,200,await aiSchedule(store,account.user.id,await readJson(request),shiftClock));return;
+      }
+      if (pathname === '/api/notifications'  || pathname === '/api/notifications/read') {
         const reading=pathname.endsWith('/read'); requireMethod(request,response,reading?'POST':'GET');
         const account=await requireAccount(store,sessions,request.headers.cookie);
         const query=new URL(request.url,'http://localhost').searchParams;
