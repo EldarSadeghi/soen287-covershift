@@ -169,3 +169,7 @@ Issue #54 selected by user on 2026-11-23. Todo verified, then In Progress. Local
 ### CS-039 — Summary cards and clearer response guidance
 
 Issue #61 selected on 2026-11-23 after user chose Summary cards and approved four response examples. Todo verified then In Progress; branch `codex/CS-039-summary-cards`. Short structured schedule/next, manager draft/completion, availability and coverage cards; separated consent/status, native expandable notes, task-specific prompts, reading space and private conversation preservation. Existing workflow/confirmation services unchanged. See `docs/acceptance/cs039/USER-STORIES.md` for evidence. CS-032 is merged PR #63 / issue #54. CS-018 remains last.
+
+### CS-021 — Demo preparation
+
+User selected the previously deferred suggestion on 2026-11-23. Issue #65 acceptance criteria recorded, Todo verified then In Progress; branch `codex/CS-021-demo-preparation`. Added isolated repeatable fictional runs, relative-date service-generated scenarios, two role URLs, dated walkthrough, production/path/staleness guards and loopback launcher with persistent AI usage. Normal records and prior demo runs preserved. 223 tests pass; real-provider/browser rehearsal and fresh reset recorded in `docs/acceptance/cs021/USER-STORIES.md`. Ready for Your review; no push/merge before explicit user approval. CS-039 is complete, PR #64 / issue #61. CS-018 stays last.

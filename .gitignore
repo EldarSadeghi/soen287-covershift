@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 data/*
 !data/README.md
 .DS_Store
+
+# CS-021 isolated fictional presentation runs (never committed)
+.covershift-demo/
