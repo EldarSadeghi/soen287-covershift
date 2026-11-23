@@ -1,3 +1,4 @@
+import { coverageEventKeys, publishCoverageNotifications } from '../notifications/service.js';
 import { randomUUID } from 'node:crypto';
 import { claimRevision, claimCommitments, claimInDatabase } from '../requests/claim.js';
 import { findClaimConflicts } from '../../public/claim-conflicts.js';
@@ -41,7 +42,7 @@ export function withAvailabilityMatching(store, clock = Date.now) {
   return {
     filename:store.filename,
     read:()=>store.read(),
-    transaction:change=>store.transaction(async db=>{const result=await change(db);matchAvailability(db,clock());return result;}),
+    transaction:change=>store.transaction(async db=>{const before=coverageEventKeys(db);const result=await change(db);matchAvailability(db,clock());publishCoverageNotifications(db,before);return result;}),
   };
 }
 export async function reconcileAvailability(store, clock = Date.now) {
@@ -49,7 +50,7 @@ export async function reconcileAvailability(store, clock = Date.now) {
   // exclusive transaction still recomputes everything, never trusts this probe.
   const snapshot = await store.read();
   if (!matchAvailability(snapshot,clock())) return 0;
-  return store.transaction(db=>matchAvailability(db,clock()));
+  return store.transaction(db=>{const before=coverageEventKeys(db);const count=matchAvailability(db,clock());publishCoverageNotifications(db,before);return count;});
 }
 export function startAvailabilityMatching(store,{clock=Date.now,intervalMs=30000,onError=()=>console.error('Availability matching failed. Check storage health; next reconciliation will retry.')}={}) {
   let running=false,stopped=false;

@@ -1,3 +1,4 @@
+import { listNotifications, markNotificationsRead } from './notifications/service.js';
 import { withAvailabilityMatching } from './availability/matching.js';
 import { listAvailability, confirmAvailability, changeAvailability } from './availability/rules.js';
 import { searchExistingShifts } from './ai/shift-search.js';
@@ -19,6 +20,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/notifications.js', ['notifications.js', 'text/javascript; charset=utf-8']],
   ['/request.js', ['request.js', 'text/javascript; charset=utf-8']],
   ['/ai-availability.js', ['ai-availability.js', 'text/javascript; charset=utf-8']],
   ['/ai-employee-request.js', ['ai-employee-request.js', 'text/javascript; charset=utf-8']],
@@ -102,6 +104,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitTeam = createSignupLimiter({ limit: 20, message: 'Too many worker changes. Please wait 10 minutes and try again.' });
   const limitShifts = createSignupLimiter({ limit: 60, message: 'Too many shift changes. Please wait 10 minutes and try again.' });
   const limitCoverage = createSignupLimiter({ limit: 30, message: 'Too many coverage changes. Please wait 10 minutes and try again.' });
+  const limitNotificationReads = createSignupLimiter({ limit: 120, message: 'Too many notification updates. Please wait and refresh.' });
   const limitAi = createSignupLimiter({ limit: 5, message: 'Too many AI drafting attempts. Wait 10 minutes or use the manual form.' });
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -111,7 +114,23 @@ export function createAppServer({ store, signup = registerManager, login = authe
     let pathname;
     try {
       pathname = new URL(request.url, 'http://localhost').pathname;
-      if (pathname === '/api/signup' || pathname === '/api/login') {
+      if (pathname === '/api/notifications' || pathname === '/api/notifications/read') {
+        const reading=pathname.endsWith('/read'); requireMethod(request,response,reading?'POST':'GET');
+        const account=await requireAccount(store,sessions,request.headers.cookie);
+        const query=new URL(request.url,'http://localhost').searchParams;
+        if (reading) {
+          protectMutation(request,publicOrigin);
+          if (query.size) throw new HttpError(400,'This action uses your signed-in account.');
+          if (!sessions.validCsrf(account.session,request.headers['x-csrf-token'])) throw new HttpError(403,'Refresh the page and try again.');
+          limitNotificationReads(account.user.id);
+          sendJson(response,200,await markNotificationsRead(store,account.user.id,await readJson(request),shiftClock));
+        } else {
+          if ([...query.keys()].some(k=>k!=='before') || query.getAll('before').length>1 || query.has('before') && !/^[a-f0-9]{64}$/.test(query.get('before'))) throw new HttpError(400,'Invalid notification cursor.');
+          sendJson(response,200,await listNotifications(store,account.user.id,query.get('before'),shiftClock()));
+        }
+        return;
+      }
+      if (pathname === '/api/signup'  || pathname === '/api/login') {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
         if (pathname === '/api/signup') {
           limitSignup(request.socket.remoteAddress);

@@ -163,3 +163,7 @@ User explicitly started this focused increment after asking about remaining cred
 CS-031C is ready in Your review (2026-11-22): 189 tests pass, fictional browser/restart/mobile checks documented in `docs/acceptance/cs031c/`. Preview port3024. Issue #50 remains open; no feature push or merge before explicit user approval.
 
 User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: CS-031D employee and manager notifications. CS-018 deployment/submission remains last.
+
+## 2026-11-22 — CS-031D notifications
+
+User requested employee/manager notifications after CS-031C merged PR #51. Issue #52 acceptance criteria recorded; Todo verified, then In Progress verified before implementation. Implemented atomic private event receipts, bell/inbox, read controls, role-scoped links and recovery/mobile states on `codex/CS-031D-notifications`. Targeted + full regression/browser evidence recorded in `docs/acceptance/cs031d/`. No paid provider calls. Local preview only; user approval required before push/merge. CS-018 remains last.

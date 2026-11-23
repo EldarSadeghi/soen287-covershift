@@ -157,3 +157,7 @@ CS-031B-2 merged in PR #49; issue #48 closed and Done verified. CS-031C started 
 CS-031C is ready in Your review (2026-11-22): 189 tests pass, fictional browser/restart/mobile checks documented in `docs/acceptance/cs031c/`. Preview port3024. Issue #50 remains open; no feature push or merge before explicit user approval.
 
 User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: CS-031D employee and manager notifications. CS-018 deployment/submission remains last.
+
+### CS-031D — Employee and manager in-app notifications
+
+Issue #52; local branch `codex/CS-031D-notifications`. Private workspace bell, exact unread total, paged saved receipts, selected/displayed read controls, scoped request-history links, atomic event projection for manual/automatic requests and manager outcomes. No paid inference or external delivery. Acceptance evidence: `docs/acceptance/cs031d/USER-STORIES.md`. Await explicit review approval before push/merge. CS-018 stays last.

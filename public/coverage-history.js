@@ -8,15 +8,18 @@ export async function mountCoverageHistory(main, role) {
   const filter = main.querySelector('#history-status'); const refresh = main.querySelector('#refresh-history'); const content = main.querySelector('#history-records'); const count = main.querySelector('#history-count'); const updated = main.querySelector('#history-updated');
   const allowed = ['all', 'open', 'pending', 'expired', 'approved', 'rejected', 'cancelled'];
   const initial = new URLSearchParams(location.search).get('status'); if (allowed.includes(initial)) filter.value = initial;
+  const target = new URLSearchParams(location.search).get('request');
   let data; let loading = false;
   function render() {
-    const records = data.records.filter(r => filter.value === 'all' || r.displayStatus === filter.value); content.replaceChildren();
+    const records = data.records.filter(r => (!target || r.id === target) && (filter.value === 'all' || r.displayStatus === filter.value)); content.replaceChildren();
+    if (target) { const all=element('a','','View all coverage history');all.href=`/workspace/${role}/history`;content.append(all); }
     count.textContent = `${records.length} of ${data.records.length} coverage records · Times shown in ${data.timezone}.`;
     const time = new Intl.DateTimeFormat(undefined, { timeZone: data.timezone, dateStyle: 'medium', timeStyle: 'medium' });
     if (!records.length) { const empty = element('section', 'panel empty'); empty.append(element('h2', '', 'No matching coverage records.'), element('p', '', data.records.length ? 'Choose another status to see more history.' : 'History will appear after coverage is requested or claimed.')); content.append(empty); }
     for (const r of records) {
       const card = element('article', 'panel history-record'); const header = element('div', 'panel-head'); header.append(element('h2', '', r.shift.title), element('span', `badge ${r.displayStatus === 'pending' ? 'amber' : ''}`, labels[r.displayStatus]));
       card.append(header, shiftCard(r.shift, data.timezone));
+      if (role === 'manager' && r.displayStatus === 'pending') { const review = element('a', '', 'Review pending coverage'); review.href='/workspace/manager/approvals'; card.append(review); }
       const people = element('div', 'coverage-details'); people.append(element('p', '', `Requested by: ${r.originalWorkerName}`));
       if (r.claimantName) people.append(element('p', '', `Claimant: ${r.claimantName}`));
       if (r.reviewerName) people.append(element('p', '', `Reviewed by: ${r.reviewerName}`));

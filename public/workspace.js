@@ -1,3 +1,4 @@
+import { mountNotifications } from './notifications.js';
 import { mountAiChat } from './ai-shift-draft.js';
 import { requestJSON } from './request.js';
 import { mountCoverageHistory } from './coverage-history.js';
@@ -11,6 +12,7 @@ const logout = document.querySelector('#logout');
 const errorBox = document.querySelector('#workspace-error');
 let csrfToken;
 let aiChat;
+let notifications;
 const routes = {
   manager: [['overview', 'Overview', '◫'], ['schedule', 'Schedule', '▦'], ['approvals', 'Approvals', '✓'], ['team', 'Team', '♧'], ['history', 'History', '◷']],
   worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄'], ['history', 'History', '◷']],
@@ -39,6 +41,7 @@ async function load() {
     document.querySelector('#navigation').innerHTML = roleRoutes.map(([key, name, icon]) => `<a class="nav-link" href="/workspace/${user.role}/${key}" ${key === page ? 'aria-current="page"' : ''}><span class="nav-icon" aria-hidden="true">${icon}</span>${name}</a>`).join('');
     logout.disabled = false;
     aiChat = mountAiChat(account, csrfToken);
+    notifications = mountNotifications(account, csrfToken);
     if (page === 'history') { await mountCoverageHistory(main, user.role); return; }
     if (user.role === 'manager' && ['overview', 'schedule', 'approvals'].includes(page)) {
       await mountManagerDashboard(main, page, account, csrfToken);
@@ -58,7 +61,7 @@ logout.addEventListener('click', async () => {
   try {
     const response = await requestJSON('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: '{}' });
     if (!response.ok && response.status !== 401) throw new Error();
-    aiChat?.clear(); csrfToken = undefined; location.replace('/login');
+    aiChat?.clear(); notifications?.clear(); csrfToken = undefined; location.replace('/login');
   } catch { showError('We couldn’t confirm sign-out. Refresh the page to check your session before trying again.'); logout.disabled = false; }
 });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
