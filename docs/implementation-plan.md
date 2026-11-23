@@ -161,3 +161,7 @@ User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: C
 ### CS-031D — Employee and manager in-app notifications
 
 Issue #52; local branch `codex/CS-031D-notifications`. Private workspace bell, exact unread total, paged saved receipts, selected/displayed read controls, scoped request-history links, atomic event projection for manual/automatic requests and manager outcomes. No paid inference or external delivery. Acceptance evidence: `docs/acceptance/cs031d/USER-STORIES.md`. Await explicit review approval before push/merge. CS-018 stays last.
+
+### CS-032 — Schedule questions through AI chat
+
+Issue #54 selected by user on 2026-11-23. Todo verified, then In Progress. Local `codex/CS-032-schedule-questions`: both-role read-only next/date/week/hour questions, server-calculated scope/totals, pending-claim distinction, saved detail links and clarification/recovery. Fourteen new checks; 214 tests pass. Final live provider cases 8/8 pass after calendar-context correction; initial failures retained in evidence. See `docs/acceptance/cs032/USER-STORIES.md`. Await review approval before push/merge. CS-033–040 remain Todo suggestions and CS-018 remains last. CS-031D is complete, merged PR #53 / issue #52.

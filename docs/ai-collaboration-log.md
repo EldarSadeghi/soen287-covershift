@@ -167,3 +167,7 @@ User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: C
 ## 2026-11-22 — CS-031D notifications
 
 User requested employee/manager notifications after CS-031C merged PR #51. Issue #52 acceptance criteria recorded; Todo verified, then In Progress verified before implementation. Implemented atomic private event receipts, bell/inbox, read controls, role-scoped links and recovery/mobile states on `codex/CS-031D-notifications`. Targeted + full regression/browser evidence recorded in `docs/acceptance/cs031d/`. No paid provider calls. Local preview only; user approval required before push/merge. CS-018 remains last.
+
+## 2026-11-23 — CS-032 schedule questions
+
+User chose CS-032 from the nine Todo AI proposals. Issue #54 Todo and In Progress verified before feature work, scope refined in issue. Added structured question parsing with minimized provider context and fresh server-side schedule calculations, 31-day bound, next-shift selection, DST/overnight hours, same-business manager full-name resolution, private employee scope, pending claim distinction and read-only saved detail links. Added both-role Chat task and recovery/persistence integration. Official Structured Outputs documentation consulted. Initial live next-week failure/overclarification prompted explicit server-derived calendar anchors; final 8/8 live cases pass. 214 automated checks pass. Fictional preview port3027; no feature push/merge before user review.

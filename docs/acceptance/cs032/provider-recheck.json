@@ -1,0 +1,32 @@
+{
+  "elapsedMs": 1208,
+  "pass": true,
+  "result": {
+    "kind": "schedule_answer",
+    "query": {
+      "kind": "hours",
+      "startDate": "2026-11-30",
+      "endDate": "2026-12-07",
+      "workerName": ""
+    },
+    "scope": "Jamie Lee",
+    "timezone": "America/Toronto",
+    "asOf": "2026-11-23T16:00:00.000Z",
+    "total": 1,
+    "totalHours": 8,
+    "shifts": [
+      {
+        "id": "6d494277-68ea-4e44-8d52-3f558c88e302",
+        "title": "Next Monday service",
+        "startsAt": "2026-11-30T14:00:00.000Z",
+        "endsAt": "2026-11-30T22:00:00.000Z",
+        "workerName": "Jamie Lee",
+        "href": "/workspace/worker/shifts?shift=6d494277-68ea-4e44-8d52-3f558c88e302",
+        "timezone": "America/Toronto"
+      }
+    ],
+    "pendingClaims": 0,
+    "clippedToWindow": true,
+    "scheduleHref": "/workspace/worker/shifts"
+  }
+}

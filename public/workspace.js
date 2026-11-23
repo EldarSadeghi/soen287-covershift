@@ -1,3 +1,4 @@
+import { mountSelectedScheduleShift } from './ai-schedule.js';
 import { mountNotifications } from './notifications.js';
 import { mountAiChat } from './ai-shift-draft.js';
 import { requestJSON } from './request.js';
@@ -45,11 +46,13 @@ async function load() {
     if (page === 'history') { await mountCoverageHistory(main, user.role); return; }
     if (user.role === 'manager' && ['overview', 'schedule', 'approvals'].includes(page)) {
       await mountManagerDashboard(main, page, account, csrfToken);
+      if(page==='schedule')await mountSelectedScheduleShift(main);
       return;
     }
     if (user.role === 'manager' && page === 'team') { await mountTeam(main, account, csrfToken); return; }
     if (user.role === 'worker' && page === 'shifts') {
       await mountWorkerShifts(main, csrfToken);
+      await mountSelectedScheduleShift(main);
       return;
     }
     if (user.role === 'worker' && page === 'requests') { await mountWorkerRequests(main, csrfToken); return; }

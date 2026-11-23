@@ -37,3 +37,7 @@ User explicitly approved CS-031C push and merge on 2026-11-22. Next increment: C
 - CS-031D is in Your review (2026-11-23): 200 tests pass; browser manual approval, private employee receipt, read/uncertain recovery, empty state, logout, keyboard and 320px mobile checks recorded. Working isolated preview port3025, one afternoon match awaits a manager decision. Nothing pushed or merged; wait for explicit user approval.
 
 User explicitly approved CS-031D push and merge on 2026-11-23. Approved scope: issue #52 employee/manager in-app notifications and its acceptance documentation. CS-018 deployment/submission remains last.
+
+- CS-031D is complete: issue #52 closed and Done, merged PR #53 on 2026-11-23. CS-032 (issue #54) selected by user on 2026-11-23; Todo verified then In Progress; branch `codex/CS-032-schedule-questions`. Read-only assigned schedule/next/date/week/hours chat for both roles. Acceptance evidence `docs/acceptance/cs032/`; 214 tests, final 8/8 provider cases. CS-033–040 remain unstarted Todo proposals. No push/merge without explicit approval; CS-018 remains last.
+
+- CS-032 is in Your review (2026-11-23): 214 tests pass, final 8/8 live-provider cases, browser employee/manager answers, preserved-message retry/reload, read-only selected shift links, keyboard/Escape focus and actual manager 320px viewport verified. Preview port3027 with isolated fictional accounts. Nothing pushed/merged; explicit approval required.
