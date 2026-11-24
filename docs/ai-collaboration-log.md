@@ -193,3 +193,8 @@ User clarified they want all completed tasks consecutively, then all remaining t
 ## 2026-11-24 — CS-028 merge approval
 
 User explicitly approved merging demo preparation, now CS-028 / issue #65. Reviewed implementation and requested task-register documentation included; historical cs021 evidence retained. Pre-merge regression verification repeated with temporary localhost test-server permissions. Next task is CS-029; no new implementation started.
+
+
+## 2026-11-24 — CS-029 acceptance baseline
+
+User selected CS-029 after choosing baseline tests before future AI expansion. Issue #62 criteria updated, Todo then In Progress verified. Implemented stable fictional conversation corpus against real protected HTTP routes and injected recorded provider replies, with temporary validated stores, isolated usage/session fixtures, named assertions, safe HTML/JSON reporting and failing exit status. Clarified offline-versus-real-model and client-receipt-discard limitations. Two initial harness expectation mistakes corrected against existing routes/response contracts; no product behavior weakened. Final targeted and CLI 18/18 scenarios / 137 checks pass; full syntax/243 tests pass. Negative scoring and CLI exits checked, normal database fingerprints unchanged, local browser report details verified. No paid provider calls, no new chat features, no push/merge before review approval.

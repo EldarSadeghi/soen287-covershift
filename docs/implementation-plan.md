@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-**Current numbering (2026-11-24): CS-001–027 are completed; CS-028 demo preparation is in Your review; CS-029–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–028 are completed; CS-029 acceptance tests is in Your review; CS-030–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 ## Current consecutive task register
 
@@ -33,8 +33,8 @@
 | CS-025 | Employee and manager in-app notifications | Done | [#52](https://github.com/EldarSadeghi/soen287-covershift/issues/52) | CS-031D | #53 |
 | CS-026 | Schedule questions through AI chat | Done | [#54](https://github.com/EldarSadeghi/soen287-covershift/issues/54) | CS-032 | #63 |
 | CS-027 | Clearer AI action cards and conversation guidance | Done | [#61](https://github.com/EldarSadeghi/soen287-covershift/issues/61) | CS-039 | #64 |
-| CS-028 | Repeatable demo preparation and presentation walkthrough | Your review | [#65](https://github.com/EldarSadeghi/soen287-covershift/issues/65) | CS-021 | — |
-| CS-029 | Repeatable AI conversation acceptance tests | Todo | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | — |
+| CS-028 | Repeatable demo preparation and presentation walkthrough | Done | [#65](https://github.com/EldarSadeghi/soen287-covershift/issues/65) | CS-021 | #71 |
+| CS-029 | Repeatable AI conversation acceptance tests | Your review | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | — |
 | CS-030 | Employee time-off requests | Todo | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | — |
 | CS-031 | Show employee availability | Todo | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | — |
 | CS-032 | Daily shift duties and employee task list | Todo | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | — |
@@ -47,7 +47,7 @@
 | CS-039 | AI working-week and attention summaries | Todo | [#59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-055 | — |
 | CS-040 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-018 | — |
 
-CS-029–039 retain the dependency-based implementation order: test baseline, leave, availability, duties, publication, refinement, chat rule management, explanations, alternatives, batch creation, summaries. CS-028 still needs explicit merge approval before the next increment. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
+CS-029–039 retain the dependency-based implementation order: test baseline, leave, availability, duties, publication, refinement, chat rule management, explanations, alternatives, batch creation, summaries. CS-028 is complete in merged PR #71; CS-029 now awaits explicit user review approval. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
 
 Time off and publication must update existing manual and AI paths within those increments. Approved leave participates in current assignment/claim/approval/matching checks. Unpublished schedules must not leak through employee views, chat answers, search, rules, notifications or matching. Clarify the Monday window/legacy-shift handling before CS-033. Chat confirmations and uncertain-save protections remain required; atomic batch saves do not implicitly publish.
 
@@ -276,3 +276,8 @@ The dependencies are deliberate scheduling choices; independent work is still im
 After that, stabilize conversational refinement and explicit confirmations, then availability lifecycle actions, explanations, alternative suggestions and finally atomic batch writes. Summaries come after the data and workflows they summarize. More tests are added with each feature; the baseline task does not claim future features already work. Every increment retains authorization, same-business scope, fresh eligibility checks, uncertain-save recovery, accessible local review and explicit user approval before pushing/merging. A finite passing suite reduces risk but does not guarantee absence of bugs.
 
 CS-023–029 remain optional earlier suggestions outside this selected sequence; CS-030 notifications were covered by CS-031D. CS-018 remains the final deployment/submission step after approved implementation work and final regression checks.
+
+
+### CS-029 — Repeatable AI workflow acceptance baseline
+
+User selected issue #62 on 2026-11-24. Acceptance criteria recorded; Todo verified then In Progress on `codex/CS-029-ai-acceptance-tests`. One offline command, 18 fictional conversations / 137 checks, real protected services with recorded provider replies and temporary storage, HTML/JSON reports, negative scorer/CLI checks and extension guidance. Full syntax/regression: 243 tests pass. Browser report preview3036. Actual model language evaluation remains separately opt-in; no paid calls or production UI/workflow changes. Normal database fingerprints unchanged. Evidence: docs/acceptance/cs029/USER-STORIES.md. Ready for Your review; no push or merge before explicit user approval. CS-028 merged PR #71 / issue #65 Done. Next CS-030; deployment CS-040 stays last.

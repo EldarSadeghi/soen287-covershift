@@ -1,0 +1,28 @@
+
+> covershift@0.1.0 ai:acceptance
+> node scripts/ai-acceptance.js
+
+CS-029 offline acceptance: fictional data, recorded replies, no paid provider calls.
+PASS CS029-C01: Manager clarification → follow-up draft → explicit save
+PASS CS029-C02: Employee clarification → existing opening → confirmed claim → manager approval
+PASS CS029-C03: Grounded employee hours exclude pending claims and refresh after approval
+PASS CS029-C04: Availability draft → confirmation → idempotent retry → lifecycle revision checks
+PASS CS029-C05: Confirmed rule matching, manager approval and notifications stay coordinated
+PASS CS029-C06: Private schedules, roster context, foreign business and own-rule boundaries
+PASS CS029-C07: Malicious or invalid provider fields never become save authority
+PASS CS029-C08: Provider failures and retry preserve safe errors and the user’s message
+PASS CS029-C09: Refusals never submit claims
+PASS CS029-C10: Authentication, CSRF, origin, role and account-tampering checks
+PASS CS029-C11: Opening changes after search: stale employee confirmation cannot steal a claim
+PASS CS029-C12: Lost availability acknowledgement reconciles to one rule without automatic repost
+PASS CS029-C13: Missing-provider configuration preserves manual schedules and approval
+PASS CS029-C14: Invalid model dates, ambiguous DST time and excessive windows fail safely
+PASS CS029-C15: Fresh account checks after provider response revoke stale authority
+PASS CS029-C16: Unsupported recurring/multiple actions clarify without executing
+PASS CS029-C17: Manager team totals, exact person scope, empty employee answer and calendar anchors
+PASS CS029-C18: Lost claim acknowledgement reconciles pending status without duplicate events
+
+18/18 passed; 0 failed; 137 checks.
+Report: <project>/.covershift-ai-acceptance/run-D9Pphz/index.html
+JSON: <project>/.covershift-ai-acceptance/run-D9Pphz/results.json
+Recorded provider replies test workflow handling, not real-model language understanding or browser interaction. No live provider calls were made.
