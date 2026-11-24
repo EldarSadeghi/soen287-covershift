@@ -226,4 +226,21 @@ export const scenarios=[
  c.check('unassigned','Uncertain receipt cannot bypass manager approval.',db.shifts.find(x=>x.id===c.ids.manualShift).assignedWorkerId,'worker_alex');
 }},
 
+{id:'CS029-C19',title:'CS-030 approved time off constrains existing AI/manual work without exposing notes',async run(c){
+ const body={startLocal:'2030-01-10T14:00',endLocal:'2030-01-10T18:00',allDay:false,note:'FICTIONAL_PRIVATE_LEAVE_CANARY',submissionId:randomUUID(),timezone:'America/Toronto'};
+ const created=await c.http(employee,'/api/worker/time-off',body);c.check('request','Employee explicitly submits time off.',created.status,201);
+ const list=await c.http(manager,'/api/manager/time-off'),request=list.data.requests.find(r=>r.id===created.data.request.id);
+ c.check('approve','Manager can approve a commitment-free interval.',(await c.http(manager,`/api/manager/time-off/${request.id}/approve`,{revision:request.revision})).status,200);
+ const matches=await ask(c,employee,'existing_shift_search','Find an opening January 10, 2030, 2 PM to 6 PM.',search());
+ c.check('search','Existing AI search excludes openings conflicting with approved leave.',matches.data.total,0);
+ c.check('claim','A direct claim cannot bypass approved leave.',(await c.http(employee,`/api/worker/requests/${c.ids.manualRequest}/claim`,{revision:await c.revision(c.ids.manualRequest)})).status,409);
+ const drafted=await ask(c,manager,'shift_draft','Opening service for Jamie Lee on January 10, 2030, 2 PM to 5 PM.',{...shift(),worker:'w1',startLocal:'2030-01-10T14:00',endLocal:'2030-01-10T17:00'});
+ c.check('assignment','Manager AI draft validation also respects approved leave.',drafted.status,409);
+ c.check('private-context','Private leave notes never enter provider inputs.',c.calls.every(x=>!JSON.stringify(x.input).includes('FICTIONAL_PRIVATE_LEAVE_CANARY')));
+ const mine=await c.http(employee,'/api/worker/time-off'),saved=mine.data.requests.find(r=>r.id===request.id);
+ c.check('cancel','Employee explicitly cancels future approved leave.',(await c.http(employee,`/api/worker/time-off/${saved.id}/cancel`,{revision:saved.revision})).status,200);
+ const again=await ask(c,employee,'existing_shift_search','Find an opening January 10, 2030, 2 PM to 6 PM.',search());
+ c.check('eligible-again','Fresh search becomes eligible after confirmed leave cancellation.',again.data.requests.map(r=>r.id),[c.ids.manualRequest]);
+}},
+
 ];

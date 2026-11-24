@@ -1,0 +1,17 @@
+{
+  "normalWorkspaceAndDesktopDataUnchanged": true,
+  "previewSchemaVersion": 9,
+  "leaveStatuses": {
+    "pending": 1,
+    "approved": 1,
+    "rejected": 1,
+    "cancelled": 1
+  },
+  "lostAcknowledgementSubmissionCount": 1,
+  "previewShiftsPreserved": true,
+  "employeeMobileViewport": 320,
+  "employeeContentWidth": 305,
+  "managerMobileViewport": 320,
+  "managerContentWidth": 305,
+  "realProviderCallsDuringQA": 0
+}

@@ -202,3 +202,8 @@ User selected CS-029 after choosing baseline tests before future AI expansion. I
 ## 2026-11-24 — CS-029 merge request
 
 User requested merging the reviewed CS-029 baseline. Clean branch, 243 passing tests and unchanged scope verified against current main before push/PR. Approval applies only to issue #62; no new feature started. Real-model language evaluation remains separately opt-in.
+
+
+## 2026-11-24 — CS-030 employee time off
+
+User selected CS-030 and explicitly confirmed full/partial days, future pending/approved cancellation and approval blocked until overlapping assigned shifts/pending claims are resolved. Issue #66 scope recorded before coding; Todo then In Progress verified. Added validated schema9 requests/history, actor/privacy/revision/idempotency services, both-role Time off navigation/forms/filters/confirmations, uncertainty/read reconciliation, shared leave-aware eligibility and offboarding retention. Extended offline corpus with CS029-C19. 268 tests and 19 scenarios / 148 checks pass. Browser validated partial/full/multi-day outcomes, conflict blockers, assignment denial, approve/reject/cancel, temporary proxy real lost acknowledgement/read retry and both-role320px/keyboard controls. Browser findings fixed full-day reset labeling and stale read-error display; no fault hooks shipped. Preview uses fictional isolated storage and separate cookies; normal account data unchanged. No paid inference during QA. Ready for review, no push/merge authorized.

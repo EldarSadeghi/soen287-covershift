@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-**Current numbering/status (2026-11-24): CS-001–028 are completed; CS-029 acceptance tests is in Your review; CS-030–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–029 are completed; CS-030 time off is in Your review; CS-031–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 ## Current consecutive task register
 
@@ -34,8 +34,8 @@
 | CS-026 | Schedule questions through AI chat | Done | [#54](https://github.com/EldarSadeghi/soen287-covershift/issues/54) | CS-032 | #63 |
 | CS-027 | Clearer AI action cards and conversation guidance | Done | [#61](https://github.com/EldarSadeghi/soen287-covershift/issues/61) | CS-039 | #64 |
 | CS-028 | Repeatable demo preparation and presentation walkthrough | Done | [#65](https://github.com/EldarSadeghi/soen287-covershift/issues/65) | CS-021 | #71 |
-| CS-029 | Repeatable AI conversation acceptance tests | Your review | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | — |
-| CS-030 | Employee time-off requests | Todo | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | — |
+| CS-029 | Repeatable AI conversation acceptance tests | Done | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | #72 |
+| CS-030 | Employee time-off requests | Your review | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | — |
 | CS-031 | Show employee availability | Todo | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | — |
 | CS-032 | Daily shift duties and employee task list | Todo | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | — |
 | CS-033 | Monday publication of a two-week schedule | Todo | [#69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | CS-049 | — |
@@ -281,3 +281,8 @@ CS-023–029 remain optional earlier suggestions outside this selected sequence;
 ### CS-029 — Repeatable AI workflow acceptance baseline
 
 User selected issue #62 on 2026-11-24. Acceptance criteria recorded; Todo verified then In Progress on `codex/CS-029-ai-acceptance-tests`. One offline command, 18 fictional conversations / 137 checks, real protected services with recorded provider replies and temporary storage, HTML/JSON reports, negative scorer/CLI checks and extension guidance. Full syntax/regression: 243 tests pass. Browser report preview3036. Actual model language evaluation remains separately opt-in; no paid calls or production UI/workflow changes. Normal database fingerprints unchanged. Evidence: docs/acceptance/cs029/USER-STORIES.md. Ready for Your review; no push or merge before explicit user approval. CS-028 merged PR #71 / issue #65 Done. Next CS-030; deployment CS-040 stays last.
+
+
+### CS-030 — Employee time-off requests
+
+Issue #66 selected 2026-11-24, confirmed policy recorded before implementation, Todo verified then In Progress. Local branch codex/CS-030-employee-time-off. Dedicated both-role Time off pages, full/partial leave, confirmation/idempotency/revisions, private notes/history, schema9, blockers, shared approved-leave scheduling eligibility and offboarding integration. 268 tests pass; offline corpus expanded to 19 scenarios / 148 checks. Both-role browser, lost-ack reconciliation, read retry and mobile/keyboard evidence in docs/acceptance/cs030/USER-STORIES.md. Ready for Your review; no push/merge before explicit approval. CS-029 merged PR #72. Next CS-031; CS-040 remains last.

@@ -16,7 +16,7 @@ export function claimAction(request, context, csrfToken, onClaimed) {
     if (!items.length) return;
     const message = element('p','', fresh ? 'Schedule conflict: this shift overlaps your current commitments.' : 'Schedule conflict in your last loaded schedule. Check again to verify current availability.'); feedback.append(message);
     const list = element('ul');
-    for (const item of items) { const time = formatShiftTime(item, context.timezone); list.append(element('li','',`${item.title} · ${time.date} · ${time.startTime} – ${time.endDate ? time.endDate + ' · ' : ''}${time.endTime} (${item.kind === 'pending_claim' ? 'pending claim' : 'assigned shift'})`)); }
+    for (const item of items) { const time = formatShiftTime(item, context.timezone); list.append(element('li','',`${item.title} · ${time.date} · ${time.startTime} – ${time.endDate ? time.endDate + ' · ' : ''}${time.endTime} (${item.kind === 'time_off' ? 'approved time off' : item.kind === 'pending_claim' ? 'pending claim' : 'assigned shift'})`)); }
     feedback.append(list); feedback.className = 'claim-feedback claim-warning';
   }
   function message(text, warning = false) { feedback.replaceChildren(element('p','',text)); feedback.className = `claim-feedback ${warning ? 'claim-warning' : ''}`; }
@@ -38,7 +38,7 @@ export function claimAction(request, context, csrfToken, onClaimed) {
     try {
       const data = await post('claim-check');context.commitments=data.commitments;
       if(!data.canClaim){conflicts(data.conflicts,true);feedback.focus();}
-      else {message('No conflicts found in your current assigned shifts or pending claims. Final eligibility is checked again when you confirm.');confirm.hidden=false;back.focus();}
+      else {message('No conflicts found in your current assigned shifts, pending claims or approved time off. Final eligibility is checked again when you confirm.');confirm.hidden=false;back.focus();}
     }catch(error){message(error.message || 'Couldn’t check availability. Refresh and try again.',true);feedback.focus();}
     finally {busy=false;check.disabled=false;check.textContent='Check again';}
   });

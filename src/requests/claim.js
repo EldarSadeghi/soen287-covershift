@@ -1,3 +1,4 @@
+import {timeOffCommitments} from '../time-off/conflicts.js';
 import { recordCoverageEvent } from './history.js';
 import { createHash } from 'node:crypto';
 import { HttpError } from '../auth/errors.js';
@@ -7,7 +8,7 @@ export const claimRevision = (request, shift) => createHash('sha256').update(JSO
 export function claimCommitments(db, user, now) {
   const shifts = db.shifts.filter(s => s.businessId === user.businessId && Date.parse(s.endsAt) > now);
   const pending = new Set(db.coverageRequests.filter(r => r.businessId === user.businessId && r.status === 'pending' && r.claimantId === user.id).map(r => r.shiftId));
-  return shifts.filter(s => s.assignedWorkerId === user.id || pending.has(s.id)).map(s => ({ id: s.id, title: s.title, startsAt: s.startsAt, endsAt: s.endsAt, kind: s.assignedWorkerId === user.id ? 'assigned' : 'pending_claim' }));
+  return [...shifts.filter(s => s.assignedWorkerId === user.id || pending.has(s.id)).map(s => ({ id: s.id, title: s.title, startsAt: s.startsAt, endsAt: s.endsAt, kind: s.assignedWorkerId === user.id ? 'assigned' : 'pending_claim' })), ...timeOffCommitments(db,user.id).filter(r=>Date.parse(r.endsAt)>now)];
 }
 function inspect(db, userId, requestId, input, now) {
   const { user, business } = coverageAccount(db, userId);
@@ -31,7 +32,7 @@ export async function checkClaim(store, userId, requestId, input, clock = Date.n
 // the exclusive transaction; this function always repeats current eligibility.
 export function claimInDatabase(db, userId, requestId, input, now) {
   const result = inspect(db, userId, requestId, input, now);
-  if (result.conflicts.length) throw new HttpError(409, 'This shift overlaps your assigned shifts or pending claims. You cannot claim it.', { conflicts: result.conflicts });
+  if (result.conflicts.length) throw new HttpError(409, 'This shift overlaps your assigned shifts, pending claims or approved time off. You cannot claim it.', { conflicts: result.conflicts });
   const request = result.request; const previous = { ...request };
   request.claimantId = result.user.id; request.status = 'pending';
   request.updatedAt = new Date(Math.max(now, Date.parse(request.updatedAt) + 1)).toISOString();

@@ -6,7 +6,7 @@ Run this from the CoverShift project folder with Node.js 24 or newer:
 npm run ai:acceptance
 ```
 
-The command runs 18 stable fictional conversation scenarios, prints PASS/FAIL by ID, and prints paths to a self-contained HTML report and machine-readable `results.json`. Open the printed `index.html` in a browser. Each run uses a new folder under the ignored `.covershift-ai-acceptance/`; earlier reports are retained. Open a failed scenario to see its check IDs and expected behaviors. Exit status is 1 on any failed scenario or runner error; all-pass exits 0. It needs permission to bind temporary loopback HTTP servers. Port conflicts with your normal website are avoided by requesting ephemeral ports.
+The command runs 19 stable fictional conversation scenarios, prints PASS/FAIL by ID, and prints paths to a self-contained HTML report and machine-readable `results.json`. Open the printed `index.html` in a browser. Each run uses a new folder under the ignored `.covershift-ai-acceptance/`; earlier reports are retained. Open a failed scenario to see its check IDs and expected behaviors. Exit status is 1 on any failed scenario or runner error; all-pass exits 0. It needs permission to bind temporary loopback HTTP servers. Port conflicts with your normal website are avoided by requesting ephemeral ports.
 
 For one scenario:
 
@@ -44,6 +44,7 @@ The report labels this `offline-recorded-provider-replies`. There is no language
 | CS029-C16 | Recorded unsupported recurrence/batch/“yes” clarifications cannot execute anything. |
 | CS029-C17 | Manager team and exact-person totals, server Monday anchors and empty employee answer are grounded/read-only. |
 | CS029-C18 | Intentionally discarded claim acknowledgement reconciles pending status; explicit stale retry produces no duplicate claim event. |
+| CS029-C19 | Added with CS-030: approved time off constrains AI search/draft validation and direct claims; private notes stay out of provider context; cancellation restores eligibility. |
 
 Lost acknowledgements are simulated **in the test client after the server has processed the request**. These cases verify server reconciliation/idempotency, not TCP disconnect timing, a browser’s visual uncertain state or button behavior. Composer persistence is tested through the real storage module; no browser typing/error UI is simulated. Existing browser acceptance evidence remains under the historical cs031a/cs031b/cs039 directories. A new browser walkthrough is still required when future increments change UI.
 
@@ -65,4 +66,4 @@ For an existing scripted **two-request manager follow-up check**, the project al
 node --env-file=/absolute/path/to/private/.env scripts/evaluate-ai-shifts.js --chat-only
 ```
 
-This is explicitly opt-in and bounded to two provider attempts, each with the existing 1,200-output-token and 16,000-byte request-body bounds. It uses a fixed November 20, 2026 interpretation clock and fictional read-only records, and consumes the existing configured usage allowance. It only measures those two manager cases, not all 18 workflows. Never run it automatically, paste the key into chat, or combine its results with offline counts. For wider evaluation, separately document date/clock, model, number of attempted calls, per-message semantic expectations and observed failures; provider variability and manual assessment remain limitations. No paid evaluation was performed for the CS-029 offline baseline.
+This is explicitly opt-in and bounded to two provider attempts, each with the existing 1,200-output-token and 16,000-byte request-body bounds. It uses a fixed November 20, 2026 interpretation clock and fictional read-only records, and consumes the existing configured usage allowance. It only measures those two manager cases, not all 19 workflows. Never run it automatically, paste the key into chat, or combine its results with offline counts. For wider evaluation, separately document date/clock, model, number of attempted calls, per-message semantic expectations and observed failures; provider variability and manual assessment remain limitations. No paid evaluation was performed for the CS-029 offline baseline.
