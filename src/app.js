@@ -1,4 +1,4 @@
-import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability} from './availability/windows.js';
+import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability,coworkerUpcomingWindows} from './availability/windows.js';
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
@@ -122,6 +122,11 @@ export function createAppServer({ store, signup = registerManager, login = authe
     let pathname;
     try {
       pathname = new URL(request.url, 'http://localhost').pathname;
+      if(pathname==='/api/worker/coworker-windows'){
+        requireMethod(request,response,'GET');const account=await requireAccount(store,sessions,request.headers.cookie,'worker');
+        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Upcoming coworker windows use 14 calendar days in your business timezone.');
+        sendJson(response,200,await coworkerUpcomingWindows(availabilityWindowStore,account.user.id,shiftClock));return;
+      }
       if(pathname==='/api/worker/coworker-availability'){
         requireMethod(request,response,'GET');
         const account=await requireAccount(store,sessions,request.headers.cookie,'worker'),query=new URL(request.url,'http://localhost').searchParams;

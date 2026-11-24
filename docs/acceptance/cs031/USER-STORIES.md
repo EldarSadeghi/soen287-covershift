@@ -67,3 +67,20 @@ This approved extension supersedes the earlier manager-only visibility scope: co
 `npm run verify`: **290/290 tests pass** (five new coworker service/HTTP tests). Final frontend switching/count/deep-link changes passed syntax/diff checks and browser checks. Evidence: [coworker desktop](coworker-desktop.png), [coworker mobile](coworker-mobile.png), [verification](coworker-verification.txt), [review board](board-coworker-review.png).
 
 Review link: http://127.0.0.1:3039/workspace/worker/availability#coworkers — signed in as fictional Alex Morgan (`worker_alex@example.test`, passphrase `CoverShift demo access!`). Select Nov26 14:00–17:00 for one Available, one Unavailable and one Unknown coworker. Morgan's manager session remains at localhost3039. The preserved fictional database was reused, without resetting any normal/demo accounts. The temporary3040 recovery proxy was stopped after QA. No provider call or message was sent. No branch push or merge has occurred.
+
+
+## Next-14-day upcoming windows — 2026-11-24 (latest scope)
+
+User requested coworker Upcoming windows in the same card style, covering the next14 days. This supersedes the preceding status-only coworker UI: derived free intervals are now also shared, while source IDs/history and private conflict causes remain hidden. Both employee views show the rest of today plus the following13 local calendar dates, labelled Nov24–Dec7,2026 for the review clock.
+
+| ID | Acceptance | Result |
+|---|---|---|
+| CS031-US16 | Browse coworker upcoming windows without entering a shift time. | PASS: automatically loaded grouped cards, ascending times, generic empty group for Sam. As Alex: Jamie Nov26/Dec4 and Taylor Dec1. No self, contacts, source record IDs or conflict causes. |
+| CS031-US17 | See usable time inside the14-day range with fresh conflict handling. | PASS: service tests union/clip overlapping and adjacent windows, subtract assigned work/approved leave through shared commitments, reject foreign scope, and preserve exact database bytes. Subtraction also receives pending-claim commitments from the existing shared helper. |
+| CS031-US18 | Retain my later windows and withdraw correctly when a card is clipped. | PASS: browser Dec10 save appears under Later availability, not current list; withdrawal retains history. Dec7 22:00→Dec8 06:00 appears clipped at Dec8 midnight, with explicit whole-window withdrawal warning and successful withdrawal using original revision. |
+| CS031-US19 | Use reliable timezone boundaries and retry independent lists. | PASS: calendar horizon tests cover year boundary, spring/fall DST, Kathmandu's non-hour offset and SaoPaulo's skipped midnight. Browser GET503 on upcoming list shows error; Refresh restores cards; exact-period checker still returns three statuses. |
+| CS031-US20 | Read the updated lists on mobile and understand the exact dates. | PASS: visible inclusive date range and timezone; actual320px viewport gives scrollWidth305px. Screenshot reviewed; override reset. |
+
+`npm run verify`: **296/296 tests pass** (six new horizon/projection/UI grouping/HTTP tests). Final heading semantics/error-copy edits passed syntax/diff checks and browser verification. [Verification](fortnight-verification.txt), [coworker desktop](coworker-fortnight-desktop.png), [coworker mobile](coworker-fortnight-mobile.png), [own range](own-fortnight-desktop.png), [board](board-fortnight-review.png).
+
+Local preview still3039 with preserved fictional data, employee Alex. In QA, Alex added and withdrew the Dec10 and crossing-Dec7 windows; history remains, and the original Nov26 window remains confirmed. Coworker cards therefore remain Jamie's two and Taylor's one. No normal accounts or earlier demo run were reset. The temporary3040 recovery proxy was stopped after checks. Status Your review; no push/merge approval or action.
