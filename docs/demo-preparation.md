@@ -1,5 +1,7 @@
 # CS-021: Prepare a presentation demo
 
+Current task identities were renumbered on 2026-11-24. See [the consecutive register](implementation-plan.md#current-consecutive-task-register). Historical task IDs in this document and evidence filenames are aliases; use GitHub issue numbers for traceability. Deployment is CS-040 and remains last.
+
 Use Node.js 24 or newer. Open this project folder in VS Code and run:
 
 ```sh

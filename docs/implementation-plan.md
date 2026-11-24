@@ -1,5 +1,62 @@
 # CoverShift implementation plan
 
+**Current numbering (2026-11-24): CS-001–027 are completed; CS-028 demo preparation is in Your review; CS-029–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+
+## Current consecutive task register
+
+| Current ID | Task | Status | GitHub issue | Previous ID | Merged PR |
+| --- | --- | --- | --- | --- | --- |
+| CS-001 | Project foundation | Done | [#2](https://github.com/EldarSadeghi/soen287-covershift/issues/2) | CS-001 | #1 |
+| CS-002 | Responsive worker and manager navigation | Done | [#3](https://github.com/EldarSadeghi/soen287-covershift/issues/3) | CS-002 | #4 |
+| CS-003 | JSON data model and storage adapter | Done | [#5](https://github.com/EldarSadeghi/soen287-covershift/issues/5) | CS-003 | #6 |
+| CS-004 | Manager signup and business creation | Done | [#7](https://github.com/EldarSadeghi/soen287-covershift/issues/7) | CS-004 | #8 |
+| CS-005 | Login, logout, sessions, and protected access | Done | [#9](https://github.com/EldarSadeghi/soen287-covershift/issues/9) | CS-005 | #10 |
+| CS-006 | Worker upcoming shifts from saved data | Done | [#11](https://github.com/EldarSadeghi/soen287-covershift/issues/11) | CS-006 | #12 |
+| CS-007 | Manager dashboard and milestone walkthrough | Done | [#13](https://github.com/EldarSadeghi/soen287-covershift/issues/13) | CS-007 | #14 |
+| CS-008 | Worker management and account setup | Done | [#17](https://github.com/EldarSadeghi/soen287-covershift/issues/17) | CS-008 | #18 |
+| CS-009 | Manager shift creation and assignment | Done | [#19](https://github.com/EldarSadeghi/soen287-covershift/issues/19) | CS-009 | #20 |
+| CS-010 | Manager shift editing and deletion | Done | [#21](https://github.com/EldarSadeghi/soen287-covershift/issues/21) | CS-010 | #22 |
+| CS-011 | Request and cancel coverage | Done | [#23](https://github.com/EldarSadeghi/soen287-covershift/issues/23) | CS-011 | #24 |
+| CS-012 | Open-shift board | Done | [#25](https://github.com/EldarSadeghi/soen287-covershift/issues/25) | CS-012 | #26 |
+| CS-013 | Claim coverage with live conflict detection | Done | [#27](https://github.com/EldarSadeghi/soen287-covershift/issues/27) | CS-013 | #28 |
+| CS-014 | Manager approval and rejection | Done | [#29](https://github.com/EldarSadeghi/soen287-covershift/issues/29) | CS-014 | #30 |
+| CS-015 | Coverage status and history | Done | [#31](https://github.com/EldarSadeghi/soen287-covershift/issues/31) | CS-015 | #32 |
+| CS-016 | Security and workflow verification | Done | [#33](https://github.com/EldarSadeghi/soen287-covershift/issues/33) | CS-016 | #34 |
+| CS-017 | Accessibility and responsive polish | Done | [#35](https://github.com/EldarSadeghi/soen287-covershift/issues/35) | CS-017 | #37 |
+| CS-018 | Remove and deactivate employees | Done | [#36](https://github.com/EldarSadeghi/soen287-covershift/issues/36) | CS-019 | #38 |
+| CS-019 | Request recovery and independent schedule loading | Done | [#40](https://github.com/EldarSadeghi/soen287-covershift/issues/40) | CS-020 | #41 |
+| CS-020 | Expired coverage handling | Done | [#42](https://github.com/EldarSadeghi/soen287-covershift/issues/42) | CS-022 | #43 |
+| CS-021 | AI chat interface and manager shift drafting | Done | [#44](https://github.com/EldarSadeghi/soen287-covershift/issues/44) | CS-031A | #45 |
+| CS-022 | Find and request an existing shift through chat | Done | [#46](https://github.com/EldarSadeghi/soen287-covershift/issues/46) | CS-031B-1 | #47 |
+| CS-023 | Confirmed employee availability rules | Done | [#48](https://github.com/EldarSadeghi/soen287-covershift/issues/48) | CS-031B-2 | #49 |
+| CS-024 | Automatic availability matching and coverage requests | Done | [#50](https://github.com/EldarSadeghi/soen287-covershift/issues/50) | CS-031C | #51 |
+| CS-025 | Employee and manager in-app notifications | Done | [#52](https://github.com/EldarSadeghi/soen287-covershift/issues/52) | CS-031D | #53 |
+| CS-026 | Schedule questions through AI chat | Done | [#54](https://github.com/EldarSadeghi/soen287-covershift/issues/54) | CS-032 | #63 |
+| CS-027 | Clearer AI action cards and conversation guidance | Done | [#61](https://github.com/EldarSadeghi/soen287-covershift/issues/61) | CS-039 | #64 |
+| CS-028 | Repeatable demo preparation and presentation walkthrough | Your review | [#65](https://github.com/EldarSadeghi/soen287-covershift/issues/65) | CS-021 | — |
+| CS-029 | Repeatable AI conversation acceptance tests | Todo | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | — |
+| CS-030 | Employee time-off requests | Todo | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | — |
+| CS-031 | Show employee availability | Todo | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | — |
+| CS-032 | Daily shift duties and employee task list | Todo | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | — |
+| CS-033 | Monday publication of a two-week schedule | Todo | [#69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | CS-049 | — |
+| CS-034 | Refine AI drafts conversationally | Todo | [#57](https://github.com/EldarSadeghi/soen287-covershift/issues/57) | CS-050 | — |
+| CS-035 | Manage employee availability rules through chat | Todo | [#60](https://github.com/EldarSadeghi/soen287-covershift/issues/60) | CS-051 | — |
+| CS-036 | Explain availability matches and scheduling conflicts | Todo | [#55](https://github.com/EldarSadeghi/soen287-covershift/issues/55) | CS-052 | — |
+| CS-037 | Suggest eligible alternative shifts | Todo | [#56](https://github.com/EldarSadeghi/soen287-covershift/issues/56) | CS-053 | — |
+| CS-038 | Manager batch shift creation through chat | Todo | [#58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-054 | — |
+| CS-039 | AI working-week and attention summaries | Todo | [#59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-055 | — |
+| CS-040 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-018 | — |
+
+CS-029–039 retain the dependency-based implementation order: test baseline, leave, availability, duties, publication, refinement, chat rule management, explanations, alternatives, batch creation, summaries. CS-028 still needs explicit merge approval before the next increment. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
+
+Time off and publication must update existing manual and AI paths within those increments. Approved leave participates in current assignment/claim/approval/matching checks. Unpublished schedules must not leak through employee views, chat answers, search, rules, notifications or matching. Clarify the Monday window/legacy-shift handling before CS-033. Chat confirmations and uncertain-save protections remain required; atomic batch saves do not implicitly publish.
+
+Earlier optional suggestions without issues (formerly CS-023–029) remain historical ideas only, outside the current sequence. Their former IDs now refer to different current tasks; use feature names when reconsidering them. The former deployment ID CS-018 now means completed employee removal; deployment is exclusively CS-040 / issue #70.
+
+## Historical plan and previous numbering — superseded
+
+Everything below preserves earlier planning snapshots and aliases. Use the current register above for all new work.
+
 **Current backlog order (2026-11-24): CS-045 → CS-055**, as listed in “Dependency-based implementation order” below. CS-021 remains in Your review; CS-018 is always last. Older entries below are historical snapshots; former unstarted IDs are retired aliases, not additional work.
 
 Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 merged (PR #30, issue #29). CS-015 merged (PR #32, issue #31). CS-016 merged (PR #34, issue #33). CS-017 merged (PR #37, issue #35). CS-019 merged (PR #38, issue #36). CS-020 merged (PR #41, issue #40). CS-022 (issue #42) is ready for local user review. CS-021 is deferred as an unstarted suggestion. Repository: https://github.com/EldarSadeghi/soen287-covershift.

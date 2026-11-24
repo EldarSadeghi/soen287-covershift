@@ -1,5 +1,7 @@
 # CS-039: Summary cards and response guidance
 
+Current task identities were renumbered on 2026-11-24. See [the consecutive register](implementation-plan.md#current-consecutive-task-register). Historical task IDs in this document and evidence filenames are aliases; use GitHub issue numbers for traceability. Deployment is CS-040 and remains last.
+
 User selected **Summary cards** and approved implementing the four example response types on 2026-11-23. Issue #61; branch `codex/CS-039-summary-cards`. This is presentation and navigation refinement, without changes to provider prompts, models, scheduling rules, authorization or business schemas.
 
 Every response uses a short heading, textual status, labeled fields or compact values, a separate consent/pending note, and a clear next action. Colors supplement explicit text. Schedule hours show assigned hours and shift count, with pending claims separate. Next-shift cards show date/duration plus exact saved shift fields. Calculations and older long replies use native expandable details; checked-at time/timezone remain visible. Empty answers are explicit.

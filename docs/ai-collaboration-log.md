@@ -184,3 +184,8 @@ User selected implementation of demo preparation. Created issue #65 with accepta
 ## 2026-11-24 — Backlog dependency order and renumbering
 
 User requested reprioritizing all seven unstarted AI proposals plus four requested scheduling features. Renamed existing GitHub issues in place to CS-045–055, preserving issue links/history and recording former aliases and prerequisites in every issue. No implementation started. Test baseline precedes leave/availability/duties/publication; AI expansion follows stable scheduling semantics and confirmation behavior, with atomic batches late. Current mapping recorded in implementation-plan.md and working instructions; historical completed IDs, CS-021 review and final CS-018 remain unchanged.
+
+
+## 2026-11-24 — Continuous completed-to-future numbering correction
+
+User clarified they want all completed tasks consecutively, then all remaining tasks consecutively, not a fresh ID range. Renamed original implementation issues to CS-001–027 in merge order, demo preparation to CS-028 (still Your review), unstarted backlog to CS-029–039 in dependency order, and final deployment to CS-040 (new tracking issue #70 for the existing final scope). Issue numbers/URLs, states, approvals and historical PR/evidence names preserved. Previous identities retained in each issue and current register; superseded duplicate issues #15/#16 are not implementation increments. No implementation or merge authorized by this administrative change.

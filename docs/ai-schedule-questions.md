@@ -1,5 +1,7 @@
 # CS-032: schedule questions through AI chat
 
+Current task identities were renumbered on 2026-11-24. See [the consecutive register](implementation-plan.md#current-consecutive-task-register). Historical task IDs in this document and evidence filenames are aliases; use GitHub issue numbers for traceability. Deployment is CS-040 and remains last.
+
 Issue #54, branch `codex/CS-032-schedule-questions`. Both roles select **Ask about schedules** from Chat task. Employees ask about their own assigned shifts. Managers ask about the entire team or one exact full employee name. Examples: “When is my next shift?”, “Am I working Thursday?”, “How many hours am I working this week?”, “Show Alex Morgan’s schedule next week.”
 
 The provider only extracts a bounded question: next upcoming shift, assigned schedule, or hours over a 1–31-day date window. The server supplies current business time and calendar anchors for today/tomorrow and Monday-based weeks, validates interpretation, and calculates answers from a fresh authorized JSON snapshot. No schedule records, team roster, account identifiers, passwords or returned answers are automatically sent to the model; the user's text and bounded conversation may contain names they type. Existing configured model and shared persistent allowance/concurrency/timeout protections remain in use. No automatic inference retries.

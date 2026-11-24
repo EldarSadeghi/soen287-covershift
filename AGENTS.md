@@ -1,5 +1,17 @@
 # CoverShift working instructions
 
+## Authoritative current identities — 2026-11-24
+
+**Current numbering (2026-11-24): CS-001–027 are completed; CS-028 demo preparation is in Your review; CS-029–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+
+User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-040 Deployment and final submission is always last** (formerly CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, Your review**. No push/merge approval has been given. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
+
+Current Todo sequence: CS-029 tests (#62), CS-030 time off (#66), CS-031 availability (#67), CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-040 final deployment (#70). Completed tasks are CS-001–027; original PR/evidence names remain historical.
+
+## Workflow rules and historical log
+
+Workflow rules remain applicable. Task IDs/status snapshots in the older log below are superseded by the current register above.
+
 - Track every implementation task with its CS-xxx ID in a GitHub issue and on https://github.com/users/EldarSadeghi/projects/1.
 - Add each new task to Todo first and verify it appears there. Then move it to In Progress and tell the user implementation has started. Status flow: Todo -> In Progress -> Your review -> Done. Mark Done only after the user's confirmation and approved merge.
 - Implement one increment at a time on a `codex/CS-xxx-short-name` branch. Include acceptance criteria in the issue before implementation.
