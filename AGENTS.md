@@ -73,3 +73,5 @@ User explicitly approved CS-039 Summary cards push and merge on 2026-11-23. Appr
 
 
 - CS-029 selected on 2026-11-24: issue #62 acceptance scope recorded, Todo verified then In Progress; branch `codex/CS-029-ai-acceptance-tests`. Local offline corpus now ready for Your review: 18 scenarios / 137 checks, 243 full tests pass. Command `npm run ai:acceptance` generates safe HTML/JSON reports using recorded provider replies, temporary fictional storage and real protected HTTP workflows. No paid calls or normal data changes; real-model semantic/browser limitations explicit. Evidence: docs/acceptance/cs029/USER-STORIES.md; local report preview3036. No push/merge before explicit approval. Next is CS-030 time off; CS-040 stays last.
+
+- User requested merging CS-029 on 2026-11-24 after reviewing the completed baseline. Approved scope: issue #62, offline corpus/report/docs, 243 passing checks; no new product behavior. Next planned increment is CS-030 Employee time-off requests (#66), which still needs a start instruction. CS-040 remains last. Consult issue #62 / its linked PR for final merge status.
