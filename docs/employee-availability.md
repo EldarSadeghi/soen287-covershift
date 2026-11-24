@@ -1,6 +1,6 @@
 # CS-031: Employee availability
 
-Employees use **Availability** in their signed-in workspace to enter dated start/end times, review them, then explicitly confirm. Each window lasts up to 24 local hours and starts in the future within 90 days. Overnight windows use the following date for the end. Windows can overlap or adjoin; their union can cover a manager's queried period. Employees can withdraw current windows, including a window already in progress. Expired and withdrawn records remain visible for history. Limits: 60 current windows and 1,000 total per employee.
+Employees use **Availability** in their signed-in workspace to enter dated start/end times, review them, then explicitly confirm. Each window lasts up to 24 local hours and starts in the future within 90 days. Select **Ends next day** for overnight windows. The form derives the next calendar date in the business timezone, including month/year boundaries. Windows can overlap or adjoin; their union can cover a manager's queried period. Employees can withdraw current windows, including a window already in progress. Expired and withdrawn records remain visible for history. Limits: 60 current windows and 1,000 total per employee.
 
 Managers use **Availability** to check a future start/end period (same bounds). Results include active same-business employees only:
 
@@ -27,3 +27,7 @@ Endpoints:
 All responses are no-store, authenticated and business-scoped; mutations also require same-origin JSON, CSRF and the existing change rate limit. Manager browsing uses only reads, so it cannot trigger matching or notifications.
 
 Not included: recurring weekly patterns, explicit unavailable windows, automated scheduling, or chat management of these general windows. Use Time off for a request requiring manager approval. Availability is not a substitute for leave.
+
+## Reviewed UI refinement
+
+Managers have summary cards, a compact employee/status/reason roster and All/Available/Unavailable/Unknown filters. Filters operate locally on the last checked snapshot and announce the matching count; editing dates/times removes stale results and summary cards. Employees have a separate add form and chronological upcoming windows, with date badges and explicitly confirmed withdrawal. Past/withdrawn records remain under expandable history. Detailed policy is under How availability works; timezone, uncertainty and commit feedback remain visible. Fields stack at the narrowest mobile widths to keep native time controls readable.

@@ -34,3 +34,19 @@ Browser tests used only a fresh temporary fictional database (`/tmp/covershift-c
 ## Limits
 
 Dated positive windows only; no weekly recurring patterns or explicit unavailable windows. Availability is advisory and does not promise an eventual assignment. Existing scheduling actions still recheck conflicts at commit time. General windows are independent from automatic request rules; withdrawing one does not withdraw another rule or an already-submitted claim. See [policy](../../employee-availability.md).
+
+
+## User-approved UI refinement — 2026-11-24
+
+The user selected the interactive mockup and authorized applying it locally, explicitly requesting review before merge. This refines the same CS-031 issue/branch; it is not merge approval. Board moved Your review → In Progress → Your review.
+
+- Manager summary cards, compact initials/name/status/reason roster, local status filters with pressed states and announced matching count, and date/from/until controls implemented. Browsing/filtering adds no API mutations.
+- Employee add form and chronological upcoming windows are side by side on desktop. Past/withdrawn history remains accessible. Date badges, explicit withdrawal, same-day/overnight choice and expandable rules preserve the existing policy.
+- Browser checks: seeded manager 1 Available/2 Unavailable/1 Unknown; Available filter shows Jamie only; an Available filter for a period with no saved evidence shows an honest empty result; All restores the full roster. Employee explicitly confirmed Dec3 22:00 → Dec4 06:00, then withdrew it and checked retained history.
+- Controlled GET503 showed an error and recovered with Refresh. A Dec4 18:00–20:00 save committed upstream while the proxy discarded the response: all mutation controls locked, Refresh recovered one confirmed window without reposting. The proxy was stopped after QA.
+- Actual320px viewport checks for both roles show scrollWidth305px. Native date/time inputs are239px wide and stack, preserving complete time values. Manager tablet768px gives scrollWidth753px. Viewport overrides reset. This is browser/layout evidence, not a claim of exhaustive assistive-technology certification.
+- `npm run verify`: **285/285 tests pass**, including the new form-mapping/filter test with overnight, leap-day and year-boundary cases. Final accessibility count markup passed syntax and diff checks. Backend/API policy is unchanged by this refinement.
+
+Updated evidence: [manager desktop](manager-refined-desktop.png), [employee desktop](employee-refined-desktop.png), [manager mobile](manager-refined-mobile.png), [employee mobile](employee-refined-mobile.png), [recovered save](refined-recovered-save.png), [verification](refined-verification.txt), [Your review board](board-refined-review.png). Initial screenshots above are retained as the earlier layout, not the latest design.
+
+The isolated3039 preview preserves the earlier fictional records. Jamie now has the original Nov26 window plus the recovered Dec4 window; withdrawn Nov30 and Dec3 windows remain in history. The default Nov26 manager example is unchanged. No push or merge has occurred.
