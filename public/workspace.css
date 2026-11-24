@@ -150,3 +150,5 @@
 @media(max-width:1050px){.availability-manager-form .availability-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.availability-manager-form .availability-fields label:first-child{grid-column:1/-1}}
 @media(max-width:950px){.availability-table-head{display:none}.availability-team-row{grid-template-columns:minmax(0,1fr) auto}.availability-reason{grid-column:1/-1;padding-left:calc(34px + .65rem)}}
 @media(max-width:380px){.availability-fields,.availability-manager-form .availability-fields,.availability-employee-layout .availability-fields{grid-template-columns:minmax(0,1fr)}.availability-fields label:first-child,.availability-fields>.solid-link{grid-column:auto}}
+.availability-view-switch{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.5rem}
+.availability-view-switch button[aria-pressed=true]{background:var(--av-green);color:#fff;border-color:var(--av-green)}

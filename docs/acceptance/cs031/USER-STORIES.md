@@ -50,3 +50,20 @@ The user selected the interactive mockup and authorized applying it locally, exp
 Updated evidence: [manager desktop](manager-refined-desktop.png), [employee desktop](employee-refined-desktop.png), [manager mobile](manager-refined-mobile.png), [employee mobile](employee-refined-mobile.png), [recovered save](refined-recovered-save.png), [verification](refined-verification.txt), [Your review board](board-refined-review.png). Initial screenshots above are retained as the earlier layout, not the latest design.
 
 The isolated3039 preview preserves the earlier fictional records. Jamie now has the original Nov26 window plus the recovered Dec4 window; withdrawn Nov30 and Dec3 windows remain in history. The default Nov26 manager example is unchanged. No push or merge has occurred.
+
+
+## User-requested coworker access — 2026-11-24 (current scope)
+
+This approved extension supersedes the earlier manager-only visibility scope: coworkers can now query derived statuses, while full windows and private conflict causes remain protected. User requested local implementation, not push/merge.
+
+| ID | Acceptance | Result |
+|---|---|---|
+| CS031-US11 | As an employee, check active same-business coworkers for a selected period. | PASS: new read-only endpoint, own ID excluded, foreign/inactive peers excluded. Browser as Alex on Nov26 14:00–17:00 shows Jamie Available, Sam Unavailable, Taylor Unknown. |
+| CS031-US12 | As an employee, find possible cover without accessing private leave/schedule data. | PASS: API allowlisted id/name/status/generic reasons only. Automated canaries prove no leave note, assigned title, pending-claim/setup cause, email, raw windows or rule details. Browser Sam shows only “Not available for this period”; managers retain “Approved time off”. |
+| CS031-US13 | As an employee, browse without making requests or changing any shifts. | PASS: GET only, exact query keys, current-role/session validation, no-store, and exact database byte preservation. Existing final assignment/approval behavior remains unchanged. |
+| CS031-US14 | As an employee, use filters, switch views, and recover from an outage. | PASS: Available filter shows Jamie and announces1of3coworkers; My availability retains an unfinished Dec6 form; during confirmation the view buttons are disabled. Coworker deep link loads its selected view. Proxy GET503 shows error; Refresh restores the three statuses. |
+| CS031-US15 | As an employee, understand sharing and use the view on mobile. | PASS: own confirmation/save/footer notices explain coworker status visibility. Coworker view has agreement/approval guidance. Actual320px gives scrollWidth305px; viewport reset. |
+
+`npm run verify`: **290/290 tests pass** (five new coworker service/HTTP tests). Final frontend switching/count/deep-link changes passed syntax/diff checks and browser checks. Evidence: [coworker desktop](coworker-desktop.png), [coworker mobile](coworker-mobile.png), [verification](coworker-verification.txt), [review board](board-coworker-review.png).
+
+Review link: http://127.0.0.1:3039/workspace/worker/availability#coworkers — signed in as fictional Alex Morgan (`worker_alex@example.test`, passphrase `CoverShift demo access!`). Select Nov26 14:00–17:00 for one Available, one Unavailable and one Unknown coworker. Morgan's manager session remains at localhost3039. The preserved fictional database was reused, without resetting any normal/demo accounts. The temporary3040 recovery proxy was stopped after QA. No provider call or message was sent. No branch push or merge has occurred.

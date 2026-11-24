@@ -12,7 +12,7 @@ Results are fresh snapshots with the checked time and exact queried range. Chang
 
 General availability is separate from the opt-in automatic-request rules managed through AI chat. An automatic rule does not supply general availability evidence, even when active. Withdrawing a general window does not cancel a rule, existing assignment or coverage claim. No new model calls or provider data are added.
 
-Only the employee sees their saved windows; their managers can query derived statuses/reasons. Teammates cannot browse one another's windows. Manager results omit email addresses, private leave notes, shift titles and claim details. Old-timezone windows remain in employee history but do not establish availability after a business timezone change; withdraw and recreate them in the current timezone.
+The employee and same-business managers can access their full windows. Employees can also use **Coworkers** to query derived availability for active same-business peers (excluding themselves); coworker results show names, statuses and generic explanations only. They cannot browse raw windows or see the conflict cause. Manager results omit email addresses, private leave notes, shift titles and claim details. Coworker results additionally hide whether unavailability comes from leave, an assignment, a pending claim or account setup. Old-timezone windows remain in employee history but do not establish availability after a business timezone change; withdraw and recreate them in the current timezone.
 
 Confirmation retries use the same submission ID, including after a lost response. An uncertain mutation disables new changes until Refresh checks saved records. No automatic repost occurs. Withdrawal requires a fresh record revision. Employee deactivation withdraws windows and preserves history; availability history prevents hard deletion and changes invalidate stale deletion revisions.
 
@@ -23,11 +23,14 @@ Endpoints:
 - GET/POST `/api/worker/availability-windows` (own list / confirmed creation)
 - POST `/api/worker/availability-windows/:id/withdraw` with revision
 - GET `/api/manager/availability-windows?startLocal=...&endLocal=...&timezone=...`
+- GET `/api/worker/coworker-availability?startLocal=...&endLocal=...&timezone=...` (derived peer statuses only)
 
-All responses are no-store, authenticated and business-scoped; mutations also require same-origin JSON, CSRF and the existing change rate limit. Manager browsing uses only reads, so it cannot trigger matching or notifications.
+All responses are no-store, authenticated and business-scoped; mutations also require same-origin JSON, CSRF and the existing change rate limit. Manager and coworker browsing use only reads, so neither can trigger matching or notifications.
 
 Not included: recurring weekly patterns, explicit unavailable windows, automated scheduling, or chat management of these general windows. Use Time off for a request requiring manager approval. Availability is not a substitute for leave.
 
 ## Reviewed UI refinement
 
 Managers have summary cards, a compact employee/status/reason roster and All/Available/Unavailable/Unknown filters. Filters operate locally on the last checked snapshot and announce the matching count; editing dates/times removes stale results and summary cards. Employees have a separate add form and chronological upcoming windows, with date badges and explicitly confirmed withdrawal. Past/withdrawn records remain under expandable history. Detailed policy is under How availability works; timezone, uncertainty and commit feedback remain visible. Fields stack at the narrowest mobile widths to keep native time controls readable.
+
+Employees switch between **My availability** and **Coworkers**. An unfinished own form is retained during ordinary switches; switching is disabled during review, save, or uncertain-result recovery. The Coworkers selection is linked with `#coworkers` and survives a page reload. Ask coworkers for agreement outside this view; a displayed Available status does not reserve them, contact them, claim an opening or approve a transfer. Existing coverage claims and manager approval remain the way to transfer a shift. Confirmation and save notices explicitly describe coworker status visibility.

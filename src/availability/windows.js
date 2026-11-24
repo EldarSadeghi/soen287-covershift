@@ -32,7 +32,7 @@ export async function saveWindow(store,userId,input,clock=Date.now){
     if(mine.some(r=>r.status==='confirmed'&&r.timezone===business.timezone&&r.startsAt===values.startsAt&&r.endsAt===values.endsAt))throw new HttpError(409,'You already saved these times. Refresh your availability.');
     const at=new Date(now).toISOString(),r={id:randomUUID(),businessId:business.id,workerId:user.id,...values,submissionId:input.submissionId,status:'confirmed',createdAt:at,updatedAt:at};
     db.schemaVersion=Math.max(db.schemaVersion,10);db.availabilityRules||=[];db.availabilityMatches||=[];db.notifications||=[];db.timeOffRequests||=[];db.availabilityWindows||=[];db.availabilityWindows.push(r);
-    return {window:dto(r,now),replayed:false,message:'Availability saved. Your managers can now see these times. No shift was requested or assigned.'};
+    return {window:dto(r,now),replayed:false,message:'Availability saved. Your managers can see these times; coworkers can check your availability status. No shift was requested or assigned.'};
   });
 }
 export async function withdrawWindow(store,userId,id,input,clock=Date.now){
@@ -50,9 +50,9 @@ export function coversPeriod(windows,period){
   for(const r of [...windows].sort((a,b)=>a.startsAt.localeCompare(b.startsAt))){if(r.startsAt>end)break;if(r.endsAt>end)end=r.endsAt;if(end>=period.endsAt)return true;}
   return false;
 }
-export async function teamAvailability(store,managerId,input,clock=Date.now){
-  const db=await store.read(),business=managerBusiness(db,managerId),now=clock(),period=windowFields(input,business.timezone,now);
-  const workers=db.users.filter(u=>u.businessId===business.id&&u.role==='worker'&&!u.deactivation).sort((a,b)=>a.name.localeCompare(b.name)||a.id.localeCompare(b.id)).map(u=>{
+function availabilitySnapshot(db,business,input,now,excludeWorkerId=null){
+  const period=windowFields(input,business.timezone,now);
+  const workers=db.users.filter(u=>u.businessId===business.id&&u.role==='worker'&&!u.deactivation&&u.id!==excludeWorkerId).sort((a,b)=>a.name.localeCompare(b.name)||a.id.localeCompare(b.id)).map(u=>{
     const reasons=[];
     if(!u.passwordHash)reasons.push('Account setup incomplete');
     const conflicts=claimCommitments(db,u,now).filter(r=>intervalsOverlap(period,r));
@@ -62,4 +62,15 @@ export async function teamAvailability(store,managerId,input,clock=Date.now){
     return {id:u.id,name:u.name,status,reasons:reasons.length?reasons:[covered?'Confirmed availability covers the entire period':windows.length?'Saved availability covers only part of this period':'No confirmed availability for this period']};
   });
   return {timezone:business.timezone,...period,checkedAt:new Date(now).toISOString(),workers};
+}
+
+export async function teamAvailability(store,managerId,input,clock=Date.now){
+  const db=await store.read(),business=managerBusiness(db,managerId);
+  return availabilitySnapshot(db,business,input,clock());
+}
+export async function coworkerAvailability(store,workerId,input,clock=Date.now){
+  const db=await store.read(),{user,business}=workerAccount(db,workerId);
+  const snapshot=availabilitySnapshot(db,business,input,clock(),user.id);
+  // Employee browsing receives derived eligibility only, never conflict causes or raw windows.
+  return {...snapshot,workers:snapshot.workers.map(({id,name,status})=>({id,name,status,reasons:[status==='available'?'Confirmed availability for this period':status==='unavailable'?'Not available for this period':'Availability is not confirmed for the full period']}))};
 }

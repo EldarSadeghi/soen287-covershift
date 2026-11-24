@@ -1,4 +1,4 @@
-import {listWindows,saveWindow,withdrawWindow,teamAvailability} from './availability/windows.js';
+import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability} from './availability/windows.js';
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
@@ -122,6 +122,12 @@ export function createAppServer({ store, signup = registerManager, login = authe
     let pathname;
     try {
       pathname = new URL(request.url, 'http://localhost').pathname;
+      if(pathname==='/api/worker/coworker-availability'){
+        requireMethod(request,response,'GET');
+        const account=await requireAccount(store,sessions,request.headers.cookie,'worker'),query=new URL(request.url,'http://localhost').searchParams;
+        if(query.size!==3||!['startLocal','endLocal','timezone'].every(k=>query.getAll(k).length===1))throw new HttpError(400,'Choose only a start, end and business timezone.');
+        sendJson(response,200,await coworkerAvailability(availabilityWindowStore,account.user.id,Object.fromEntries(query),shiftClock));return;
+      }
       const windowRoute=pathname.match(/^\/api\/(manager|worker)\/availability-windows(?:\/([a-zA-Z0-9_-]{1,80})\/withdraw)?$/);
       if(windowRoute){
         const [,role,id]=windowRoute,listing=request.method==='GET'&&!id;

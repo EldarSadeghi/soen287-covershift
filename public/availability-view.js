@@ -14,19 +14,21 @@ export function availabilityFormWindow(day,from,until,nextDay,timezone){
   return window;
 }
 
-export async function mountAvailability(main,account,csrf){
-  const manager=account.user.role==='manager',timezone=account.business.timezone,base=`/api/${account.user.role}/availability-windows`;
+export async function mountAvailability(main,account,csrf,{coworkers=globalThis.location?.hash==='#coworkers',ownDraft=null}={}){
+  coworkers=account.user.role==='worker'&&coworkers;
+  const manager=account.user.role==='manager',teamView=manager||coworkers,timezone=account.business.timezone,base=coworkers?'/api/worker/coworker-availability':`/api/${account.user.role}/availability-windows`;
   main.classList.add('availability-page');
-  const form=`<form id="av-form"><div class="availability-fields"><label for="av-date">Date<input id="av-date" type="date" required></label><label for="av-from">From<input id="av-from" type="time" value="09:00" required></label><label for="av-until">Until<input id="av-until" type="time" value="17:00" required></label>${manager?'<button id="av-review" class="solid-link" type="submit">Check availability</button>':''}</div><label class="availability-overnight"><input id="av-overnight" type="checkbox"> Ends next day</label>${manager?'':'<button id="av-review" class="solid-link" type="submit">Review availability <span aria-hidden="true">→</span></button>'}</form>`;
+  const form=`<form id="av-form"><div class="availability-fields"><label for="av-date">Date<input id="av-date" type="date" required></label><label for="av-from">From<input id="av-from" type="time" value="09:00" required></label><label for="av-until">Until<input id="av-until" type="time" value="17:00" required></label>${teamView?'<button id="av-review" class="solid-link" type="submit">Check availability</button>':''}</div><label class="availability-overnight"><input id="av-overnight" type="checkbox"> Ends next day</label>${teamView?'':'<button id="av-review" class="solid-link" type="submit">Review availability <span aria-hidden="true">→</span></button>'}</form>`;
   const rules=`<div class="availability-meta"><span>Times in <strong id="av-zone"></strong></span><details><summary>How availability works</summary><p>Choose a future period of up to 24 local hours, starting within 90 days. Select “Ends next day” for overnight periods. Available requires confirmed windows covering the entire period with no known conflicts. Missing evidence is Unknown. Availability does not reserve a worker or activate automatic requests.</p></details></div>`;
-  const confirmation=`<section id="av-confirmation" class="coverage-confirm" aria-label="Review availability" tabindex="-1" hidden><h3>Confirm your availability</h3><p id="av-summary"></p><p>Your managers will see that you can work during these times, subject to current conflicts. This does not request or assign any shift.</p><div class="create-actions"><button id="av-edit" class="logout-button" type="button">Edit times</button><button id="av-save" class="solid-link" type="button">Confirm availability</button></div></section>`;
-  const results=`<section class="availability-results" aria-label="${manager?'Team availability':'Saved availability'}"><div class="availability-list-heading"><h2>${manager?'Your team':'Upcoming windows'}</h2><span id="av-count" class="section-note" role="status"></span></div><div id="av-filters" class="availability-filters" role="group" aria-label="Filter availability" hidden>${['all','available','unavailable','unknown'].map(v=>`<button type="button" class="logout-button" data-status="${v}" aria-pressed="${v==='all'}">${v==='all'?'All':v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div><p id="av-period" class="section-note" hidden></p><div id="av-results"></div><p id="av-freshness" class="section-note" role="status"></p></section>`;
-  main.innerHTML=`<p class="eyebrow">${manager?'Team planning':'Your working week'}</p><div class="page-heading"><div><h1>${manager?'Who can work?':'Make time for what works.'}</h1><p class="subtitle">${manager?'The right people, at the right time.':'Let your manager know when you can work.'}</p></div><button id="av-refresh" class="logout-button" type="button">Refresh</button></div><p id="av-message" role="status" tabindex="-1" hidden></p><p id="av-error" role="alert" tabindex="-1" hidden></p>${manager?`<section class="panel availability-form availability-manager-form" aria-label="Choose a period">${form}</section>${rules}<div id="av-stats" class="availability-stats" aria-label="Availability summary" hidden></div>${results}`:`${rules}<div class="availability-employee-layout"><section class="panel availability-form"><h2>Add availability</h2>${form}${confirmation}</section>${results}</div><p class="availability-disclaimer">Sharing availability does not turn on automatic shift requests. Manage those rules separately in AI chat.</p>`}`;
+  const confirmation=`<section id="av-confirmation" class="coverage-confirm" aria-label="Review availability" tabindex="-1" hidden><h3>Confirm your availability</h3><p id="av-summary"></p><p>Your managers can see these times. Coworkers can check your availability status for a selected period, subject to current conflicts. This does not request or assign any shift.</p><div class="create-actions"><button id="av-edit" class="logout-button" type="button">Edit times</button><button id="av-save" class="solid-link" type="button">Confirm availability</button></div></section>`;
+  const results=`<section class="availability-results" aria-label="${teamView?'Team availability':'Saved availability'}"><div class="availability-list-heading"><h2>${teamView?(coworkers?'Your coworkers':'Your team'):'Upcoming windows'}</h2><span id="av-count" class="section-note" role="status"></span></div><div id="av-filters" class="availability-filters" role="group" aria-label="Filter availability" hidden>${['all','available','unavailable','unknown'].map(v=>`<button type="button" class="logout-button" data-status="${v}" aria-pressed="${v==='all'}">${v==='all'?'All':v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div><p id="av-period" class="section-note" hidden></p><div id="av-results"></div><p id="av-freshness" class="section-note" role="status"></p></section>`;
+  main.innerHTML=`<p class="eyebrow">${teamView?(coworkers?'Find shift cover':'Team planning'):'Your working week'}</p><div class="page-heading"><div><h1>${teamView?(coworkers?'Who could cover your shift?':'Who can work?'):'Make time for what works.'}</h1><p class="subtitle">${teamView?(coworkers?'Check your coworkers’ availability, then ask before requesting a change.':'The right people, at the right time.'):'Share when you can work with your team.'}</p></div><button id="av-refresh" class="logout-button" type="button">Refresh</button></div>${manager?'':`<div class="availability-view-switch" role="group" aria-label="Availability view"><button type="button" id="av-own-view" class="logout-button" aria-pressed="${!coworkers}">My availability</button><button type="button" id="av-coworker-view" class="logout-button" aria-pressed="${coworkers}">Coworkers</button></div>`}<p id="av-message" role="status" tabindex="-1" hidden></p><p id="av-error" role="alert" tabindex="-1" hidden></p>${teamView?`<section class="panel availability-form availability-manager-form" aria-label="Choose a period">${form}</section>${rules}<div id="av-stats" class="availability-stats" aria-label="Availability summary" hidden></div>${results}${coworkers?'<p class="availability-disclaimer">Ask your coworker before arranging cover. Availability does not reserve them or change a shift. Manager approval is still required for a coverage transfer.</p>':''}`:`${rules}<div class="availability-employee-layout"><section class="panel availability-form"><h2>Add availability</h2>${form}${confirmation}</section>${results}</div><p class="availability-disclaimer">Coworkers can check your availability status. This does not turn on automatic shift requests; manage those rules separately in AI chat.</p>`}`;
   const q=id=>main.querySelector('#'+id);q('av-zone').textContent=timezone;
+  if(!teamView&&ownDraft){for(const id of ['av-date','av-from','av-until'])q(id).value=ownDraft[id];q('av-overnight').checked=ownDraft.overnight;}
   let busy=false,review=null,uncertain=null,query=null,team=null,statusFilter='all';
   const message=(id,text)=>{q(id).textContent=text;q(id).hidden=false;q(id).focus();};
   const clear=()=>{q('av-error').hidden=true;q('av-message').hidden=true;};
-  function controls(){q('av-refresh').disabled=busy;q('av-review').disabled=busy||Boolean(uncertain)||Boolean(review);for(const id of ['av-date','av-from','av-until','av-overnight'])q(id).disabled=busy||Boolean(review)||Boolean(uncertain);if(!manager){q('av-edit').disabled=busy||Boolean(uncertain);q('av-save').disabled=busy||Boolean(uncertain);}for(const b of main.querySelectorAll('[data-status]'))b.disabled=busy;for(const b of main.querySelectorAll('[data-withdraw],[data-withdraw-confirm]'))b.disabled=busy||Boolean(uncertain);}
+  function controls(){q('av-refresh').disabled=busy;q('av-review').disabled=busy||Boolean(uncertain)||Boolean(review);for(const id of ['av-date','av-from','av-until','av-overnight'])q(id).disabled=busy||Boolean(review)||Boolean(uncertain);if(!teamView){q('av-edit').disabled=busy||Boolean(uncertain);q('av-save').disabled=busy||Boolean(uncertain);}if(!manager)for(const id of ['av-own-view','av-coworker-view'])q(id).disabled=busy||Boolean(review)||Boolean(uncertain);for(const b of main.querySelectorAll('[data-status]'))b.disabled=busy;for(const b of main.querySelectorAll('[data-withdraw],[data-withdraw-confirm]'))b.disabled=busy||Boolean(uncertain);}
   async function api(path,input){
     const r=await requestJSON(path,input===undefined?{cache:'no-store'}:{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(input)});
     if(r.status===401){location.replace('/login?expired=1');throw new Error('Please sign in again.');}
@@ -36,12 +38,12 @@ export async function mountAvailability(main,account,csrf){
   function renderTeam(){
     const root=q('av-results');root.replaceChildren();if(!team)return;
     const shown=filterAvailability(team.workers,statusFilter);
-    q('av-count').textContent=statusFilter==='all'?`${team.workers.length} employee${team.workers.length===1?'':'s'}`:`${shown.length} of ${team.workers.length} employees`;
+    const noun=coworkers?'coworker':'employee';q('av-count').textContent=statusFilter==='all'?`${team.workers.length} ${noun}${team.workers.length===1?'':'s'}`:`${shown.length} of ${team.workers.length} ${noun}s`;
     q('av-filters').hidden=false;
     for(const b of main.querySelectorAll('[data-status]'))b.setAttribute('aria-pressed',String(b.dataset.status===statusFilter));
-    if(!shown.length){root.append(element('p','empty-state',team.workers.length?'No employees match this status. Choose another filter.':'No active employees yet. Add employees in Team.'));return;}
+    if(!shown.length){root.append(element('p','empty-state',team.workers.length?(coworkers?'No coworkers match this status. Choose another filter.':'No employees match this status. Choose another filter.'):coworkers?'No active coworkers yet.':'No active employees yet. Add employees in Team.'));return;}
     const table=element('div','availability-table');
-    const head=element('div','availability-table-head');for(const label of ['Employee','Availability','Reason'])head.append(element('span','',label));table.append(head);
+    const head=element('div','availability-table-head');for(const label of [coworkers?'Coworker':'Employee','Availability','Reason'])head.append(element('span','',label));table.append(head);
     for(const r of shown){const row=element('article','availability-team-row'),name=element('div','availability-person'),avatar=element('span','availability-avatar',initials(r.name));avatar.setAttribute('aria-hidden','true');name.append(avatar,element('h3','',r.name));row.append(name,element('span','availability-status '+r.status,r.status[0].toUpperCase()+r.status.slice(1)),element('p','availability-reason',r.reasons.join(' · ')));table.append(row);}root.append(table);
   }
   function windowCard(r){
@@ -57,8 +59,8 @@ export async function mountAvailability(main,account,csrf){
   }
   function render(data){
     const root=q('av-results');root.replaceChildren();
-    q('av-freshness').textContent=`Checked ${new Intl.DateTimeFormat('en-US',{timeZone:timezone,dateStyle:'medium',timeStyle:'medium'}).format(new Date(data.checkedAt))}. ${manager?'Snapshot only: refresh before planning.':'Visible to you and your managers.'}`;
-    if(manager){
+    q('av-freshness').textContent=`Checked ${new Intl.DateTimeFormat('en-US',{timeZone:timezone,dateStyle:'medium',timeStyle:'medium'}).format(new Date(data.checkedAt))}. ${teamView?'Snapshot only: refresh before planning.':'Full windows are visible to you and your managers. Coworkers can check your status.'}`;
+    if(teamView){
       team=data;q('av-period').textContent=availabilityRange(data,timezone);q('av-period').hidden=false;
       const counts={available:0,unavailable:0,unknown:0};for(const r of data.workers)counts[r.status]++;
       q('av-stats').replaceChildren();q('av-stats').hidden=false;
@@ -66,16 +68,16 @@ export async function mountAvailability(main,account,csrf){
     }else{
       const upcoming=data.windows.filter(r=>r.status==='confirmed').sort((a,b)=>a.startsAt.localeCompare(b.startsAt)||a.id.localeCompare(b.id)),history=data.windows.filter(r=>r.status!=='confirmed');
       q('av-count').textContent=`${upcoming.length} confirmed`;
-      if(!upcoming.length)root.append(element('p','empty-state',data.windows.length?'No upcoming availability. Add a window to share new times.':'No availability saved yet. Add a window to share your times. Your managers will see Unknown until you do.'));
+      if(!upcoming.length)root.append(element('p','empty-state',data.windows.length?'No upcoming availability. Add a window to share new times.':'No availability saved yet. Add a window to share your times. Your team will see Unknown until you do.'));
       for(const r of upcoming)root.append(windowCard(r));
       if(history.length){const archive=element('details','availability-history'),summary=element('summary','',`Past & withdrawn windows (${history.length})`);archive.append(summary);for(const r of history)archive.append(windowCard(r));root.append(archive);}
     }
   }
   async function load(){
-    if(busy)return;clear();busy=true;controls();q('av-results').replaceChildren(element('p','','Loading availability…'));q('av-freshness').textContent='';q('av-count').textContent='';if(manager){team=null;q('av-stats').hidden=true;q('av-filters').hidden=true;q('av-period').hidden=true;}
+    if(busy)return;clear();busy=true;controls();q('av-results').replaceChildren(element('p','','Loading availability…'));q('av-freshness').textContent='';q('av-count').textContent='';if(teamView){team=null;q('av-stats').hidden=true;q('av-filters').hidden=true;q('av-period').hidden=true;}
     try{
-      if(manager&&!query){q('av-results').replaceChildren(element('p','empty-state','Choose a period above to see availability.'));return;}
-      const data=await api(base+(manager?'?'+new URLSearchParams(query):''));render(data);
+      if(teamView&&!query){q('av-results').replaceChildren(element('p','empty-state','Choose a period above to see availability.'));return;}
+      const data=await api(base+(teamView?'?'+new URLSearchParams(query):''));render(data);
       if(uncertain){const saved=data.windows.find(r=>uncertain.kind==='save'?r.submissionId===uncertain.input.submissionId:r.id===uncertain.record.id);
         if(saved&&(uncertain.kind==='save'||saved.status==='withdrawn')){const kind=uncertain.kind;uncertain=null;if(kind==='save')reset();message('av-message',kind==='save'?`Save recovered. This window is ${saved.status}. No shift was requested.`:'Withdrawal confirmed.');}
         else {const pending=uncertain;uncertain=null;message('av-message','No completed change was found. You can explicitly retry; the same submission is safe to reuse.');if(pending.kind==='save')review=pending.input;}
@@ -88,14 +90,15 @@ export async function mountAvailability(main,account,csrf){
     catch(e){if(e.uncertain){uncertain={kind,input,record};message('av-error','The result is uncertain. Do not submit another change. Use Refresh to check the saved result.');}else message('av-error',e.message);}
     finally{busy=false;controls();}
   }
-  if(manager)for(const id of ['av-date','av-from','av-until','av-overnight'])q(id).addEventListener('input',()=>{query=null;team=null;q('av-freshness').textContent='Filters changed. Check availability again.';q('av-count').textContent='';q('av-stats').hidden=true;q('av-filters').hidden=true;q('av-period').hidden=true;q('av-results').replaceChildren();});
+  if(teamView)for(const id of ['av-date','av-from','av-until','av-overnight'])q(id).addEventListener('input',()=>{query=null;team=null;q('av-freshness').textContent='Filters changed. Check availability again.';q('av-count').textContent='';q('av-stats').hidden=true;q('av-filters').hidden=true;q('av-period').hidden=true;q('av-results').replaceChildren();});
   for(const b of main.querySelectorAll('[data-status]'))b.addEventListener('click',()=>{if(busy||!team)return;statusFilter=b.dataset.status;renderTeam();});
+  if(!manager)for(const [id,next] of [['av-own-view',false],['av-coworker-view',true]])q(id).addEventListener('click',async()=>{if(busy||review||uncertain||next===coworkers)return;if(!coworkers)ownDraft={...Object.fromEntries(['av-date','av-from','av-until'].map(id=>[id,q(id).value])),overnight:q('av-overnight').checked};history.replaceState(null,'',location.pathname+location.search+(next?'#coworkers':''));await mountAvailability(main,account,csrf,{coworkers:next,ownDraft});main.querySelector('#'+id)?.focus();});
   q('av-refresh').addEventListener('click',load);
   q('av-form').addEventListener('submit',async e=>{
     e.preventDefault();if(busy||uncertain)return;clear();let window;try{window=availabilityFormWindow(q('av-date').value,q('av-from').value,q('av-until').value,q('av-overnight').checked,timezone);}catch(error){message('av-error',error.message);return;}
-    if(manager){query=window;await load();return;}
+    if(teamView){query=window;await load();return;}
     review={window,submissionId:crypto.randomUUID()};q('av-summary').textContent=`${window.startLocal.replace('T',' ')} – ${window.endLocal.replace('T',' ')} · ${timezone}`;q('av-confirmation').hidden=false;controls();q('av-confirmation').focus();
   });
-  if(!manager){q('av-edit').addEventListener('click',()=>{review=null;q('av-confirmation').hidden=true;controls();q('av-date').focus();});q('av-save').addEventListener('click',()=>mutate('save'));}
+  if(!teamView){q('av-edit').addEventListener('click',()=>{review=null;q('av-confirmation').hidden=true;controls();q('av-date').focus();});q('av-save').addEventListener('click',()=>mutate('save'));}
   await load();
 }
