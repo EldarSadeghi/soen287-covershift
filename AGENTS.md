@@ -1,5 +1,17 @@
 # CoverShift working instructions
 
+## Authoritative current identities — 2026-11-24
+
+**Current numbering (2026-11-24): CS-001–027 are completed; CS-028 demo preparation is in Your review; CS-029–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+
+User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-040 Deployment and final submission is always last** (formerly CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, Your review**. No push/merge approval has been given. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
+
+Current Todo sequence: CS-029 tests (#62), CS-030 time off (#66), CS-031 availability (#67), CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-040 final deployment (#70). Completed tasks are CS-001–027; original PR/evidence names remain historical.
+
+## Workflow rules and historical log
+
+Workflow rules remain applicable. Task IDs/status snapshots in the older log below are superseded by the current register above.
+
 - Track every implementation task with its CS-xxx ID in a GitHub issue and on https://github.com/users/EldarSadeghi/projects/1.
 - Add each new task to Todo first and verify it appears there. Then move it to In Progress and tell the user implementation has started. Status flow: Todo -> In Progress -> Your review -> Done. Mark Done only after the user's confirmation and approved merge.
 - Implement one increment at a time on a `codex/CS-xxx-short-name` branch. Include acceptance criteria in the issue before implementation.
@@ -49,3 +61,12 @@ User explicitly approved CS-032 push and merge on 2026-11-23. After merge, propo
 - CS-039 local implementation ready for Your review: 214 regression tests pass; controlled browser checks cover all four card types, real form/claim/rule commits, cancellation, three lost-ack uncertain states, empty-next correction, owner isolation and rate-limit message retention. Real-provider review shows 7 assigned employee hours and a valid manager draft; 320px card fits without overflow and keyboard/Escape focus verified. Preview3028. No push or merge without explicit approval.
 
 User explicitly approved CS-039 Summary cards push and merge on 2026-11-23. Approved scope is issue #61 and its verified UI/documentation increment. CS-018 remains the final deployment/submission task.
+
+- CS-039 is complete: issue #61, merged PR #64. CS-021 Demo preparation selected on 2026-11-23: issue #65, `codex/CS-021-demo-preparation`, Todo verified then In Progress. Local repeatable fictional demo, two-role launcher and generated walkthrough; 223 tests pass and browser rehearsal/reset documented in `docs/acceptance/cs021/`. Ready for Your review; no push/merge without explicit approval. CS-018 remains the very last step. Demo commands: `npm run demo:prepare`, `npm run demo:start`; isolated `.covershift-demo/`, default port3035. Preserve normal accounts and previous runs.
+
+- User requested backlog additions on 2026-11-24: CS-041 Employee time-off requests (#66), CS-042 Show employee availability (#67), CS-043 Daily shift duties and employee task list (#68), CS-044 Monday publication of a two-week schedule (#69). Acceptance criteria/open decisions are in GitHub issues. Planning only; no feature implementation started. Suggested order 041→042→043→044. Confirm publication window and manual/automatic policy before implementing CS-044. CS-018 remains last.
+
+
+- Authoritative backlog renumbering (2026-11-24, user requested): CS-045 tests (#62, formerly040), CS-046 time off (#66, formerly041), CS-047 availability (#67, formerly042), CS-048 duties (#68, formerly043), CS-049 Monday two-week publication (#69, formerly044), CS-050 conversational refinement (#57, formerly035), CS-051 chat rule management (#60, formerly038), CS-052 explanations (#55, formerly033), CS-053 alternatives (#56, formerly034), CS-054 batch creation (#58, formerly036), CS-055 summaries (#59, formerly037). Old unstarted IDs are retired aliases; same issue numbers/history, no duplicate tasks. All remain Todo; planning only. Implement in 045→055 order after CS-021 review decision, one increment at a time. Baseline tests first, then core scheduling before AI expansion. Existing AI/manual paths must respect approved leave and publication within those core increments. Completed IDs stay unchanged, CS-021 remains Your review, CS-018 stays last. See current mapping in docs/implementation-plan.md.
+
+- User explicitly approved CS-028 demo preparation (issue #65, former CS-021) for push/merge on 2026-11-24. Scope includes the reviewed demo implementation/evidence and user-requested backlog numbering documentation. Current branch renamed `codex/CS-028-demo-preparation`; historical `cs021` evidence paths remain valid. Next planned task is CS-029 AI conversation acceptance tests; no authorization to start it yet. CS-040 deployment stays last.

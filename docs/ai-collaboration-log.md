@@ -175,3 +175,21 @@ User chose CS-032 from the nine Todo AI proposals. Issue #54 Todo and In Progres
 ## 2026-11-23 — CS-039 Summary cards
 
 User selected Summary cards, reviewed four response examples, and authorized implementation. Reused Todo issue #61, recorded selected design criteria before work, verified Todo then In Progress. Implemented a shared safe DOM card hierarchy across read-only answers, manager drafts/correlated receipts, availability and coverage preflight/confirmed/uncertain states. Reduced duplicate paragraphs while preserving bounded conversation context and existing protected workflows. Added composer sample buttons, native details/privacy, concise statuses and reading/focus adjustments. Controlled browser QA uses real saves/claims/rules and temporary lost-ack proxy; no fault hooks or provider prompt changes in product. Browser checking found an empty-next rendering error, fixed and rechecked. Awaiting explicit review approval before push/merge.
+
+## 2026-11-23 — CS-021 demo preparation
+
+User selected implementation of demo preparation. Created issue #65 with acceptance criteria and verified Todo then In Progress before implementation. Added fixed isolated managed demo storage, fresh-run preparation preserving previous records, strictly upcoming Toronto scenarios through real workflow services, generated dated walkthrough and loopback full-application launcher. Public fictional credentials and separate role hostnames support presentation in one browser. Existing private AI config stays process-local; usage persists outside scenario runs. Nine new checks; all 223 pass. Browser rehearsed real schedule AI answer, manager approval, automatic pending match and employee notifications, then prepared and opened a pristine run. Both normal data fingerprints unchanged. Ready for user review; no push or merge authorized. No deployment work.
+
+
+## 2026-11-24 — Backlog dependency order and renumbering
+
+User requested reprioritizing all seven unstarted AI proposals plus four requested scheduling features. Renamed existing GitHub issues in place to CS-045–055, preserving issue links/history and recording former aliases and prerequisites in every issue. No implementation started. Test baseline precedes leave/availability/duties/publication; AI expansion follows stable scheduling semantics and confirmation behavior, with atomic batches late. Current mapping recorded in implementation-plan.md and working instructions; historical completed IDs, CS-021 review and final CS-018 remain unchanged.
+
+
+## 2026-11-24 — Continuous completed-to-future numbering correction
+
+User clarified they want all completed tasks consecutively, then all remaining tasks consecutively, not a fresh ID range. Renamed original implementation issues to CS-001–027 in merge order, demo preparation to CS-028 (still Your review), unstarted backlog to CS-029–039 in dependency order, and final deployment to CS-040 (new tracking issue #70 for the existing final scope). Issue numbers/URLs, states, approvals and historical PR/evidence names preserved. Previous identities retained in each issue and current register; superseded duplicate issues #15/#16 are not implementation increments. No implementation or merge authorized by this administrative change.
+
+## 2026-11-24 — CS-028 merge approval
+
+User explicitly approved merging demo preparation, now CS-028 / issue #65. Reviewed implementation and requested task-register documentation included; historical cs021 evidence retained. Pre-merge regression verification repeated with temporary localhost test-server permissions. Next task is CS-029; no new implementation started.

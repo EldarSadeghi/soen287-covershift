@@ -14,6 +14,10 @@ Open http://127.0.0.1:3000. No third-party dependencies or installation step are
 
 Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied. Keep `.env` out of Git. Stop the server with Ctrl+C.
 
+## Presentation demo (CS-021)
+
+Run `npm run demo:prepare`, then `npm run demo:start` for isolated fictional manager and employee accounts, upcoming scenarios and a generated walkthrough. See [demo preparation](docs/demo-preparation.md) for sign-in details, reset instructions and the manual backup flow. Normal account data is preserved.
+
 ## Current scope
 
 Managers can manage workers, create/edit/delete eligible shifts, and view saved schedules and pending coverage claims. Workers see their own assigned shifts, request/cancel coverage, and browse teammate requests. Dates use the business timezone. Protected pages use saved records; the public demo remains separate.
