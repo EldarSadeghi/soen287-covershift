@@ -1,6 +1,9 @@
 # CoverShift implementation plan
 
-**Current numbering/status (2026-11-24): CS-001–030 are completed; CS-031 availability is in Your review; CS-032–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–040 are Todo; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+
+
+Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User authorized adding CS-040 Request cover (#75), verified Todo on the project; do not implement until selected. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
 
 ## Current consecutive task register
 
@@ -36,7 +39,7 @@
 | CS-028 | Repeatable demo preparation and presentation walkthrough | Done | [#65](https://github.com/EldarSadeghi/soen287-covershift/issues/65) | CS-021 | #71 |
 | CS-029 | Repeatable AI conversation acceptance tests | Done | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | #72 |
 | CS-030 | Employee time-off requests | Done | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | #73 |
-| CS-031 | Show employee availability | Your review | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | — |
+| CS-031 | Show employee availability | Done | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | #74 |
 | CS-032 | Daily shift duties and employee task list | Todo | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | — |
 | CS-033 | Monday publication of a two-week schedule | Todo | [#69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | CS-049 | — |
 | CS-034 | Refine AI drafts conversationally | Todo | [#57](https://github.com/EldarSadeghi/soen287-covershift/issues/57) | CS-050 | — |
@@ -45,9 +48,10 @@
 | CS-037 | Suggest eligible alternative shifts | Todo | [#56](https://github.com/EldarSadeghi/soen287-covershift/issues/56) | CS-053 | — |
 | CS-038 | Manager batch shift creation through chat | Todo | [#58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-054 | — |
 | CS-039 | AI working-week and attention summaries | Todo | [#59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-055 | — |
-| CS-040 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-018 | — |
+| CS-040 | Request cover from a coworker | Todo | [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75) | New | — |
+| CS-041 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
-CS-029–039 retain the dependency-based implementation order: test baseline, leave, availability, duties, publication, refinement, chat rule management, explanations, alternatives, batch creation, summaries. CS-028 is complete in merged PR #71; CS-029 now awaits explicit user review approval. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
+CS-001–031 are complete. Remaining work is CS-032 duties, CS-033 publication, CS-034 refinement, CS-035 chat rule management, CS-036 explanations, CS-037 alternatives, CS-038 batch creation, CS-039 summaries and CS-040 directed cover requests, followed by CS-041 final deployment. Request cover is planning only; no implementation has started. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
 
 Time off and publication must update existing manual and AI paths within those increments. Approved leave participates in current assignment/claim/approval/matching checks. Unpublished schedules must not leak through employee views, chat answers, search, rules, notifications or matching. Clarify the Monday window/legacy-shift handling before CS-033. Chat confirmations and uncertain-save protections remain required; atomic batch saves do not implicitly publish.
 

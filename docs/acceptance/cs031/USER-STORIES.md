@@ -84,3 +84,8 @@ User requested coworker Upcoming windows in the same card style, covering the ne
 `npm run verify`: **296/296 tests pass** (six new horizon/projection/UI grouping/HTTP tests). Final heading semantics/error-copy edits passed syntax/diff checks and browser verification. [Verification](fortnight-verification.txt), [coworker desktop](coworker-fortnight-desktop.png), [coworker mobile](coworker-fortnight-mobile.png), [own range](own-fortnight-desktop.png), [board](board-fortnight-review.png).
 
 Local preview still3039 with preserved fictional data, employee Alex. In QA, Alex added and withdrew the Dec10 and crossing-Dec7 windows; history remains, and the original Nov26 window remains confirmed. Coworker cards therefore remain Jamie's two and Taylor's one. No normal accounts or earlier demo run were reset. The temporary3040 recovery proxy was stopped after checks. Status Your review; no push/merge approval or action.
+
+
+## Approved merge — 2026-11-24
+
+User explicitly approved all current CS-031 work. Merged PR [#74](https://github.com/EldarSadeghi/soen287-covershift/pull/74), merge SHA `0e3455d778ac92c5a909a4954277474805588a11`; issue #67 closed/completed and project Done verified. Request cover is separately queued as CS-040 [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75), Todo only; deployment moves to CS-041 #70 and remains last. [Merged board](board-merged.png), [new task Todo and deployment ordering](request-cover-todo.png).
