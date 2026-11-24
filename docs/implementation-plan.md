@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-**Current numbering/status (2026-11-24): CS-001–029 are completed; CS-030 time off is in Your review; CS-031–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–030 are completed; CS-031 availability is in Your review; CS-032–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 ## Current consecutive task register
 
@@ -35,8 +35,8 @@
 | CS-027 | Clearer AI action cards and conversation guidance | Done | [#61](https://github.com/EldarSadeghi/soen287-covershift/issues/61) | CS-039 | #64 |
 | CS-028 | Repeatable demo preparation and presentation walkthrough | Done | [#65](https://github.com/EldarSadeghi/soen287-covershift/issues/65) | CS-021 | #71 |
 | CS-029 | Repeatable AI conversation acceptance tests | Done | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | #72 |
-| CS-030 | Employee time-off requests | Your review | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | — |
-| CS-031 | Show employee availability | Todo | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | — |
+| CS-030 | Employee time-off requests | Done | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | #73 |
+| CS-031 | Show employee availability | Your review | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | — |
 | CS-032 | Daily shift duties and employee task list | Todo | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | — |
 | CS-033 | Monday publication of a two-week schedule | Todo | [#69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | CS-049 | — |
 | CS-034 | Refine AI drafts conversationally | Todo | [#57](https://github.com/EldarSadeghi/soen287-covershift/issues/57) | CS-050 | — |
@@ -286,3 +286,14 @@ User selected issue #62 on 2026-11-24. Acceptance criteria recorded; Todo verifi
 ### CS-030 — Employee time-off requests
 
 Issue #66 selected 2026-11-24, confirmed policy recorded before implementation, Todo verified then In Progress. Local branch codex/CS-030-employee-time-off. Dedicated both-role Time off pages, full/partial leave, confirmation/idempotency/revisions, private notes/history, schema9, blockers, shared approved-leave scheduling eligibility and offboarding integration. 268 tests pass; offline corpus expanded to 19 scenarios / 148 checks. Both-role browser, lost-ack reconciliation, read retry and mobile/keyboard evidence in docs/acceptance/cs030/USER-STORIES.md. Ready for Your review; no push/merge before explicit approval. CS-029 merged PR #72. Next CS-031; CS-040 remains last.
+
+
+CS-031 (#67), `codex/CS-031-employee-availability`: user selected separate employee availability windows on 2026-11-24. Todo verified before In Progress. Local confirmation/withdrawal and read-only manager status/reasons implemented; general windows never activate automatic rules. 284 tests pass; desktop/320px, empty, error/retry and lost-save acknowledgement checks documented in `docs/acceptance/cs031/USER-STORIES.md`. Preview3039, isolated fictional data. Ready for Your review; no push or merge without explicit approval. CS-030 is merged PR #73; CS-040 remains last.
+
+CS-031 UI refinement approved for local implementation on 2026-11-24, explicitly requiring another review before merge. Mockup applied to manager summary/filter/compact roster and employee form/window history; 285 tests pass, browser recovery/overnight/withdrawal/320px and tablet checks documented in `docs/acceptance/cs031/USER-STORIES.md`. Status Your review. User has NOT approved push/merge of CS-031. Preview3039 remains running.
+
+CS-031 coworker visibility extension (2026-11-24) supersedes earlier manager-only status visibility: employees may query active same-business peers, excluding self, via My availability/Coworkers. Only derived name/status/generic reasons; no private cause, raw windows or contact information. Local implementation ready for Your review: 290 tests, browser filter/own-draft/confirmation guard/read retry/320px checks. Preview3039 employee now uses fictional Alex; manager Morgan at localhost. No push/merge approval.
+
+CS-031 next14-day extension (2026-11-24): coworker Upcoming windows automatically lists derived free intervals grouped by peer, subtracting commitments and preserving private causes. Own view uses same rest-of-today+13-local-date horizon with Later availability/history and explicit whole-record withdrawal on clipped cards. Exact-period checker retained. 296 tests pass; browser auto-list/read retry/own later/clipped withdrawal/320px documented in `docs/acceptance/cs031/USER-STORIES.md`. Your review, not pushed/merged. Preview3039 preserved, Alex employee.
+
+User explicitly approved all current CS-031 changes for push/merge on 2026-11-24, including manager/employee UI, coworker visibility, next14-day free windows, later/history retention and acceptance evidence (296 tests). Earlier no-merge requests are superseded by this approval. After verified merge, add Request cover as a Todo planning task only; do not implement it yet. Final deployment/submission must remain last.

@@ -16,8 +16,8 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9].includes(db.schemaVersion), 'unsupported schema version');
-  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests'), 'unknown collection');
+  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests' || db.schemaVersion >= 10 && key === 'availabilityWindows'), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
@@ -186,6 +186,20 @@ export function validateDatabase(db) {
       requireValue(previousStatus===r.status&&previousAt===r.updatedAt, 'time-off outcome must match history');
       requireValue(!worker.deactivation||r.status!=='pending'&&(r.status!=='approved'||r.endsAt<=worker.deactivation.at), 'inactive employee has actionable time off');
       if(['pending','approved'].includes(r.status)){requireValue(!active.some(x=>x.workerId===r.workerId&&x.startsAt<r.endsAt&&r.startsAt<x.endsAt), 'overlapping active time-off requests');active.push(r);}
+    }
+  }
+  if(db.schemaVersion>=10){
+    requireValue(Array.isArray(db.availabilityWindows),'availabilityWindows must be an array');
+    const seen=new Set(),submissions=new Set();
+    const expected=['id','businessId','workerId','startsAt','endsAt','timezone','submissionId','status','createdAt','updatedAt'];
+    for(const r of db.availabilityWindows){
+      requireValue(r&&typeof r==='object'&&!Array.isArray(r)&&Object.keys(r).length===expected.length&&expected.every(k=>Object.hasOwn(r,k)),'invalid general availability fields');
+      const worker=users.get(r.workerId);
+      requireValue(id(r.id)&&!seen.has(r.id)&&businesses.has(r.businessId)&&worker?.businessId===r.businessId&&worker.role==='worker','invalid general availability scope');seen.add(r.id);
+      requireValue(typeof r.submissionId==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(r.submissionId)&&!submissions.has(r.workerId+':'+r.submissionId),'invalid general availability submission');submissions.add(r.workerId+':'+r.submissionId);
+      requireValue(timestamp(r.startsAt)&&timestamp(r.endsAt)&&r.startsAt<r.endsAt&&Date.parse(r.endsAt)-Date.parse(r.startsAt)<=25*3600000&&timestamp(r.createdAt)&&timestamp(r.updatedAt)&&r.updatedAt>=r.createdAt,'invalid general availability dates');
+      requireValue(text(r.timezone)&&['confirmed','withdrawn'].includes(r.status)&&(!worker.deactivation||r.status==='withdrawn'),'invalid general availability status');
+      try{new Intl.DateTimeFormat('en',{timeZone:r.timezone});}catch{throw new Error('Invalid database: general availability timezone');}
     }
   }
   return db;

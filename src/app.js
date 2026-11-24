@@ -1,3 +1,4 @@
+import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability,coworkerUpcomingWindows} from './availability/windows.js';
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
@@ -22,6 +23,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/availability-view.js',['availability-view.js','text/javascript; charset=utf-8']],
   ['/time-off.js', ['time-off.js', 'text/javascript; charset=utf-8']],
   ['/ai-response-card.js', ['ai-response-card.js', 'text/javascript; charset=utf-8']],
   ['/ai-schedule.js', ['ai-schedule.js', 'text/javascript; charset=utf-8']],
@@ -100,9 +102,10 @@ async function readJson(request) {
   catch { throw new HttpError(400, 'This request could not be read. Please try again.'); }
 }
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
-const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off'], worker: ['shifts', 'open', 'requests', 'history', 'time-off'] };
+const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability'] };
 
 export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null }) {
+  const availabilityWindowStore=store; // General windows do not participate in automatic claims.
   store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
   const limitSetup = createSignupLimiter({ limit: 20, message: 'Too many setup requests. Please wait 10 minutes and try again.' });
@@ -119,6 +122,35 @@ export function createAppServer({ store, signup = registerManager, login = authe
     let pathname;
     try {
       pathname = new URL(request.url, 'http://localhost').pathname;
+      if(pathname==='/api/worker/coworker-windows'){
+        requireMethod(request,response,'GET');const account=await requireAccount(store,sessions,request.headers.cookie,'worker');
+        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Upcoming coworker windows use 14 calendar days in your business timezone.');
+        sendJson(response,200,await coworkerUpcomingWindows(availabilityWindowStore,account.user.id,shiftClock));return;
+      }
+      if(pathname==='/api/worker/coworker-availability'){
+        requireMethod(request,response,'GET');
+        const account=await requireAccount(store,sessions,request.headers.cookie,'worker'),query=new URL(request.url,'http://localhost').searchParams;
+        if(query.size!==3||!['startLocal','endLocal','timezone'].every(k=>query.getAll(k).length===1))throw new HttpError(400,'Choose only a start, end and business timezone.');
+        sendJson(response,200,await coworkerAvailability(availabilityWindowStore,account.user.id,Object.fromEntries(query),shiftClock));return;
+      }
+      const windowRoute=pathname.match(/^\/api\/(manager|worker)\/availability-windows(?:\/([a-zA-Z0-9_-]{1,80})\/withdraw)?$/);
+      if(windowRoute){
+        const [,role,id]=windowRoute,listing=request.method==='GET'&&!id;
+        requireMethod(request,response,role==='manager'||listing?'GET':'POST');
+        const account=await requireAccount(store,sessions,request.headers.cookie,role),query=new URL(request.url,'http://localhost').searchParams;
+        if(role==='manager'){
+          if(id||query.size!==3||!['startLocal','endLocal','timezone'].every(k=>query.getAll(k).length===1))throw new HttpError(400,'Choose only a start, end and business timezone.');
+          sendJson(response,200,await teamAvailability(availabilityWindowStore,account.user.id,Object.fromEntries(query),shiftClock));return;
+        }
+        if(query.size)throw new HttpError(400,'Availability uses your signed-in account.');
+        if(listing){sendJson(response,200,await listWindows(availabilityWindowStore,account.user.id,shiftClock));return;}
+        protectMutation(request,publicOrigin);
+        if(!sessions.validCsrf(account.session,request.headers['x-csrf-token']))throw new HttpError(403,'Refresh the page and try again.');
+        limitCoverage(account.user.id);const input=await readJson(request);
+        if(id)sendJson(response,200,await withdrawWindow(availabilityWindowStore,account.user.id,id,input,shiftClock));
+        else {const result=await saveWindow(availabilityWindowStore,account.user.id,input,shiftClock);sendJson(response,result.replayed?200:201,result);}
+        return;
+      }
       const leaveRoute=pathname.match(/^\/api\/(manager|worker)\/time-off(?:\/([a-zA-Z0-9_-]{1,80})\/(approve|reject|cancel))?$/);
       if(leaveRoute){
         const [,role,id,action]=leaveRoute,listing=!id&&request.method==='GET';
