@@ -189,3 +189,7 @@ User requested reprioritizing all seven unstarted AI proposals plus four request
 ## 2026-11-24 — Continuous completed-to-future numbering correction
 
 User clarified they want all completed tasks consecutively, then all remaining tasks consecutively, not a fresh ID range. Renamed original implementation issues to CS-001–027 in merge order, demo preparation to CS-028 (still Your review), unstarted backlog to CS-029–039 in dependency order, and final deployment to CS-040 (new tracking issue #70 for the existing final scope). Issue numbers/URLs, states, approvals and historical PR/evidence names preserved. Previous identities retained in each issue and current register; superseded duplicate issues #15/#16 are not implementation increments. No implementation or merge authorized by this administrative change.
+
+## 2026-11-24 — CS-028 merge approval
+
+User explicitly approved merging demo preparation, now CS-028 / issue #65. Reviewed implementation and requested task-register documentation included; historical cs021 evidence retained. Pre-merge regression verification repeated with temporary localhost test-server permissions. Next task is CS-029; no new implementation started.
