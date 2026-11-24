@@ -16,8 +16,8 @@ let csrfToken;
 let aiChat;
 let notifications;
 const routes = {
-  manager: [['overview', 'Overview', '◫'], ['schedule', 'Schedule', '▦'], ['approvals', 'Approvals', '✓'], ['team', 'Team', '♧'], ['time-off', 'Time off', '◷'], ['history', 'History', '◷']],
-  worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄'], ['time-off', 'Time off', '◷'], ['history', 'History', '◷']],
+  manager: [['overview', 'Overview', '◫'], ['schedule', 'Schedule', '▦'], ['approvals', 'Approvals', '✓'], ['team', 'Team', '♧'], ['time-off', 'Time off', '◷'], ['availability', 'Availability', '◷'], ['history', 'History', '◷']],
+  worker: [['shifts', 'My shifts', '▦'], ['open', 'Open shifts', '↗'], ['requests', 'My requests', '⇄'], ['time-off', 'Time off', '◷'], ['availability', 'Availability', '◷'], ['history', 'History', '◷']],
 };
 function showError(message) { errorBox.textContent = message; errorBox.hidden = false; errorBox.focus(); }
 async function load() {
@@ -44,6 +44,7 @@ async function load() {
     logout.disabled = false;
     aiChat = mountAiChat(account, csrfToken);
     notifications = mountNotifications(account, csrfToken);
+    if (page === 'availability') { const {mountAvailability}=await import('./availability-view.js');await mountAvailability(main,account,csrfToken);return; }
     if (page === 'time-off') { await mountTimeOff(main,account,csrfToken); return; }
     if (page === 'history') { await mountCoverageHistory(main, user.role); return; }
     if (user.role === 'manager' && ['overview', 'schedule', 'approvals'].includes(page)) {

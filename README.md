@@ -93,3 +93,5 @@ Automatic availability matching (CS-031C): [execution, limits, approval and veri
 
 
 Employee time off (CS-030): both roles have **Time off**, with full-day/partial-day requests, confirmed decisions/cancellation, private history and approved-leave scheduling safeguards. See [workflow, policy and recovery](docs/time-off.md).
+
+Employee availability (CS-031): employees confirm dated windows in **Availability**; managers check Available / Unavailable / Unknown against saved windows and current conflicts. General windows are separate from automatic chat rules. See [policy and recovery](docs/employee-availability.md).
