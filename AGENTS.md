@@ -2,11 +2,11 @@
 
 ## Authoritative current identities — 2026-11-24
 
-**Current numbering/status (2026-11-24): CS-001–028 are completed; CS-029 acceptance tests is in Your review; CS-030–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–029 are completed; CS-030 time off is in Your review; CS-031–039 are Todo; CS-040 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-040 Deployment and final submission is always last** (formerly CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
 
-Current review: CS-029 tests (#62). Remaining Todo sequence: CS-030 time off (#66), CS-031 availability (#67), CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-040 final deployment (#70). Completed tasks are CS-001–028; original PR/evidence names remain historical.
+Current review: CS-030 time off (#66). Remaining Todo sequence: CS-031 availability (#67), CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-040 final deployment (#70). Completed tasks are CS-001–029; original PR/evidence names remain historical.
 
 ## Workflow rules and historical log
 
@@ -75,3 +75,8 @@ User explicitly approved CS-039 Summary cards push and merge on 2026-11-23. Appr
 - CS-029 selected on 2026-11-24: issue #62 acceptance scope recorded, Todo verified then In Progress; branch `codex/CS-029-ai-acceptance-tests`. Local offline corpus now ready for Your review: 18 scenarios / 137 checks, 243 full tests pass. Command `npm run ai:acceptance` generates safe HTML/JSON reports using recorded provider replies, temporary fictional storage and real protected HTTP workflows. No paid calls or normal data changes; real-model semantic/browser limitations explicit. Evidence: docs/acceptance/cs029/USER-STORIES.md; local report preview3036. No push/merge before explicit approval. Next is CS-030 time off; CS-040 stays last.
 
 - User requested merging CS-029 on 2026-11-24 after reviewing the completed baseline. Approved scope: issue #62, offline corpus/report/docs, 243 passing checks; no new product behavior. Next planned increment is CS-030 Employee time-off requests (#66), which still needs a start instruction. CS-040 remains last. Consult issue #62 / its linked PR for final merge status.
+
+
+- CS-029 completed: issue #62 closed/Done, merged PR #72. CS-030 selected 2026-11-24, issue #66: Todo verified then In Progress, branch `codex/CS-030-employee-time-off`. User confirmed full/partial days, future pending/approved cancellation and approval blocked by unresolved shifts/pending claims. Ready for Your review: schema9/history, both-role pages/recovery, shared leave-aware create/edit/claim/matching/approval/AI guards, offboarding retention. 268 tests and 19 offline AI scenarios / 148 checks pass. Browser full/partial/multi-day, blockers, approve/reject/cancel, real lost-ack/read retry and 320px/keyboard verified; evidence docs/acceptance/cs030. Fictional preview3037, normal data preserved. No push/merge until explicit user approval. Next CS-031 availability; final CS-040 stays last.
+
+- User explicitly approved CS-030 push/merge on 2026-11-24. Approved scope: issue #66, time-off implementation, shared eligibility, offboarding, review evidence and 268 passing tests. Next planned increment CS-031 Show employee availability (#67) still needs a start instruction. CS-040 remains the final task. Issue #66 / linked PR is the source for final merge status.

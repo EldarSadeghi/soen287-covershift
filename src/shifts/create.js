@@ -1,3 +1,4 @@
+import {leaveConflicts} from '../time-off/conflicts.js';
 import { HttpError } from '../auth/errors.js';
 import { createRecord } from '../storage/repositories.js';
 
@@ -48,6 +49,7 @@ export function assignmentFields(db, business, input, now, excludeId = null) {
   const endsAt = businessInstant(input.endLocal, business.timezone, 'endLocal');
   if (Date.parse(startsAt) <= now) throw new HttpError(422, 'The shift must start in the future.', { startLocal: 'Choose a future start time.' });
   if (endsAt <= startsAt) throw new HttpError(422, 'The end must be after the start. For overnight shifts, choose the next day.', { endLocal: 'Choose an end date and time after the start.' });
+  if (leaveConflicts(db,worker.id,{startsAt,endsAt}).length) throw new HttpError(409, 'This employee has approved time off during this shift. Choose another employee or time.', {assignedWorkerId:'This employee has approved time off.'});
   if (db.shifts.some(shift => shift.id !== excludeId && shift.businessId === business.id && shift.assignedWorkerId === worker.id && shift.startsAt < endsAt && startsAt < shift.endsAt)) throw new HttpError(409, 'This worker already has an overlapping shift. Choose another worker or time.', { assignedWorkerId: 'This worker has an overlapping shift.' });
   return { businessId: business.id, assignedWorkerId: worker.id, title: input.title, startsAt, endsAt };
 }

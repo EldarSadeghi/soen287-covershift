@@ -1,3 +1,4 @@
+import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
 import { withAvailabilityMatching } from './availability/matching.js';
@@ -21,6 +22,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/time-off.js', ['time-off.js', 'text/javascript; charset=utf-8']],
   ['/ai-response-card.js', ['ai-response-card.js', 'text/javascript; charset=utf-8']],
   ['/ai-schedule.js', ['ai-schedule.js', 'text/javascript; charset=utf-8']],
   ['/notifications.js', ['notifications.js', 'text/javascript; charset=utf-8']],
@@ -98,7 +100,7 @@ async function readJson(request) {
   catch { throw new HttpError(400, 'This request could not be read. Please try again.'); }
 }
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
-const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history'], worker: ['shifts', 'open', 'requests', 'history'] };
+const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off'], worker: ['shifts', 'open', 'requests', 'history', 'time-off'] };
 
 export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null }) {
   store = withAvailabilityMatching(store, shiftClock);
@@ -117,6 +119,20 @@ export function createAppServer({ store, signup = registerManager, login = authe
     let pathname;
     try {
       pathname = new URL(request.url, 'http://localhost').pathname;
+      const leaveRoute=pathname.match(/^\/api\/(manager|worker)\/time-off(?:\/([a-zA-Z0-9_-]{1,80})\/(approve|reject|cancel))?$/);
+      if(leaveRoute){
+        const [,role,id,action]=leaveRoute,listing=!id&&request.method==='GET';
+        requireMethod(request,response,listing||!id&&role==='manager'?'GET':'POST');
+        const account=await requireAccount(store,sessions,request.headers.cookie,role);
+        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Time off uses your signed-in workspace.');
+        if(listing){sendJson(response,200,await listTimeOff(store,account.user.id,role,shiftClock));return;}
+        protectMutation(request,publicOrigin);
+        if(!sessions.validCsrf(account.session,request.headers['x-csrf-token']))throw new HttpError(403,'Refresh the page and try again.');
+        limitCoverage(account.user.id);const input=await readJson(request);
+        if(!id){const result=await requestTimeOff(store,account.user.id,input,shiftClock);sendJson(response,result.replayed?200:201,result);}
+        else sendJson(response,200,await decideTimeOff(store,account.user.id,role,id,action,input,shiftClock));
+        return;
+      }
       if (/^\/api\/schedule-shifts\/[a-zA-Z0-9_-]{1,80}$/.test(pathname)) {
         requireMethod(request,response,'GET');const account=await requireAccount(store,sessions,request.headers.cookie);
         if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'This view uses your signed-in schedule.');

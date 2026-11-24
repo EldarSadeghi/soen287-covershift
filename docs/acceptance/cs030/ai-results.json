@@ -1,0 +1,905 @@
+{
+  "version": 1,
+  "mode": "offline-recorded-provider-replies",
+  "generatedAt": "2026-11-24T19:18:03.049Z",
+  "fixtureClock": "2030-01-07T16:00:00.000Z",
+  "limitation": "Recorded provider replies test workflow handling, not real-model language understanding or browser interaction. No live provider calls were made.",
+  "total": 19,
+  "passed": 19,
+  "failed": 0,
+  "checks": 148,
+  "results": [
+    {
+      "id": "CS029-C01",
+      "title": "Manager clarification → follow-up draft → explicit save",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "clarification",
+          "description": "Missing hours produce a focused clarification.",
+          "status": "pass"
+        },
+        {
+          "id": "no-save",
+          "description": "Clarification does not save a shift.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "draft",
+          "description": "Follow-up context reaches the provider and resolves to a validated draft.",
+          "status": "pass"
+        },
+        {
+          "id": "worker",
+          "description": "Roster reference resolves to the authorized saved worker.",
+          "status": "pass"
+        },
+        {
+          "id": "not-saved",
+          "description": "A complete draft is still read-only.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "correction",
+          "description": "A correction retains the worker and day and changes the reviewed hours.",
+          "status": "pass"
+        },
+        {
+          "id": "correction-read-only",
+          "description": "Revision remains a draft until explicit save.",
+          "status": "pass"
+        },
+        {
+          "id": "explicit-save",
+          "description": "Only the explicit shift save creates a record.",
+          "status": "pass"
+        },
+        {
+          "id": "duplicate",
+          "description": "A repeated save cannot create an overlapping duplicate.",
+          "status": "pass"
+        },
+        {
+          "id": "one-record",
+          "description": "Exactly one shift was added.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 3
+    },
+    {
+      "id": "CS029-C02",
+      "title": "Employee clarification → existing opening → confirmed claim → manager approval",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "clarify",
+          "description": "Missing search constraints prompt clarification.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "match",
+          "description": "The server returns the actual eligible opening.",
+          "status": "pass"
+        },
+        {
+          "id": "search-read-only",
+          "description": "Search never submits a claim.",
+          "status": "pass"
+        },
+        {
+          "id": "preflight",
+          "description": "Review preflight allows an eligible claimant.",
+          "status": "pass"
+        },
+        {
+          "id": "confirmed",
+          "description": "Explicit claim becomes pending.",
+          "status": "pass"
+        },
+        {
+          "id": "no-transfer",
+          "description": "Original worker remains assigned before approval.",
+          "status": "pass"
+        },
+        {
+          "id": "approve",
+          "description": "Manager explicitly approves the claim.",
+          "status": "pass"
+        },
+        {
+          "id": "transfer",
+          "description": "Assignment changes only after approval.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 2
+    },
+    {
+      "id": "CS029-C03",
+      "title": "Grounded employee hours exclude pending claims and refresh after approval",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "hours",
+          "description": "Only the two assigned shifts contribute seven hours.",
+          "status": "pass"
+        },
+        {
+          "id": "pending",
+          "description": "The pending three-hour claim is reported separately.",
+          "status": "pass"
+        },
+        {
+          "id": "read-only",
+          "description": "Schedule questions preserve stored records.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "fresh-hours",
+          "description": "Fresh answers include the approved shift.",
+          "status": "pass"
+        },
+        {
+          "id": "fresh-pending",
+          "description": "The approved request is no longer pending.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "next",
+          "description": "Next answer links the real earliest assignment.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 3
+    },
+    {
+      "id": "CS029-C04",
+      "title": "Availability draft → confirmation → idempotent retry → lifecycle revision checks",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "draft",
+          "description": "An exact availability draft is returned.",
+          "status": "pass"
+        },
+        {
+          "id": "not-active",
+          "description": "Drafting alone does not activate a rule.",
+          "status": "pass"
+        },
+        {
+          "id": "save",
+          "description": "Separate confirmation saves an active rule.",
+          "status": "pass"
+        },
+        {
+          "id": "same-rule",
+          "description": "Retrying the same confirmation returns the same saved rule.",
+          "status": "pass"
+        },
+        {
+          "id": "changed-confirmation",
+          "description": "Reusing a confirmation for changed details is rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "pause",
+          "description": "Current rule can be paused.",
+          "status": "pass"
+        },
+        {
+          "id": "stale",
+          "description": "An old revision cannot resume a changed rule.",
+          "status": "pass"
+        },
+        {
+          "id": "resume",
+          "description": "Fresh revision resumes the rule.",
+          "status": "pass"
+        },
+        {
+          "id": "cancel",
+          "description": "Fresh revision cancels the rule.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 1
+    },
+    {
+      "id": "CS029-C05",
+      "title": "Confirmed rule matching, manager approval and notifications stay coordinated",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "paused-baseline",
+          "description": "The prepared rule is paused and has no claims.",
+          "status": "pass"
+        },
+        {
+          "id": "match",
+          "description": "Resuming creates a pending claim by the eligible employee.",
+          "status": "pass"
+        },
+        {
+          "id": "original",
+          "description": "Matching alone does not transfer assignment.",
+          "status": "pass"
+        },
+        {
+          "id": "ledger",
+          "description": "The rule consumes one request slot.",
+          "status": "pass"
+        },
+        {
+          "id": "manager-notice",
+          "description": "Manager receives a matching request receipt.",
+          "status": "pass"
+        },
+        {
+          "id": "employee-notice",
+          "description": "Employee receives an approved assignment receipt.",
+          "status": "pass"
+        },
+        {
+          "id": "final-assignment",
+          "description": "Manager approval transfers the matched shift.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 0
+    },
+    {
+      "id": "CS029-C06",
+      "title": "Private schedules, roster context, foreign business and own-rule boundaries",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "employee-scope",
+          "description": "Employee cannot ask for another employee schedule.",
+          "status": "pass"
+        },
+        {
+          "id": "minimized-context",
+          "description": "Schedule parsing sends no roster, saved IDs or account secrets.",
+          "status": "pass"
+        },
+        {
+          "id": "other-details",
+          "description": "Another worker cannot open Jamie’s saved shift detail.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "foreign-empty",
+          "description": "Foreign manager sees only their own empty business.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "foreign-name",
+          "description": "Cross-business name cannot resolve to a saved worker.",
+          "status": "pass"
+        },
+        {
+          "id": "rule-scope",
+          "description": "Another worker cannot mutate Jamie’s rule.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 3
+    },
+    {
+      "id": "CS029-C07",
+      "title": "Malicious or invalid provider fields never become save authority",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "unknown-worker",
+          "description": "An invented provider worker reference is rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "extra-fields",
+          "description": "Tool-like extra fields are rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "no-write",
+          "description": "Rejected outputs do not change any saved workflow data.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 2
+    },
+    {
+      "id": "CS029-C08",
+      "title": "Provider failures and retry preserve safe errors and the user’s message",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "transport",
+          "description": "Provider transport becomes a safe unavailable response.",
+          "status": "pass"
+        },
+        {
+          "id": "transport-secret",
+          "description": "Private provider details are not disclosed.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "http",
+          "description": "Provider http becomes a safe unavailable response.",
+          "status": "pass"
+        },
+        {
+          "id": "http-secret",
+          "description": "Private provider details are not disclosed.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "timeout",
+          "description": "Provider timeout becomes a safe unavailable response.",
+          "status": "pass"
+        },
+        {
+          "id": "timeout-secret",
+          "description": "Private provider details are not disclosed.",
+          "status": "pass"
+        },
+        {
+          "id": "retained",
+          "description": "Composer storage still holds the original message.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-4",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "retry",
+          "description": "An explicit later retry succeeds.",
+          "status": "pass"
+        },
+        {
+          "id": "no-write",
+          "description": "Provider failure/retry does not save shifts or requests.",
+          "status": "pass"
+        },
+        {
+          "id": "owner-isolation",
+          "description": "Different account cannot restore the saved composer.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 4
+    },
+    {
+      "id": "CS029-C09",
+      "title": "Refusals never submit claims",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "refusal",
+          "description": "Provider refusal is a recoverable interpretation error.",
+          "status": "pass"
+        },
+        {
+          "id": "no-mutation",
+          "description": "Refusal does not change assignments, requests or rules.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 1
+    },
+    {
+      "id": "CS029-C10",
+      "title": "Authentication, CSRF, origin, role and account-tampering checks",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "anonymous",
+          "description": "Signed-out AI questions are rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "csrf",
+          "description": "Missing CSRF token is rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "origin",
+          "description": "Foreign origin is rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "role",
+          "description": "Employee cannot invoke manager drafting.",
+          "status": "pass"
+        },
+        {
+          "id": "query-scope",
+          "description": "Query-string identity cannot override the session.",
+          "status": "pass"
+        },
+        {
+          "id": "body-scope",
+          "description": "Body identity cannot override the session.",
+          "status": "pass"
+        },
+        {
+          "id": "no-provider",
+          "description": "Rejected calls never reach the provider.",
+          "status": "pass"
+        },
+        {
+          "id": "no-mutation",
+          "description": "Rejected requests do not alter saved workflows.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 0
+    },
+    {
+      "id": "CS029-C11",
+      "title": "Opening changes after search: stale employee confirmation cannot steal a claim",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "competitor",
+          "description": "Another eligible employee claims first.",
+          "status": "pass"
+        },
+        {
+          "id": "stale",
+          "description": "Earlier search cannot authorize a stale claim.",
+          "status": "pass"
+        },
+        {
+          "id": "claimant",
+          "description": "The first claimant is preserved.",
+          "status": "pass"
+        },
+        {
+          "id": "assignment",
+          "description": "No assignment is transferred without manager approval.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 1
+    },
+    {
+      "id": "CS029-C12",
+      "title": "Lost availability acknowledgement reconciles to one rule without automatic repost",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "uncertain",
+          "description": "Client receives an explicitly uncertain outcome, not a success receipt.",
+          "status": "pass"
+        },
+        {
+          "id": "reconcile",
+          "description": "Read-after-uncertainty finds one saved confirmation.",
+          "status": "pass"
+        },
+        {
+          "id": "no-auto-repost",
+          "description": "Reconciliation performed only one POST.",
+          "status": "pass"
+        },
+        {
+          "id": "explicit-retry",
+          "description": "Explicit identical retry returns the same confirmation.",
+          "status": "pass"
+        },
+        {
+          "id": "no-duplicate",
+          "description": "Exactly one new rule exists.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 1
+    },
+    {
+      "id": "CS029-C13",
+      "title": "Missing-provider configuration preserves manual schedules and approval",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "unconfigured",
+          "description": "Missing provider configuration is reported honestly.",
+          "status": "pass"
+        },
+        {
+          "id": "manual-read",
+          "description": "Saved schedules work without an AI provider.",
+          "status": "pass"
+        },
+        {
+          "id": "manual-approval",
+          "description": "Existing manager approval works without AI.",
+          "status": "pass"
+        },
+        {
+          "id": "no-provider",
+          "description": "No provider calls occur in manual fallback.",
+          "status": "pass"
+        },
+        {
+          "id": "only-explicit-change",
+          "description": "Only the explicit manager decision transfers the shift.",
+          "status": "pass"
+        },
+        {
+          "id": "fixture-preserved",
+          "description": "Other assigned shifts are retained.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 0
+    },
+    {
+      "id": "CS029-C14",
+      "title": "Invalid model dates, ambiguous DST time and excessive windows fail safely",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "dst",
+          "description": "Nonexistent Toronto wall time is rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "window",
+          "description": "Excessive answer windows are rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "calendar",
+          "description": "Impossible calendar dates are rejected.",
+          "status": "pass"
+        },
+        {
+          "id": "unchanged",
+          "description": "Invalid interpretations leave saved data unchanged.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 3
+    },
+    {
+      "id": "CS029-C15",
+      "title": "Fresh account checks after provider response revoke stale authority",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "revoked",
+          "description": "An account disabled during inference cannot receive its answer.",
+          "status": "pass"
+        },
+        {
+          "id": "no-answer",
+          "description": "No schedule answer leaks after revocation.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 1
+    },
+    {
+      "id": "CS029-C16",
+      "title": "Unsupported recurring/multiple actions clarify without executing",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "single-only",
+          "description": "Unsupported batch/recurrence is a clarification in current manager chat.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "dated-only",
+          "description": "Recurring availability requires a dated-window clarification.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "chat-not-consent",
+          "description": "A chat yes does not create a claim.",
+          "status": "pass"
+        },
+        {
+          "id": "no-execution",
+          "description": "Unsupported messages neither save nor notify.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 3
+    },
+    {
+      "id": "CS029-C17",
+      "title": "Manager team totals, exact person scope, empty employee answer and calendar anchors",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "team-hours",
+          "description": "Team answer totals current assigned records, not fabricated provider hours.",
+          "status": "pass"
+        },
+        {
+          "id": "calendar",
+          "description": "The provider receives exact server-derived Monday week anchors.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "person",
+          "description": "Manager exact-name selection returns only that employee.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "empty",
+          "description": "No assigned next shift produces an honest empty answer.",
+          "status": "pass"
+        },
+        {
+          "id": "all-read-only",
+          "description": "Team, individual and empty answers preserve records.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 3
+    },
+    {
+      "id": "CS029-C18",
+      "title": "Lost claim acknowledgement reconciles pending status without duplicate events",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "lost",
+          "description": "The intentionally discarded receipt is marked uncertain.",
+          "status": "pass"
+        },
+        {
+          "id": "read-pending",
+          "description": "Saved My requests reconciles the submitted claim.",
+          "status": "pass"
+        },
+        {
+          "id": "no-auto-post",
+          "description": "Read reconciliation does not retry the mutation.",
+          "status": "pass"
+        },
+        {
+          "id": "retry-rejected",
+          "description": "Explicit stale retry cannot submit again.",
+          "status": "pass"
+        },
+        {
+          "id": "single-event",
+          "description": "Exactly one claimed event was recorded.",
+          "status": "pass"
+        },
+        {
+          "id": "unassigned",
+          "description": "Uncertain receipt cannot bypass manager approval.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 1
+    },
+    {
+      "id": "CS029-C19",
+      "title": "CS-030 approved time off constrains existing AI/manual work without exposing notes",
+      "status": "pass",
+      "checks": [
+        {
+          "id": "request",
+          "description": "Employee explicitly submits time off.",
+          "status": "pass"
+        },
+        {
+          "id": "approve",
+          "description": "Manager can approve a commitment-free interval.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-1",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "search",
+          "description": "Existing AI search excludes openings conflicting with approved leave.",
+          "status": "pass"
+        },
+        {
+          "id": "claim",
+          "description": "A direct claim cannot bypass approved leave.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-2",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "assignment",
+          "description": "Manager AI draft validation also respects approved leave.",
+          "status": "pass"
+        },
+        {
+          "id": "private-context",
+          "description": "Private leave notes never enter provider inputs.",
+          "status": "pass"
+        },
+        {
+          "id": "cancel",
+          "description": "Employee explicitly cancels future approved leave.",
+          "status": "pass"
+        },
+        {
+          "id": "provider-3",
+          "description": "Recorded task, latest message, conversation and strict private response contract match.",
+          "status": "pass"
+        },
+        {
+          "id": "eligible-again",
+          "description": "Fresh search becomes eligible after confirmed leave cancellation.",
+          "status": "pass"
+        }
+      ],
+      "providerCalls": 3
+    }
+  ]
+}

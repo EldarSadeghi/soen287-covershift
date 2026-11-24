@@ -35,7 +35,7 @@ Start at http://127.0.0.1:3000/login and use an account created through signup, 
 
 ## AI acceptance baseline (CS-029)
 
-Run `npm run ai:acceptance` for 18 offline fictional conversation scenarios and an HTML/JSON report. No API key or paid calls are needed. The same corpus runs in `npm test`. See [scope, scenario IDs and real-model limitations](docs/ai-acceptance-tests.md).
+Run `npm run ai:acceptance` for 19 offline fictional conversation scenarios and an HTML/JSON report. No API key or paid calls are needed. The same corpus runs in `npm test`. See [scope, scenario IDs and real-model limitations](docs/ai-acceptance-tests.md).
 
 ## Checks
 
@@ -90,3 +90,6 @@ Employee AI search and confirmed requests (CS-031B-1): [workflow, scope and acce
 Employee confirmed availability (CS-031B-2): [usage, limits and safeguards](docs/ai-availability-rules.md). Rules require explicit confirmation; automatic matching and notifications are later increments.
 
 Automatic availability matching (CS-031C): [execution, limits, approval and verification](docs/automatic-matching.md). Confirmed rules can submit eligible requests while the server runs; managers approve assignment changes.
+
+
+Employee time off (CS-030): both roles have **Time off**, with full-day/partial-day requests, confirmed decisions/cancellation, private history and approved-leave scheduling safeguards. See [workflow, policy and recovery](docs/time-off.md).

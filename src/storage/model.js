@@ -16,8 +16,8 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5, 6, 7, 8].includes(db.schemaVersion), 'unsupported schema version');
-  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications'), 'unknown collection');
+  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests'), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
@@ -155,6 +155,37 @@ export function validateDatabase(db) {
       requireValue(user.role==='manager' ? ['claimed','cancelled'].includes(n.action) : user.id===r.claimantId || ['approved','rejected'].includes(n.action) && user.id===r.originalWorkerId, 'invalid notification recipient');
       requireValue(timestamp(n.createdAt) && (n.readAt===null || timestamp(n.readAt) && n.readAt>=n.createdAt), 'invalid notification timestamps');
       const key=[n.requestId,n.action,n.createdAt,n.userId].join(':');requireValue(!events.has(key),'duplicate notification event');events.add(key);
+    }
+  }
+  if (db.schemaVersion >= 9) {
+    requireValue(Array.isArray(db.timeOffRequests), 'timeOffRequests must be an array');
+    const seen=new Set(), submissions=new Set(), active=[];
+    const expected=['id','businessId','workerId','startsAt','endsAt','timezone','allDay','note','submissionId','status','reviewerId','createdAt','updatedAt','history'];
+    for(const r of db.timeOffRequests){
+      requireValue(r&&typeof r==='object'&&!Array.isArray(r)&&Object.keys(r).length===expected.length&&expected.every(k=>Object.hasOwn(r,k)), 'invalid time-off fields');
+      const worker=users.get(r.workerId),reviewer=users.get(r.reviewerId);
+      requireValue(id(r.id)&&!seen.has(r.id)&&businesses.has(r.businessId)&&worker?.businessId===r.businessId&&worker.role==='worker', 'invalid time-off identity or scope');seen.add(r.id);
+      requireValue(typeof r.submissionId==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(r.submissionId)&&!submissions.has(r.workerId+':'+r.submissionId), 'invalid or duplicate time-off submission');submissions.add(r.workerId+':'+r.submissionId);
+      requireValue(timestamp(r.startsAt)&&timestamp(r.endsAt)&&r.endsAt>r.startsAt&&Date.parse(r.endsAt)-Date.parse(r.startsAt)<=367*86400000&&timestamp(r.createdAt)&&timestamp(r.updatedAt)&&r.updatedAt>=r.createdAt, 'invalid time-off dates');
+      requireValue(text(r.timezone)&&typeof r.allDay==='boolean'&&typeof r.note==='string'&&r.note===r.note.trim()&&r.note.length<=500&&!/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(r.note), 'invalid time-off details');
+      let formatter;try{formatter=new Intl.DateTimeFormat('en-CA',{timeZone:r.timezone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}catch{throw new Error('Invalid database: time-off timezone');}
+      if(r.allDay)requireValue([r.startsAt,r.endsAt].every(t=>formatter.format(new Date(t))==='00:00'), 'full-day leave must use local midnight');
+      requireValue(['pending','approved','rejected','cancelled'].includes(r.status)&&(r.reviewerId===null||reviewer?.businessId===r.businessId&&reviewer.role==='manager'), 'invalid time-off decision');
+      requireValue(r.status==='pending'?r.reviewerId===null:['approved','rejected'].includes(r.status)?r.reviewerId!==null:true, 'invalid time-off reviewer');
+      requireValue(Array.isArray(r.history)&&r.history.length>0, 'time-off history is required');let previousAt=r.createdAt,previousStatus=null;
+      for(const [index,e] of r.history.entries()){
+        requireValue(e&&typeof e==='object'&&!Array.isArray(e)&&Object.keys(e).length===4&&['action','actorId','at','status'].every(k=>Object.hasOwn(e,k)), 'invalid time-off event fields');
+        const actor=users.get(e.actorId),states={requested:'pending',approve:'approved',reject:'rejected',cancel:'cancelled',cancel_inactive:'cancelled'};
+        requireValue(timestamp(e.at)&&e.at>=previousAt&&e.at<=r.updatedAt&&actor?.businessId===r.businessId&&Object.hasOwn(states,e.action)&&states[e.action]===e.status, 'invalid time-off event');
+        requireValue(index===0?e.action==='requested'&&e.at===r.createdAt:previousStatus==='pending'?['approve','reject','cancel','cancel_inactive'].includes(e.action):previousStatus==='approved'?['cancel','cancel_inactive'].includes(e.action):false, 'invalid time-off transition');
+        requireValue(['requested','cancel'].includes(e.action)?actor.id===r.workerId:actor.role==='manager', 'invalid time-off actor');
+        if(e.action==='cancel_inactive')requireValue(worker.deactivation?.managerId===actor.id&&e.at>=worker.deactivation.at, 'invalid inactive time-off cancellation');
+        if(['approve','reject'].includes(e.action))requireValue(actor.id===r.reviewerId, 'time-off reviewer does not match decision');
+        previousAt=e.at;previousStatus=e.status;
+      }
+      requireValue(previousStatus===r.status&&previousAt===r.updatedAt, 'time-off outcome must match history');
+      requireValue(!worker.deactivation||r.status!=='pending'&&(r.status!=='approved'||r.endsAt<=worker.deactivation.at), 'inactive employee has actionable time off');
+      if(['pending','approved'].includes(r.status)){requireValue(!active.some(x=>x.workerId===r.workerId&&x.startsAt<r.endsAt&&r.startsAt<x.endsAt), 'overlapping active time-off requests');active.push(r);}
     }
   }
   return db;
