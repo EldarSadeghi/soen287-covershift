@@ -33,6 +33,10 @@ Start at http://127.0.0.1:3000/login and use an account created through signup, 
 - `data/`: ignored runtime JSON storage, implemented in CS-003.
 - `docs/`: implementation plan, collaboration rules, and AI log.
 
+## AI acceptance baseline (CS-029)
+
+Run `npm run ai:acceptance` for 18 offline fictional conversation scenarios and an HTML/JSON report. No API key or paid calls are needed. The same corpus runs in `npm test`. See [scope, scenario IDs and real-model limitations](docs/ai-acceptance-tests.md).
+
 ## Checks
 
 Run `npm run check` to check JavaScript syntax and `npm test` for automated verification. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths and private data paths should return 404. Authenticated pages use saved business records; /demo uses separate presentation data.

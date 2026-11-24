@@ -150,3 +150,6 @@ data/*
 
 # CS-021 isolated fictional presentation runs (never committed)
 .covershift-demo/
+
+# CS-029 local acceptance reports (fictional, generated)
+.covershift-ai-acceptance/

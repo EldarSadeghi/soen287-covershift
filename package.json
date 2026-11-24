@@ -17,6 +17,7 @@
     "data:demo-accounts": "node --env-file-if-exists=.env scripts/demo-accounts.js",
     "verify": "npm run check && npm test",
     "demo:prepare": "node --env-file-if-exists=.env scripts/demo.js prepare",
-    "demo:start": "node --env-file-if-exists=.env scripts/demo.js start"
+    "demo:start": "node --env-file-if-exists=.env scripts/demo.js start",
+    "ai:acceptance": "node scripts/ai-acceptance.js"
   }
 }
