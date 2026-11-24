@@ -1,5 +1,7 @@
 # CoverShift implementation plan
 
+**Current backlog order (2026-11-24): CS-045 → CS-055**, as listed in “Dependency-based implementation order” below. CS-021 remains in Your review; CS-018 is always last. Older entries below are historical snapshots; former unstarted IDs are retired aliases, not additional work.
+
 Status: CS-001 merged (PR #1, issue #2). CS-002 merged (PR #4, issue #3). CS-003 merged (PR #6, issue #5). CS-004 merged (PR #8, issue #7). CS-005 merged (PR #10, issue #9). CS-006 merged (PR #12, issue #11). CS-007 merged (PR #14, issue #13). CS-008 merged (PR #18, issue #17). CS-009 merged (PR #20, issue #19). CS-010 merged (PR #22, issue #21). CS-011 merged (PR #24, issue #23). CS-012 merged (PR #26, issue #25). CS-013 merged (PR #28, issue #27). CS-014 merged (PR #30, issue #29). CS-015 merged (PR #32, issue #31). CS-016 merged (PR #34, issue #33). CS-017 merged (PR #37, issue #35). CS-019 merged (PR #38, issue #36). CS-020 merged (PR #41, issue #40). CS-022 (issue #42) is ready for local user review. CS-021 is deferred as an unstarted suggestion. Repository: https://github.com/EldarSadeghi/soen287-covershift.
 
 ## Basis and open questions
@@ -173,3 +175,47 @@ Issue #61 selected on 2026-11-23 after user chose Summary cards and approved fou
 ### CS-021 — Demo preparation
 
 User selected the previously deferred suggestion on 2026-11-23. Issue #65 acceptance criteria recorded, Todo verified then In Progress; branch `codex/CS-021-demo-preparation`. Added isolated repeatable fictional runs, relative-date service-generated scenarios, two role URLs, dated walkthrough, production/path/staleness guards and loopback launcher with persistent AI usage. Normal records and prior demo runs preserved. 223 tests pass; real-provider/browser rehearsal and fresh reset recorded in `docs/acceptance/cs021/USER-STORIES.md`. Ready for Your review; no push/merge before explicit user approval. CS-039 is complete, PR #64 / issue #61. CS-018 stays last.
+
+### Requested scheduling extensions — initial IDs, 2026-11-24
+
+Superseded by the renumbering table below; links still identify the same issues.
+
+User requested four additions to the backlog. These are planning tasks, not started implementations; each will follow the usual individual branch, local review and explicit push/merge approval. CS-018 remains last.
+
+| ID / GitHub issue | Feature | Planned outcome |
+| --- | --- | --- |
+| [CS-041 / #66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | Employee time-off requests | Employees request leave; manager approves/rejects; approved intervals participate in assignment and claim checks. Existing shifts require explicit resolution, never silent deletion/reassignment. |
+| [CS-042 / #67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | Show employee availability | Manager selects a date/time and sees available, unavailable and unknown workers, with saved reasons and approved leave/conflicts respected. Lack of a rule is not proof of availability. |
+| [CS-043 / #68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | Daily shift duties and employee task list | Manager attaches duties to shifts; assigned workers see their duties for the day. Duties follow the shift after approved coverage. |
+| [CS-044 / #69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | Monday publication of a two-week schedule | Manager prepares drafts and publishes a dated two-week schedule, with Monday deadline visibility and audited later changes. |
+
+Suggested order: CS-041 → CS-042 → CS-043 → CS-044, one reviewable increment at a time. Acceptance criteria and open decisions are recorded in each issue. Before implementation confirm partial-day leave/cancellation rules, general availability entry versus automatic-claim rules, whether daily tasks mean shift duties, and which two weeks Monday publication covers. Proposed publication is manual with a due indicator; automatic publication is not assumed. Completion checkboxes, payroll/leave balances, recurring templates and external delivery remain separate scope unless selected.
+
+
+### Dependency-based implementation order — 2026-11-24
+
+Saved GitHub view: [Implementation order](https://github.com/users/EldarSadeghi/projects/1/views/4), filtered to Todo and sorted by task title ascending. All eleven task statuses verified after reload.
+
+User requested reordering and renumbering to reduce rework and improve quality. All eleven unstarted issues were renamed in place; issue numbers/URLs and history remain unchanged. Completed IDs (including CS-039), CS-021 in review and final CS-018 are unchanged. New IDs begin at CS-045 to avoid collisions with historical references. Every item remains Todo; this planning change starts no implementation.
+
+First review the existing CS-021 increment and decide its merge separately. Then proceed in this order:
+
+| Order | Current ID / issue | Former ID (retired) | Task | Prerequisites |
+| --- | --- | --- | --- | --- |
+| 1 | [CS-045 / #62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-040 | Repeatable AI conversation acceptance tests | CS-021 review decision |
+| 2 | [CS-046 / #66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-041 | Employee time-off requests | CS-045 |
+| 3 | [CS-047 / #67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-042 | Show employee availability | CS-046 |
+| 4 | [CS-048 / #68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-043 | Daily shift duties and employee task list | CS-047 |
+| 5 | [CS-049 / #69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | CS-044 | Monday publication of a two-week schedule | CS-046, CS-047, CS-048 |
+| 6 | [CS-050 / #57](https://github.com/EldarSadeghi/soen287-covershift/issues/57) | CS-035 | Refine AI drafts conversationally | CS-045, CS-049 |
+| 7 | [CS-051 / #60](https://github.com/EldarSadeghi/soen287-covershift/issues/60) | CS-038 | Manage employee availability rules through chat | CS-047, CS-050 |
+| 8 | [CS-052 / #55](https://github.com/EldarSadeghi/soen287-covershift/issues/55) | CS-033 | Explain availability matches and scheduling conflicts | CS-047, CS-049, CS-051 |
+| 9 | [CS-053 / #56](https://github.com/EldarSadeghi/soen287-covershift/issues/56) | CS-034 | Suggest eligible alternative shifts | CS-050, CS-052 |
+| 10 | [CS-054 / #58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-036 | Manager batch shift creation through chat | CS-048, CS-049, CS-050, CS-053 |
+| 11 | [CS-055 / #59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-037 | AI working-week and attention summaries | CS-049, CS-051, CS-052, CS-054 |
+
+The dependencies are deliberate scheduling choices; independent work is still implemented one increment at a time. Tests first establish the baseline. Time off then feeds shared eligibility, availability and all existing assignment/claim/approval/matching paths. Duties are defined before publication and batch creation. Publication must update existing employee reads, AI questions/search/rules, notifications and coverage checks within that increment so drafts cannot leak or become actionable. Define legacy-shift migration and Monday window before implementation.
+
+After that, stabilize conversational refinement and explicit confirmations, then availability lifecycle actions, explanations, alternative suggestions and finally atomic batch writes. Summaries come after the data and workflows they summarize. More tests are added with each feature; the baseline task does not claim future features already work. Every increment retains authorization, same-business scope, fresh eligibility checks, uncertain-save recovery, accessible local review and explicit user approval before pushing/merging. A finite passing suite reduces risk but does not guarantee absence of bugs.
+
+CS-023–029 remain optional earlier suggestions outside this selected sequence; CS-030 notifications were covered by CS-031D. CS-018 remains the final deployment/submission step after approved implementation work and final regression checks.

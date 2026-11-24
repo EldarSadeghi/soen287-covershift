@@ -179,3 +179,8 @@ User selected Summary cards, reviewed four response examples, and authorized imp
 ## 2026-11-23 — CS-021 demo preparation
 
 User selected implementation of demo preparation. Created issue #65 with acceptance criteria and verified Todo then In Progress before implementation. Added fixed isolated managed demo storage, fresh-run preparation preserving previous records, strictly upcoming Toronto scenarios through real workflow services, generated dated walkthrough and loopback full-application launcher. Public fictional credentials and separate role hostnames support presentation in one browser. Existing private AI config stays process-local; usage persists outside scenario runs. Nine new checks; all 223 pass. Browser rehearsed real schedule AI answer, manager approval, automatic pending match and employee notifications, then prepared and opened a pristine run. Both normal data fingerprints unchanged. Ready for user review; no push or merge authorized. No deployment work.
+
+
+## 2026-11-24 — Backlog dependency order and renumbering
+
+User requested reprioritizing all seven unstarted AI proposals plus four requested scheduling features. Renamed existing GitHub issues in place to CS-045–055, preserving issue links/history and recording former aliases and prerequisites in every issue. No implementation started. Test baseline precedes leave/availability/duties/publication; AI expansion follows stable scheduling semantics and confirmation behavior, with atomic batches late. Current mapping recorded in implementation-plan.md and working instructions; historical completed IDs, CS-021 review and final CS-018 remain unchanged.

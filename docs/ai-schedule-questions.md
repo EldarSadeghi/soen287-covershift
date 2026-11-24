@@ -13,3 +13,6 @@ Answers include scope, timezone, checked-at time, honest empty results and saved
 Chat task persists in the existing private per-tab state. Changing task resets its conversation/draft, New chat clears answers, and logout clears state. Rendered answer cards are intentionally fresh-response-only; reloaded conversation text remains a dated snapshot, and the user asks again for current results. Existing create/search/availability tasks remain separate. Read-only questions do not confirm or save any shift, claim, rule or notification.
 
 Implementation follows the official [Structured Outputs documentation](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses), using strict JSON schema and independent server validation/calculation. See `acceptance/cs032/USER-STORIES.md` for checks and known limits. CS-033–040 remain unstarted proposals; CS-018 stays last.
+
+
+Backlog update (2026-11-24): former unstarted AI IDs were renumbered into CS-045 and CS-050–055. See the authoritative old-to-new mapping and dependencies in [implementation plan](implementation-plan.md). Completed feature IDs and evidence remain unchanged.

@@ -15,3 +15,6 @@ The latest structured response replaces the duplicated visible assistant paragra
 A shared renderer builds DOM with `textContent`, native definition lists, text status badges, native details and links. No raw model HTML rendering. The dialog remains at the bottom-left on desktop and reflows at mobile widths. Reading space increases through a wider desktop card, shorter composer and collapsed privacy notes; the scroll container reveals the result heading without moving the underlying workspace. Focus stays in the composer after replies and returns there if a completed/cancelled action removes the focused button. The modal trap includes native summaries; completion headlines are announced through the existing status region.
 
 See `acceptance/cs039/USER-STORIES.md` for checked scenarios, evidence and review login. CS-032 is complete in PR #63; CS-033–038/040 remain suggestions. CS-018 deployment/submission remains last. Explicit user approval is still required before pushing or merging CS-039.
+
+
+Backlog update (2026-11-24): former unstarted AI IDs were renumbered into CS-045 and CS-050–055. See the authoritative old-to-new mapping and dependencies in [implementation plan](implementation-plan.md). Completed feature IDs and evidence remain unchanged.
