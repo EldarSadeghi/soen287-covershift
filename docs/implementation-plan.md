@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-**Current numbering/status (2026-11-24): CS-001–034 are completed; CS-035 is in local review; CS-036–039 are Todo; CS-044 is completed; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–035 are completed; CS-036 is in local review; CS-037–039 are Todo; CS-044 is completed; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 
 Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. User approved merging CS-040 on 2026-11-24 after 316 passing tests and a clean browser walkthrough. Merged PR #76 (`0e60396fa96479f8ee16d2dc984f04a900f2d490`); issue #75 closed and project Done verified. Evidence: docs/acceptance/cs040. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
@@ -43,8 +43,8 @@ Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e
 | CS-032 | Daily shift duties and employee task list | Done | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | #81 |
 | CS-033 | Monday publication of a two-week schedule | Done | [#69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | CS-049 | #82 |
 | CS-034 | Refine AI drafts conversationally | Done | [#57](https://github.com/EldarSadeghi/soen287-covershift/issues/57) | CS-050 | #83 |
-| CS-035 | Manage employee availability rules through chat | Your review | [#60](https://github.com/EldarSadeghi/soen287-covershift/issues/60) | CS-051 | — |
-| CS-036 | Explain availability matches and scheduling conflicts | Todo | [#55](https://github.com/EldarSadeghi/soen287-covershift/issues/55) | CS-052 | — |
+| CS-035 | Manage employee availability rules through chat | Done | [#60](https://github.com/EldarSadeghi/soen287-covershift/issues/60) | CS-051 | #86 |
+| CS-036 | Explain availability matches and scheduling conflicts | Your review | [#55](https://github.com/EldarSadeghi/soen287-covershift/issues/55) | CS-052 | — |
 | CS-037 | Suggest eligible alternative shifts | Todo | [#56](https://github.com/EldarSadeghi/soen287-covershift/issues/56) | CS-053 | — |
 | CS-038 | Manager batch shift creation through chat | Todo | [#58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-054 | — |
 | CS-039 | AI working-week and attention summaries | Todo | [#59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-055 | — |
@@ -54,7 +54,7 @@ Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e
 | CS-044 | Use one AI chat without a task selector | Done | [#84](https://github.com/EldarSadeghi/soen287-covershift/issues/84) | New | #85 |
 | CS-043 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
-CS-001–034 and CS-040–042 are complete. CS-044 is a follow-up to CS-034, followed by the remaining CS-035–039 increments and then CS-043 final deployment. Each increment requires local user review and explicit merge approval. Stable issue numbers preserve historical task mappings.
+CS-001–035, CS-040–042 and CS-044 are complete. The remaining CS-036–039 increments precede CS-043 final deployment. Each increment requires local user review and explicit merge approval. Stable issue numbers preserve historical task mappings.
 
 Time off and publication must update existing manual and AI paths within those increments. Approved leave participates in current assignment/claim/approval/matching checks. Unpublished schedules must not leak through employee views, chat answers, search, rules, notifications or matching. Clarify the Monday window/legacy-shift handling before CS-033. Chat confirmations and uncertain-save protections remain required; atomic batch saves do not implicitly publish.
 

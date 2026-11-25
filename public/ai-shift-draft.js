@@ -1,3 +1,4 @@
+import { createAvailabilityExplanations } from './ai-availability-explanation.js';
 import { CHAT_ENDPOINTS, availabilityRuleCommand, routeChat } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
@@ -33,6 +34,7 @@ export function mountAiChat(account, csrfToken) {
   function outcomeText(text) { if(chat.value.messages.at(-1)?.role==='assistant')chat.value.messages.at(-1).text=text;chat.save();messages.replaceChildren();for(const message of chat.value.messages)say(message.role,message.text); }
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
 
+  const explanations = !manager ? createAvailabilityExplanations({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText }) : null;
   const employeeRequests = !manager ? createEmployeeRequests({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText }) : null;
 
   composer.value = chat.value.composer;
@@ -124,7 +126,7 @@ export function mountAiChat(account, csrfToken) {
     showSuggestion(chat.value.suggestion); notice('Save not confirmed. Check the saved schedule before trying again.');
   });
   find('.ai-chat-controls .ai-chat-new').addEventListener('click', () => {
-    revision++; employeeRequests?.reset(); availability?.reset(); const ruleChangePending = chat.value.ruleChangePending; chat.reset();
+    revision++; explanations?.reset(); employeeRequests?.reset(); availability?.reset(); const ruleChangePending = chat.value.ruleChangePending; chat.reset();
     if (ruleChangePending) chat.value.ruleChangePending = true;
     mode = manager ? 'draft' : 'search'; chat.save(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';samples.hidden = false;
     notice(busy ? 'New chat started. The earlier request may still count toward your allowance; wait for it to finish before sending.' : (mode==='questions'?'Ask about your next assigned shift or a dated schedule/hours window.':manager ? 'New chat started. What shift would you like to create?' : (mode==='availability'?'New chat started. Describe one dated availability window.':'New chat started. Which day would you like to find a shift for?'))); composer.focus();
@@ -158,6 +160,15 @@ export function mountAiChat(account, csrfToken) {
       say('assistant', reply);
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
+    }
+    explanations?.reset();
+    if (target === 'explanation') {
+      employeeRequests.reset(); availability.reset();
+      chat.value.refinementPending = true;
+      say('user', text);
+      appendTurn('I’ll check the saved request and your current eligibility.');
+      await explanations.load({ description: text });
+      return;
     }
     if (target === 'clarification') {
       chat.value.refinementPending = true;
@@ -251,5 +262,5 @@ export function mountAiChat(account, csrfToken) {
       if (openAiReview(pending)) { chat.value.pending = null; chat.save(); }
     }
   });
-  return { clear() { revision++; observer.disconnect(); employeeRequests?.reset(); availability?.reset(); chat.clear(); dialog.remove(); launcher.remove(); } };
+  return { clear() { revision++; observer.disconnect(); explanations?.reset(); employeeRequests?.reset(); availability?.reset(); chat.clear(); dialog.remove(); launcher.remove(); } };
 }

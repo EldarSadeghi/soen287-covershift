@@ -1,3 +1,4 @@
+import { explainAvailability } from './availability/explanations.js';
 import {getSchedulePeriod,prepareSchedule,publishSchedule,discardDraft} from './schedules/publication.js';
 import {coverOptions,listCoverInvitations,sendCoverInvitation,decideCoverInvitation} from './cover/service.js';
 import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability,coworkerUpcomingWindows} from './availability/windows.js';
@@ -37,6 +38,7 @@ const assets = new Map([
   ['/ai-availability.js', ['ai-availability.js', 'text/javascript; charset=utf-8']],
   ['/ai-employee-request.js', ['ai-employee-request.js', 'text/javascript; charset=utf-8']],
   ['/ai-employee-state.js', ['ai-employee-state.js', 'text/javascript; charset=utf-8']],
+  ['/ai-availability-explanation.js', ['ai-availability-explanation.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-routing.js', ['ai-chat-routing.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-state.js', ['ai-chat-state.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-draft.js', ['ai-shift-draft.js', 'text/javascript; charset=utf-8']],
@@ -193,6 +195,15 @@ export function createAppServer({ store, signup = registerManager, login = authe
         requireMethod(request,response,'GET');const account=await requireAccount(store,sessions,request.headers.cookie);
         if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'This view uses your signed-in schedule.');
         sendJson(response,200,await scheduleShiftDetails(store,account.user.id,pathname.split('/')[3]));return;
+      }
+      if (pathname === '/api/worker/availability-explanation') {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Explanations use your signed-in workspace.');
+        limitCoverage(account.user.id);
+        sendJson(response, 200, await explainAvailability(store, account.user.id, await readJson(request), shiftClock));
+        return;
       }
       if (pathname === '/api/ai-schedule-question') {
         requireMethod(request,response,'POST');protectMutation(request,publicOrigin);const account=await requireAccount(store,sessions,request.headers.cookie);
