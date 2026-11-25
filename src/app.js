@@ -25,6 +25,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/week-planner.js',['week-planner.js','text/javascript; charset=utf-8']],
   ['/schedule-publication.js',['schedule-publication.js','text/javascript; charset=utf-8']],
   ['/cover-ui.js',['cover-ui.js','text/javascript; charset=utf-8']],
   ['/availability-view.js',['availability-view.js','text/javascript; charset=utf-8']],

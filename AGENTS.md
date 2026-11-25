@@ -123,3 +123,6 @@ CS-032 approved and completed on 2026-11-24: user authorized push/merge after lo
 
 
 CS-033 (#69) selected on2026-11-24: user confirmed following-Monday14-day window and manual Publish with Monday due/overdue indicator. Todo verified then In Progress; branch `codex/CS-033-schedule-publication`. Local schema13 private staging, reviewed atomic publication, scoped employee receipts, audit/retry/conflict handling and legacy-preserving activation ready for Your review.337 tests pass; real browser private/read/publish/edit/notification/lost-ack/320px evidence in `docs/acceptance/cs033-publication/USER-STORIES.md`. Preview3048 manager/Alex,3049 additional login. No push/merge approved. CS-034–039 remain Todo; CS-043 deployment remains last.
+
+
+User explicitly approved Week planner implementation and combined CS-033 push/merge on2026-11-24. Refined both create/edit forms within issue#69;341 tests and desktop/320px preset/validation/overnight/edit checks pass. Preserve the exact scope and verify issue closed/board Done after merge. No extra confirmation required.

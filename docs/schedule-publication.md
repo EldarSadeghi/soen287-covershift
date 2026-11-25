@@ -17,3 +17,7 @@ Publishing atomically replaces the affected live shifts, retains before/after sn
 Publication requires a fresh revision covering the period, pending drafts, current published assignments, team membership, coverage and leave. Stale review cannot overwrite new data. The same published revision replays its receipt across restart without creating duplicate notices. A lost-response UI keeps the original receipt request and provides Check previous publication result; reads can be retried with View period. If coverage changes after draft preparation, publication fails and the manager can discard/rebuild that draft.
 
 Schema13 adds `schedulePeriods`, `scheduleDrafts`, `schedulePublications` and `scheduleNotifications`. Older schemas remain readable without a write. Normal account data is never reseeded. Deployment/rollback must account for schema13; older binaries cannot read it after activation. See acceptance evidence for the isolated fictional review.
+
+## Week planner
+
+Create/edit forms share a two-week date picker and time presets. A separate date field supports dates outside the displayed fortnight. From/Until offer15-minute choices while retaining any exact saved/AI-supplied minute. Ends next day advances the finish date; Different finish date retains longer ranges. The preview calculates elapsed duration in the business timezone and rejects ambiguous/skipped DST times. Backend dates, fresh conflict checks and private publication staging remain authoritative. Small screens use four columns of readable day buttons.

@@ -14,7 +14,7 @@ export async function mountSchedulePublication(container,csrfToken,onChanged){
   }
   async function load(){
     if(busy)return;busy=true;loadButton.disabled=true;date.disabled=true;content.textContent='Loading schedule period…';
-    try{const response=await requestJSON('/api/manager/schedule-period'+(date.value?'?startsOn='+encodeURIComponent(date.value):''),{cache:'no-store'});if(response.status===401){location.replace('/login?expired=1');return;}if(!response.ok)throw new Error(response.data.message);data=response.data;date.value=data.startsOn;render();}
+    try{const response=await requestJSON('/api/manager/schedule-period'+(date.value?'?startsOn='+encodeURIComponent(date.value):''),{cache:'no-store'});if(response.status===401){location.replace('/login?expired=1');return;}if(!response.ok)throw new Error(response.data.message);data=response.data;date.value=data.startsOn;document.dispatchEvent(new CustomEvent('schedule:period-viewed',{detail:{startsOn:data.startsOn}}));render();}
     catch(error){const errorMessage=element('p','team-message',error.message||'Could not load this period. Use View period to retry.');errorMessage.setAttribute('role','alert');content.replaceChildren(errorMessage);}
     finally{busy=false;loadButton.disabled=false;date.disabled=false;}
   }
