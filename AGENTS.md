@@ -2,7 +2,7 @@
 
 ## Authoritative current identities — 2026-11-24
 
-**Current numbering/status (2026-11-24): CS-001–032 are completed; CS-033 is Your review; CS-034–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–033 are completed; CS-034–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-043 Deployment and final submission is always last** (formerly CS-040 / CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
 
@@ -126,3 +126,6 @@ CS-033 (#69) selected on2026-11-24: user confirmed following-Monday14-day window
 
 
 User explicitly approved Week planner implementation and combined CS-033 push/merge on2026-11-24. Refined both create/edit forms within issue#69;341 tests and desktop/320px preset/validation/overnight/edit checks pass. Preserve the exact scope and verify issue closed/board Done after merge. No extra confirmation required.
+
+
+CS-033 and the user-selected Week planner refinement are complete: user approved combined implementation/push/merge on2026-11-24; PR #82 merged as `5070caa85007b7f9818fe0acef75f50d5353c82f`. Issue #69 closed/completed and project Done verified.341 tests pass; create/edit preset/validation/overnight/320px checks passed. Earlier review-only notes for this scope are superseded. Next planned task CS-034 conversational AI draft refinement (#57), still Todo, not started. CS-043 deployment remains last.
