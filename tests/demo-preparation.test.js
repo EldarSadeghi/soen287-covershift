@@ -19,3 +19,36 @@ test('CLI prepares and starts isolated demo, authenticates both roles, preserves
 });
 
 test('failed preparation leaves prior selection and populated scenario unchanged',async t=>{const dir=await temp(t),root=join(dir,'demo'),run=await prepareDemo(root,{now,hash});const before=await readFile(run.store.filename,'utf8');await assert.rejects(prepareDemo(root,{now,hash:async()=>{throw Error('fictional preparation failure');}}),/preparation failure/);assert.equal((await loadDemo(root)).runId,run.runId);assert.equal(await readFile(run.store.filename,'utf8'),before);});
+
+test('refreshed demo supports scripted search, bounded alternatives, private batch publication and shared availability', async t => {
+  const root = join(await temp(t), 'demo');
+  const { manifest, store } = await prepareDemo(root, { now, hash });
+  const { presentationReplies } = await import('../src/demo/presentation.js');
+  const { createAiShiftSearcher, searchAlternativeShifts } = await import('../src/ai/shift-search.js');
+  const { createAiShiftDrafter } = await import('../src/ai/shift-draft.js');
+  const { saveShiftBatch } = await import('../src/shifts/batch.js');
+  const { getSchedulePeriod, publishSchedule } = await import('../src/schedules/publication.js');
+  const { coworkerUpcomingWindows } = await import('../src/availability/windows.js');
+  const { workingSummary } = await import('../src/ai/working-summary.js');
+  const { randomUUID } = await import('node:crypto');
+  const clock = () => now;
+  const options = { apiKey: 'fictional', allowance: { reserve() {} }, fetchImpl: presentationReplies(manifest) };
+  const { searchPrompt, batchPrompt, startsOn, summaryWeek } = manifest.presentation;
+  const summary = await workingSummary(store, 'manager_morgan', summaryWeek, clock);
+  assert.deepEqual(summary.sections.map(section => section.count), [1, 4]);
+  const results = await createAiShiftSearcher(options)(store, 'worker_jamie', { description: searchPrompt }, clock);
+  assert.deepEqual(results.requests.map(row => row.shift.title), ['Afternoon coverage', 'Evening coverage', 'Closing coverage']);
+  const alternatives = await searchAlternativeShifts(store, 'worker_jamie', { criteria: results.criteria, excludeShiftId: results.requests[1].shift.id }, clock);
+  assert.deepEqual(alternatives.criteria, results.criteria);
+  assert.equal(alternatives.total, 2);
+  const peers = await coworkerUpcomingWindows(store, 'worker_jamie', clock);
+  assert.ok(peers.workers.some(peer => peer.name === 'Alex Morgan' && peer.windows.length));
+  const proposal = await createAiShiftDrafter(options)(store, 'manager_morgan', { description: batchPrompt, batch: true }, clock);
+  assert.equal(proposal.warning, '');
+  const receipt = await saveShiftBatch(store, 'manager_morgan', { batchId: randomUUID(), shifts: proposal.shifts, timezone: proposal.timezone }, clock);
+  assert.equal(receipt.draft, true);
+  assert.equal((await store.read()).shifts.filter(shift => shift.title.startsWith('Presentation ')).length, 0);
+  const period = await getSchedulePeriod(store, 'manager_morgan', startsOn, now);
+  await publishSchedule(store, 'manager_morgan', { startsOn, revision: period.revision }, clock);
+  assert.equal((await store.read()).shifts.filter(shift => shift.title.startsWith('Presentation ')).length, 2);
+});
