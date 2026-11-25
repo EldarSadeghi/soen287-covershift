@@ -19,6 +19,7 @@ const taskLabels = {
 function explicitRoute(text, manager) {
   const message = normalizedMessage(text);
   if (/^(?:do not|don't|never)\b/.test(message)) return null;
+  if (manager && requestsShiftBatch(message)) return 'draft';
   if (manager && /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
   if (!manager) {
     if (/\b(?:co[ -]?workers?|colleagues?|teammates?)\b/.test(message) &&
@@ -49,6 +50,14 @@ function mixedRoutes(text, manager) {
     else requests[requests.length - 1] += part;
   }
   return [...new Set(requests.map(request => explicitRoute(request.trim().replace(/^also\s+/i, ''), manager)).filter(Boolean))];
+}
+
+export function requestsShiftBatch(text) {
+  const message = normalizedMessage(text);
+  if (!/^(?:draft|create|schedule|add|assign|put together|make|help me (?:draft|create|schedule))\b/.test(message)) return false;
+  return /^(?:draft|create|schedule|add|assign|put together|make) (?:these )?shifts\b/.test(message) ||
+    /\b(?:batch|multiple|several|two|three|four|five|six|\d+)\s+(?:dated\s+)?shifts\b|\b(?:batch of|shifts for)\b/.test(message) ||
+    /\bfor\b[\s\S]*(?:;|\band\b|\n)[\s\S]*\bfor\b/.test(message);
 }
 
 export function routeChat(text, manager, current) {
