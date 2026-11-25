@@ -1,3 +1,4 @@
+import { validateSchedules } from '../schedules/validate.js';
 export const collections = ['businesses', 'users', 'shifts', 'coverageRequests'];
 export const emptyDatabase = () => ({ schemaVersion: 1, businesses: [], users: [], shifts: [], coverageRequests: [] });
 const fields = {
@@ -16,8 +17,8 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(db.schemaVersion), 'unsupported schema version');
-  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests' || db.schemaVersion >= 10 && key === 'availabilityWindows' || db.schemaVersion >= 11 && ['coverInvitations','coverNotifications'].includes(key)), 'unknown collection');
+  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || db.schemaVersion>=13&&['schedulePeriods','scheduleDrafts','schedulePublications','scheduleNotifications'].includes(key) || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests' || db.schemaVersion >= 10 && key === 'availabilityWindows' || db.schemaVersion >= 11 && ['coverInvitations','coverNotifications'].includes(key)), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
@@ -236,5 +237,6 @@ export function validateDatabase(db) {
       requireValue(timestamp(n.createdAt)&&(n.readAt===null||timestamp(n.readAt)&&n.readAt>=n.createdAt),'invalid cover notice timestamps');
     }
   }
+  if(db.schemaVersion>=13)validateSchedules(db,validateDatabase);
   return db;
 }

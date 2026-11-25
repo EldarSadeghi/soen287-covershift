@@ -3,18 +3,20 @@ import { createHash } from 'node:crypto';
 import { HttpError } from '../auth/errors.js';
 import { managerBusiness } from '../shifts/create.js';
 export function workerRemovalState(db, worker, now) {
+  const draftReferences=(db.scheduleDrafts||[]).filter(d=>d.shift.assignedWorkerId===worker.id);
+  const publicationReferences=(db.schedulePublications||[]).filter(r=>r.managerId===worker.id||r.changes.some(c=>[c.before?.assignedWorkerId,c.after?.assignedWorkerId].includes(worker.id)));
   const assigned = db.shifts.filter(s => s.businessId === worker.businessId && s.assignedWorkerId === worker.id);
   const requests = db.coverageRequests.filter(r => r.businessId === worker.businessId && (r.originalWorkerId === worker.id || r.claimantId === worker.id || r.history?.some(e => e.actorId === worker.id)));
   const rules = (db.availabilityRules || []).filter(r => r.workerId === worker.id && r.businessId === worker.businessId);
   const leave=(db.timeOffRequests||[]).filter(r=>r.workerId===worker.id&&r.businessId===worker.businessId);
   const windows=(db.availabilityWindows||[]).filter(r=>r.workerId===worker.id&&r.businessId===worker.businessId);
   const invitations=(db.coverInvitations||[]).filter(r=>r.businessId===worker.businessId&&(r.senderId===worker.id||r.recipientId===worker.id));
-  const blockers = assigned.filter(s => Date.parse(s.endsAt) > now).map(s => ({ id:s.id, title:s.title, kind:'assignment', startsAt:s.startsAt, endsAt:s.endsAt }));
+  const blockers = [...assigned,...draftReferences.filter(d=>!d.deleted).map(d=>d.shift)].filter(s => Date.parse(s.endsAt) > now).map(s => ({ id:s.id, title:s.title, kind:'assignment', startsAt:s.startsAt, endsAt:s.endsAt }));
   for (const r of requests.filter(r => r.status === 'pending' && r.claimantId === worker.id)) {
     const shift = db.shifts.find(s => s.id === r.shiftId);
     if (Date.parse(shift.endsAt) > now) blockers.push({id:shift.id,title:shift.title,kind:'pending_claim',startsAt:shift.startsAt,endsAt:shift.endsAt});
   }
-  return { revision: createHash('sha256').update(JSON.stringify([worker,assigned,requests,...(rules.length ? [rules] : []),...(leave.length ? [leave] : []),...(windows.length ? [windows] : []),...(invitations.length ? [invitations] : [])])).digest('hex'), canDelete: assigned.length === 0 && requests.length === 0 && rules.length === 0 && leave.length === 0 && windows.length === 0 && invitations.length === 0, canDeactivate: !worker.deactivation && blockers.length === 0, blockers };
+  return { revision: createHash('sha256').update(JSON.stringify([worker,assigned,requests,draftReferences,publicationReferences,...(rules.length ? [rules] : []),...(leave.length ? [leave] : []),...(windows.length ? [windows] : []),...(invitations.length ? [invitations] : [])])).digest('hex'), canDelete: draftReferences.length===0 && publicationReferences.length===0 && !(db.scheduleNotifications||[]).some(n=>n.userId===worker.id) && assigned.length === 0 && requests.length === 0 && rules.length === 0 && leave.length === 0 && windows.length === 0 && invitations.length === 0, canDeactivate: !worker.deactivation && blockers.length === 0, blockers };
 }
 export async function removeWorker(store, managerId, workerId, action, input, clock=Date.now) {
   return store.transaction(db => {

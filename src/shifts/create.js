@@ -1,3 +1,4 @@
+import { publicationEnabled, effectiveShifts, stageShift } from '../schedules/publication.js';
 import {leaveConflicts} from '../time-off/conflicts.js';
 import { HttpError } from '../auth/errors.js';
 import { createRecord } from '../storage/repositories.js';
@@ -66,7 +67,8 @@ export async function createShift(store, managerId, input, clock = Date.now) {
   input = validateShiftInput(input);
   return store.transaction(db => {
     const business = managerBusiness(db, managerId);
-    const shift = createRecord(assignmentFields(db, business, input, clock()));
+    const shift = createRecord(assignmentFields(publicationEnabled(db,business.id)?{...db,shifts:effectiveShifts(db)}:db, business, input, clock()));
+    if(publicationEnabled(db,business.id)){stageShift(db,business,shift,null);return {...savedShift(db,shift,business.timezone),draft:true};}
     if(Object.hasOwn(shift,'duties'))dutiesSchema(db);db.shifts.push(shift);
     return savedShift(db, shift, business.timezone);
   });

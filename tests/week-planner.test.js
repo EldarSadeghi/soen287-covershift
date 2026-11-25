@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {plannerDate,plannerAddDays,plannerMonday,plannerRange} from '../public/week-planner.js';
+const timezone='America/Toronto';
+test('planner uses calendar dates across month/year/leap boundaries without host timezone drift',()=>{assert.equal(plannerDate('2026-02-30'),false);assert.equal(plannerDate('2028-02-29'),true);assert.equal(plannerMonday('2026-12-13'),'2026-12-07');assert.equal(plannerAddDays('2026-12-28',13),'2027-01-10');});
+test('planner composes a same-day shift, preserves exact minutes and rejects reversed intervals',()=>{assert.deepEqual(plannerRange({date:'2026-11-30',start:'09:07',end:'12:43'},timezone),{startLocal:'2026-11-30T09:07',endLocal:'2026-11-30T12:43',minutes:216});assert.throws(()=>plannerRange({date:'2026-11-30',start:'17:00',end:'09:00'},timezone),/Finish must/);assert.throws(()=>plannerRange({date:'',start:'09:00',end:'12:00'},timezone),/Choose a shift/);});
+test('overnight and explicit longer finish dates remain exact API wall-clock values',()=>{assert.deepEqual(plannerRange({date:'2026-12-31',start:'22:00',end:'02:00',overnight:true},timezone),{startLocal:'2026-12-31T22:00',endLocal:'2027-01-01T02:00',minutes:240});assert.equal(plannerRange({date:'2026-11-30',start:'09:00',end:'12:00',endDate:'2026-12-02'},timezone).minutes,3060);});
+test('elapsed preview respects business DST and rejects skipped or ambiguous local times',()=>{assert.equal(plannerRange({date:'2030-03-10',start:'01:00',end:'04:00'},timezone).minutes,120);assert.throws(()=>plannerRange({date:'2030-03-10',start:'02:30',end:'04:00'},timezone),/does not exist/);assert.throws(()=>plannerRange({date:'2030-11-03',start:'01:30',end:'04:00'},timezone),/occurs twice/);});

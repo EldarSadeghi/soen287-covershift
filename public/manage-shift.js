@@ -1,3 +1,4 @@
+import {mountWeekPlanner} from './week-planner.js';
 import { requestJSON } from './request.js';
 import { element, shiftCard } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
@@ -8,6 +9,7 @@ export function businessLocal(instant, timezone) {
 export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   const wrapper = element('div', 'managed-shift');
   wrapper.append(shiftCard(shift, timezone, { workerName: shift.assignedWorker.name }));
+  if(shift.draft)wrapper.prepend(element('p','draft-label','Private draft · unpublished'));
   if (shift.lockReason) {
     wrapper.append(element('p', 'shift-lock', shift.lockReason)); return wrapper;
   }
@@ -34,13 +36,13 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       const result = response.data;
       if (!response.ok) { markErrors(result.fields || {}); message(result.message || 'The change could not be saved. Try again.'); return; }
-      await onChanged(action === 'edit' ? `“${result.shift.title}” was updated and assigned to ${result.shift.assignedWorker.name}.` : `“${shift.title}” was deleted.`);
+      await onChanged(result.draft?'Private draft saved. Publish the schedule to update employees.':action === 'edit' ? `“${result.shift.title}” was updated and assigned to ${result.shift.assignedWorker.name}.` : `“${shift.title}” was deleted.`);
     } catch { uncertain = true; message('We couldn’t confirm the result. Your entries are kept. Cancel and refresh the schedule to check the saved shift before trying again.'); }
     finally { busy = false; submit.disabled = uncertain; cancel.disabled = false; submit.textContent = action === 'edit' ? 'Save changes' : 'Delete this shift'; }
   }
   editButton.addEventListener('click', async () => {
     if (!start(editButton)) return;
-    editor.append(element('h3', '', 'Edit shift'), element('p', 'section-note', `All times are in ${timezone}. For an overnight shift, use the next day as the end date.`)); errorBox();
+    editor.append(element('h3', '', 'Edit shift'), element('p', 'section-note', `All times are in ${timezone}. Use Ends next day for overnight shifts.`)); errorBox();
     const state = element('p', 'section-note', 'Loading your workers…'); state.setAttribute('role', 'status'); editor.append(state);
     const cancel = cancelButton(); editor.append(cancel); cancel.focus();
     try {
@@ -61,7 +63,9 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
         else { input.type = type; if (type === 'text') input.maxLength = 100; else { input.min = '2000-01-01T00:00'; input.max = '2099-12-31T23:59'; } }
         input.value = value; inputs[key] = input; const error = element('p', 'field-error'); error.id = `${input.id}-error`; error.hidden = true; input.setAttribute('aria-describedby', error.id); field.append(caption, input, error); grid.append(field);
       }
+      let planner;
       function markErrors(errors) {
+        planner?.showErrors(errors);
         for (const [key, input] of Object.entries(inputs)) {
           const error = document.getElementById(`${input.id}-error`);
           input.removeAttribute('aria-invalid'); error.hidden = true;
@@ -75,12 +79,13 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
         editor.querySelector('.manage-error').hidden = true;
         const errors = {};
         for (const [key, input] of Object.entries(inputs)) if (!input.validity.valid) errors[key] = input.validationMessage;
+        if(!planner.validate()){message('Please check the shift date and hours.');return;}
         if (!inputs.title.value.trim()) errors.title = 'Enter a shift title.';
         markErrors(errors);
         if (Object.keys(errors).length) { message('Please check the highlighted fields before saving.'); return; }
         const values=Object.fromEntries(new FormData(form));values.duties=duties.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(values.duties.length>10||values.duties.some(d=>d.length>160)){message('Use up to 10 duties, 160 characters each.');return;}mutate('edit', values, submit, cancel, markErrors);
       });
-      editor.append(form); inputs.title.focus();
+      editor.append(form);planner=mountWeekPlanner({startInput:inputs.startLocal,endInput:inputs.endLocal,timezone});inputs.title.focus();
     } catch { if (state.isConnected) { state.textContent = 'We couldn’t load the workers. Cancel and choose Edit shift to retry.'; message('Your shift has not changed. Please retry.'); } }
   });
   deleteButton.addEventListener('click', () => {

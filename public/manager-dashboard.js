@@ -1,3 +1,4 @@
+import {mountSchedulePublication} from './schedule-publication.js';
 import { requestJSON } from './request.js';
 import { reviewActions } from './review-claim.js';
 import { managedShiftCard } from './manage-shift.js';
@@ -43,8 +44,9 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
   const summary = document.querySelector('#manager-summary');
   const timezone = document.querySelector('#manager-timezone');
   const updated = document.querySelector('#dashboard-updated');
-  let loading = false;
+  let loading = false;let refreshPublication=null;
   if (page === 'schedule') {
+    const publication=element('section');content.before(publication);refreshPublication=await mountSchedulePublication(publication,csrfToken,()=>load());
     const creator = element('div'); content.before(creator);
     // Roster availability must never hold the saved schedule or Refresh hostage.
     void mountCreateShift(creator, account, csrfToken, () => load());
@@ -60,7 +62,8 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
       const response = await requestJSON('/api/manager/dashboard', { cache: 'no-store' });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error();
-      const result = response.data;
+      const result = response.data;if(refreshPublication)void refreshPublication();
+      if(page==='schedule'){const button=main.querySelector('#save-shift');if(button){button.dataset.draftMode=String(result.publicationEnabled);button.textContent=result.publicationEnabled?'Save private draft →':'Create and assign shift →';}}
       timezone.textContent = `All times shown in your business timezone: ${result.timezone}.`;
       for (const [label, value, detail] of [['Team members', result.summary.workers, 'workers in your business'], ['Upcoming & current', result.summary.shifts, 'assigned shifts'], ['Awaiting approval', result.summary.pendingClaims, 'pending coverage claims']]) {
         const card = element('article', 'stat'); card.append(element('p', 'stat-title', label), element('strong', '', String(value)), element('small', '', detail)); summary.append(card);
@@ -92,5 +95,5 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
       const retry = element('button', 'solid-link', 'Try again'); retry.type = 'button'; retry.addEventListener('click', load); error.append(message, retry); content.replaceChildren(error); return false;
     } finally { loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
-  refresh.addEventListener('click', load); await load();
+  refresh.addEventListener('click',load); await load();
 }
