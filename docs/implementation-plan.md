@@ -11,8 +11,8 @@ Implement one increment at a time. CS-043 deployment remains last.
 
 | Task | Acceptance criteria | Tracking |
 | --- | --- | --- |
-| CS-048 Conversation regression baseline | Run real demo prompts through repeatable checks. Cover both roles, follow-ups, missing details and coworker calendar boundaries. Fix the deterministic routing failures found by these cases and provide a preview. | [#95](https://github.com/EldarSadeghi/soen287-covershift/issues/95), implemented locally |
-| CS-049 Intent routing | Handle unfamiliar paraphrases and mixed requests through a fixed set of role-allowed workflows. Ask a focused question when intent is unclear. Preserve explicit confirmation. | Approved backlog |
+| CS-048 Conversation regression baseline | Run real demo prompts through repeatable checks. Cover both roles, follow-ups, missing details and coworker calendar boundaries. Fix the deterministic routing failures found by these cases and provide a preview. | [#95](https://github.com/EldarSadeghi/soen287-covershift/issues/95), merged in #96 |
+| CS-049 Intent routing | Handle unfamiliar paraphrases and mixed requests through a fixed set of role-allowed workflows. Ask a focused question when intent is unclear. Preserve explicit confirmation. | [#97](https://github.com/EldarSadeghi/soen287-covershift/issues/97) |
 | CS-050 Follow-up context | Keep selected shifts and reviewed dates, hours and filters across search, explanation and alternatives. Verify ambiguous and stale references. | Approved backlog |
 | CS-051 Clearer answers and recovery | Show grounded facts and one useful next action. Cover empty, stale, pending and uncertain outcomes with keyboard, mobile and screen-reader checks. | Approved backlog |
 | CS-052 Live-model checks and speed | Evaluate natural phrasing, date handling and follow-ups with fictional data and an opt-in live provider. Measure time to progress and answer, and report failures separately from offline results. | Approved backlog |
