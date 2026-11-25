@@ -163,6 +163,9 @@ export function mountAiChat(account, csrfToken) {
     event.preventDefault(); if (busy) return;
     const text = composer.value.trim();
     if (!text) { notice('Write a message first.'); composer.focus(); return; }
+    const timingStart = performance.now();
+    delete dialog.dataset.progressMs;
+    delete dialog.dataset.answerMs;
     const previous = chat.value.messages.at(-1);
     const coworkerDateReply = !manager && previous?.topic === 'coworkers' &&
       /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification' &&
@@ -352,6 +355,12 @@ export function mountAiChat(account, csrfToken) {
     for(const bubble of messages.children)bubble.hidden=false;
     const pendingBubble = say('user', text);
     notice('Preparing a reply… You can close this panel and keep working.');
+    // Allow a rendering opportunity before recording visible progress.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (dialog.open && busy && version === revision && status.textContent.startsWith('Preparing a reply')) {
+        dialog.dataset.progressMs = String(Math.round(performance.now() - timingStart));
+      }
+    }));
     try {
       const response = await requestJSON(CHAT_ENDPOINTS[mode], { method: 'POST', readOnly: true, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body });
       if (version !== revision || chat.value.completion || chat.value.uncertainDraftId) {
@@ -390,6 +399,7 @@ export function mountAiChat(account, csrfToken) {
       if (data.kind === 'clarification') notice('Reply below to continue.');
       else notice(data.kind === 'matches' ? reply : card.querySelector('h3')?.textContent || 'Your response is ready.', true);
       syncResponse();if(!card.hidden)revealResponse(card);
+      dialog.dataset.answerMs = String(Math.round(performance.now() - timingStart));
       if (dialog.open) composer.focus({preventScroll:true});
     } catch (error) {
       pendingBubble.remove();
