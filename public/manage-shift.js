@@ -8,6 +8,7 @@ export function businessLocal(instant, timezone) {
 export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   const wrapper = element('div', 'managed-shift');
   wrapper.append(shiftCard(shift, timezone, { workerName: shift.assignedWorker.name }));
+  if(shift.draft)wrapper.prepend(element('p','draft-label','Private draft · unpublished'));
   if (shift.lockReason) {
     wrapper.append(element('p', 'shift-lock', shift.lockReason)); return wrapper;
   }
@@ -34,7 +35,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       const result = response.data;
       if (!response.ok) { markErrors(result.fields || {}); message(result.message || 'The change could not be saved. Try again.'); return; }
-      await onChanged(action === 'edit' ? `“${result.shift.title}” was updated and assigned to ${result.shift.assignedWorker.name}.` : `“${shift.title}” was deleted.`);
+      await onChanged(result.draft?'Private draft saved. Publish the schedule to update employees.':action === 'edit' ? `“${result.shift.title}” was updated and assigned to ${result.shift.assignedWorker.name}.` : `“${shift.title}” was deleted.`);
     } catch { uncertain = true; message('We couldn’t confirm the result. Your entries are kept. Cancel and refresh the schedule to check the saved shift before trying again.'); }
     finally { busy = false; submit.disabled = uncertain; cancel.disabled = false; submit.textContent = action === 'edit' ? 'Save changes' : 'Delete this shift'; }
   }

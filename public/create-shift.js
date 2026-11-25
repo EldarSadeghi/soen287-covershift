@@ -101,10 +101,10 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
       aiDraftId = null;
       document.dispatchEvent(new CustomEvent('ai:shift-created', { detail: { draftId: submittedDraftId, result } }));
       form.reset();
-      feedback(`“${result.shift.title}” is saved and assigned to ${result.shift.assignedWorker.name}. It is now available in their My shifts page.`, true);
+      feedback(result.draft?`“${result.shift.title}” is saved as a private draft. Publish its schedule before employees can see it.`:`“${result.shift.title}” is saved and assigned to ${result.shift.assignedWorker.name}. It is now available in their My shifts page.`, true);
       await onCreated();
     } catch (error) { document.dispatchEvent(new CustomEvent('ai:shift-save-uncertain', { detail: { draftId: submittedDraftId } })); uncertain = true; reviewed = false; reconcile.textContent = 'Check saved shifts'; reconcile.hidden = false; feedback('We couldn’t confirm whether the shift was saved. Your entries are kept. Check the saved schedule before trying again.'); }
-    finally { saving = false; submit.disabled = uncertain; submit.textContent = 'Create and assign shift →'; }
+    finally { saving = false; submit.disabled = uncertain; submit.textContent = submit.dataset.draftMode==='true'?'Save private draft →':'Create and assign shift →'; }
   });
   find('retry-roster').addEventListener('click', loadWorkers);
   await loadWorkers();

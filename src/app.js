@@ -1,3 +1,4 @@
+import {getSchedulePeriod,prepareSchedule,publishSchedule,discardDraft} from './schedules/publication.js';
 import {coverOptions,listCoverInvitations,sendCoverInvitation,decideCoverInvitation} from './cover/service.js';
 import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability,coworkerUpcomingWindows} from './availability/windows.js';
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
@@ -24,6 +25,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/schedule-publication.js',['schedule-publication.js','text/javascript; charset=utf-8']],
   ['/cover-ui.js',['cover-ui.js','text/javascript; charset=utf-8']],
   ['/availability-view.js',['availability-view.js','text/javascript; charset=utf-8']],
   ['/time-off.js', ['time-off.js', 'text/javascript; charset=utf-8']],
@@ -256,6 +258,17 @@ export function createAppServer({ store, signup = registerManager, login = authe
         limitTeam(account.user.id);
         const input = await readJson(request);
         sendJson(response, pathname.endsWith('/setup') ? 200 : 201, pathname.endsWith('/setup') ? await reissueSetup(store, account.user.id, pathname.split('/')[4], input, setupClock()) : await addWorker(store, account.user.id, input, setupClock())); return;
+      }
+      if(pathname==='/api/manager/schedule-period'||pathname==='/api/manager/schedule-prepare'||pathname==='/api/manager/schedule-publish'||/^\/api\/manager\/schedule-drafts\/[a-zA-Z0-9_-]{1,80}\/discard$/.test(pathname)){
+        const reading=pathname==='/api/manager/schedule-period';requireMethod(request,response,reading?'GET':'POST');
+        const account=await requireAccount(store,sessions,request.headers.cookie,'manager');
+        const url=new URL(request.url,'http://localhost');
+        if(reading){if([...url.searchParams.keys()].some(k=>k!=='startsOn'))throw new HttpError(400,'Choose only a schedule start date.');sendJson(response,200,await getSchedulePeriod(store,account.user.id,url.searchParams.get('startsOn'),shiftClock()));return;}
+        protectMutation(request,publicOrigin);if(url.search)throw new HttpError(400,'Use your signed-in business.');
+        if(!sessions.validCsrf(account.session,request.headers['x-csrf-token']))throw new HttpError(403,'Refresh the page and try again.');
+        const input=await readJson(request);limitShifts(account.user.id);
+        const result=pathname.endsWith('prepare')?await prepareSchedule(store,account.user.id,input,shiftClock):pathname.endsWith('publish')?await publishSchedule(store,account.user.id,input,shiftClock):await discardDraft(store,account.user.id,pathname.split('/')[4],input);
+        sendJson(response,200,result);return;
       }
       if (pathname === '/api/logout') {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);

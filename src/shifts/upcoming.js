@@ -14,5 +14,6 @@ export async function upcomingWorkerShifts(store, userId, now = Date.now()) {
     .filter(shift => shift.businessId === business.id && shift.assignedWorkerId === user.id && Date.parse(shift.endsAt) > now)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
     .map(shift => ({ id: shift.id, title: shift.title, duties:shift.duties||[], startsAt: shift.startsAt, endsAt: shift.endsAt, coverage: coverageState(db, shift, now), status: Date.parse(shift.startsAt) <= now ? 'in_progress' : 'upcoming' }));
-  return { shifts, timezone: business.timezone, asOf: new Date(now).toISOString() };
+  const publications=(db.schedulePublications||[]).filter(r=>r.businessId===business.id&&((db.scheduleNotifications||[]).some(n=>n.publicationId===r.id&&n.userId===user.id))).map(r=>{const p=db.schedulePeriods.find(p=>p.id===r.periodId);return {startsOn:p.startsOn,endsOn:p.endsOn,publishedAt:r.at};}).reverse().filter((p,i,all)=>all.findIndex(x=>x.startsOn===p.startsOn)===i).slice(0,4);
+  return { shifts, publications, timezone: business.timezone, asOf: new Date(now).toISOString() };
 }

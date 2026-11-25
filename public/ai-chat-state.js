@@ -9,11 +9,11 @@ function savedReceipt(draftId, result) {
   if (!validId(draftId) || !validId(shift?.id) || !validId(shift?.assignedWorker?.id) || typeof shift.title !== 'string' || !shift.title.trim() || shift.title.length > 100 || typeof shift.assignedWorker.name !== 'string' || !shift.assignedWorker.name.trim() || shift.assignedWorker.name.length > 100 || typeof result.timezone !== 'string' || result.timezone.length > 100) return null;
   if (!['startsAt', 'endsAt'].every(key => typeof shift[key] === 'string' && shift[key].length <= 30 && Number.isFinite(Date.parse(shift[key]))) || Date.parse(shift.endsAt) <= Date.parse(shift.startsAt)) return null;
   try { new Intl.DateTimeFormat('en', { timeZone: result.timezone }).format(new Date(shift.startsAt)); } catch { return null; }
-  return { draftId, shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, assignedWorker: { id: shift.assignedWorker.id, name: shift.assignedWorker.name } }, timezone: result.timezone };
+  return { draftId, ...(result.draft===true?{draft:true}:{}), shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, assignedWorker: { id: shift.assignedWorker.id, name: shift.assignedWorker.name } }, timezone: result.timezone };
 }
 export function createdShiftMessage(completion) {
   const time = formatShiftTime(completion.shift, completion.timezone);
-  return `Shift created: “${completion.shift.title}”, assigned to ${completion.shift.assignedWorker.name}. ${time.date}, ${time.startTime} – ${time.endDate ? time.endDate + ' · ' : ''}${time.endTime} (${completion.timezone}).`;
+  return completion.draft?`Private shift draft saved: “${completion.shift.title}” for ${completion.shift.assignedWorker.name}. Publish the schedule before employees can see it.`:`Shift created: “${completion.shift.title}”, assigned to ${completion.shift.assignedWorker.name}. ${time.date}, ${time.startTime} – ${time.endDate ? time.endDate + ' · ' : ''}${time.endTime} (${completion.timezone}).`;
 }
 export function createChatState(storage, owner, now = Date.now) {
   const empty = () => ({ owner, messages: [], composer: '', suggestion: null, pending: null, completion: null, uncertainDraftId: null });

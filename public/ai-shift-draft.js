@@ -90,10 +90,10 @@ export function mountAiChat(account, csrfToken) {
     card.replaceChildren();card.hidden=!data;if(!data)return;
     const completion=chat.value.completion;
     if(completion && completion.draftId===data.id){
-      responseHeader(card,'Shift created','Your shift is saved.','success');
+      responseHeader(card,completion.draft?'Private draft saved':'Shift created',completion.draft?'Publish the schedule to release this shift.':'Your shift is saved.','success');
       card.append(savedShiftFields(completion.shift,completion.timezone,completion.shift.assignedWorker.name));
       const schedule=element('a','ai-chat-review','View schedule');schedule.href='/workspace/manager/schedule';
-      card.append(responseNote('Saved successfully. The employee can see this assignment in My shifts.','success'),schedule);return;
+      card.append(responseNote(completion.draft?'This draft is private. The employee will see it after schedule publication.':'Saved successfully. The employee can see this assignment in My shifts.','success'),schedule);return;
     }
     if(chat.value.uncertainDraftId===data.id){
       responseHeader(card,'Save not confirmed','Check your saved schedule.','uncertain');

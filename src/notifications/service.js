@@ -42,11 +42,12 @@ function presentation(db,user,n,r,shift,status,groupKey){
 }
 export async function listNotifications(store,userId,before=null,now=Date.now()) {
   const db=await store.read(),user=account(db,userId);
-  const own=[...(db.notifications||[]),...(db.coverNotifications||[])].filter(n=>n.userId===user.id && n.businessId===user.businessId).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id));
+  const own=[...(db.notifications||[]),...(db.coverNotifications||[]),...(db.scheduleNotifications||[])].filter(n=>n.userId===user.id && n.businessId===user.businessId).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id));
   const offset=before===null ? 0 : own.findIndex(n=>n.id===before)+1;
   if (before!==null && offset===0) throw new HttpError(400,'Refresh notifications to start again.');
   const page=own.slice(offset,offset+20);
   return {unreadCount:own.filter(n=>n.readAt===null).length, next:offset+page.length<own.length?page.at(-1).id:null,notifications:page.map(n=>{
+    if(n.publicationId){const r=db.schedulePublications.find(r=>r.id===n.publicationId),p=db.schedulePeriods.find(p=>p.id===r.periodId);return {id:n.id,groupKey:'schedule:'+p.id,headline:'Schedule published',title:p.startsOn+' – '+p.endsOn,summary:'Your team schedule was published or updated. Review your assigned shifts.',message:'Review your published schedule.',eventMessage:'Manager published schedule',currentStatus:'published',createdAt:n.createdAt,readAt:n.readAt,timezone:p.timezone,href:'/workspace/worker/shifts',linkLabel:'View schedule ↗'};}
     if(n.invitationId){const r=db.coverInvitations.find(r=>r.id===n.invitationId);const message={sent:'A coworker asked you to cover a shift. Review it and accept or decline.',accepted:'Your coworker accepted. Manager approval is still required.',declined:'Your coworker declined your cover invitation.',cancelled:'The sender cancelled this cover invitation.',expired:'This cover invitation is no longer available. No shift was transferred.'}[n.action];const shift=db.shifts.find(s=>s.id===r.shiftId);const status=coverDisplayStatus(db,r,now);const view=presentation(db,user,n,r,shift,status==='pending'?'invited':status,r.requestId?'coverage:'+r.requestId:'invitation:'+r.id);return {...view,id:n.id,title:r.shiftSnapshot.title,message,createdAt:n.createdAt,readAt:n.readAt,currentStatus:coverDisplayStatus(db,r,now),href:`/workspace/${user.role}/cover?invitation=${r.id}`};}
     const r=db.coverageRequests.find(r=>r.id===n.requestId),shift=db.shifts.find(s=>s.id===r.shiftId);
     const audience=['approved','rejected'].includes(n.action)?(user.id===r.claimantId?'claimant':'original'):user.role;
@@ -56,7 +57,7 @@ export async function listNotifications(store,userId,before=null,now=Date.now())
 export async function markNotificationsRead(store,userId,input,clock=Date.now) {
   if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length!==1 || !Array.isArray(input.ids) || input.ids.length<1 || input.ids.length>100 || input.ids.some(id=>typeof id!=='string'||! /^[a-f0-9]{64}$/.test(id)) || new Set(input.ids).size!==input.ids.length) throw new HttpError(400,'Choose up to 100 displayed notifications.');
   return store.transaction(db=>{
-    const user=account(db,userId),records=input.ids.map(id=>[...(db.notifications||[]),...(db.coverNotifications||[])].find(n=>n.id===id && n.userId===user.id && n.businessId===user.businessId));
+    const user=account(db,userId),records=input.ids.map(id=>[...(db.notifications||[]),...(db.coverNotifications||[]),...(db.scheduleNotifications||[])].find(n=>n.id===id && n.userId===user.id && n.businessId===user.businessId));
     if (records.some(n=>!n)) throw new HttpError(404,'Notification not found.');
     for (const n of records) if(n.readAt===null)n.readAt=new Date(Math.max(clock(),Date.parse(n.createdAt))).toISOString();
     return {message:'Selected notifications marked as read.'};
