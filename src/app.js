@@ -3,6 +3,7 @@ import {getSchedulePeriod,prepareSchedule,publishSchedule,discardDraft} from './
 import {coverOptions,listCoverInvitations,sendCoverInvitation,decideCoverInvitation} from './cover/service.js';
 import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability,coworkerUpcomingWindows} from './availability/windows.js';
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
+import { workingSummary } from './ai/working-summary.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
 import { withAvailabilityMatching } from './availability/matching.js';
@@ -33,6 +34,7 @@ const assets = new Map([
   ['/availability-view.js',['availability-view.js','text/javascript; charset=utf-8']],
   ['/time-off.js', ['time-off.js', 'text/javascript; charset=utf-8']],
   ['/ai-response-card.js', ['ai-response-card.js', 'text/javascript; charset=utf-8']],
+  ['/ai-working-summary.js', ['ai-working-summary.js', 'text/javascript; charset=utf-8']],
   ['/ai-schedule.js', ['ai-schedule.js', 'text/javascript; charset=utf-8']],
   ['/notifications.js', ['notifications.js', 'text/javascript; charset=utf-8']],
   ['/request.js', ['request.js', 'text/javascript; charset=utf-8']],
@@ -205,6 +207,14 @@ export function createAppServer({ store, signup = registerManager, login = authe
         if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Explanations use your signed-in workspace.');
         limitCoverage(account.user.id);
         sendJson(response, 200, await explainAvailability(store, account.user.id, await readJson(request), shiftClock));
+        return;
+      }
+      if (pathname === '/api/ai-working-summary') {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie);
+        const query = new URL(request.url, 'http://localhost').searchParams;
+        if (query.size !== 1 || !query.has('week')) throw new HttpError(422, 'Choose this week or next week.');
+        sendJson(response, 200, await workingSummary(store, account.user.id, query.get('week'), shiftClock));
         return;
       }
       if (pathname === '/api/ai-schedule-question') {

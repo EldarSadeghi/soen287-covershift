@@ -1,6 +1,7 @@
+import { showWorkingSummary, workingSummaryMessage } from './ai-working-summary.js';
 import { createBatchReview } from './ai-shift-batch.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate, workingSummaryWeek } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -59,11 +60,38 @@ export function mountAiChat(account, csrfToken) {
     }
   }
 
+  async function loadWorkingSummary(week) {
+    if (busy) return;
+    working(true);
+    notice('Checking saved records…');
+    card.hidden = true;
+    card.replaceChildren();
+    try {
+      const response = await requestJSON(`/api/ai-working-summary?week=${week}`, { cache: 'no-store' });
+      if (response.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
+      if (!response.ok || response.data.kind !== 'working_summary') throw new Error();
+      const message = workingSummaryMessage(response.data);
+      showWorkingSummary(card, response.data, () => void loadWorkingSummary(week));
+      outcomeText(message);
+      notice(message, true);
+    } catch {
+      card.hidden = false;
+      responseHeader(card, 'Could not refresh', 'Summary unavailable', 'uncertain');
+      card.append(responseNote('The latest saved records could not be checked. Try refreshing the summary.', 'uncertain'));
+      const retry = element('button', 'ai-chat-review', 'Retry summary');
+      retry.type = 'button';
+      retry.addEventListener('click', () => void loadWorkingSummary(week));
+      card.append(retry);
+      outcomeText('Summary unavailable. Retry to check the latest saved records.');
+      notice('Summary unavailable. Retry to check the latest saved records.', true);
+    } finally { working(false); }
+  }
+
   composer.value = chat.value.composer;
   composer.placeholder = 'Ask or describe what you need…';
   const prompts = manager
-    ? [['Create a shift', 'Help me create a shift.'], ['Draft multiple shifts', 'Draft two shifts: '], ['Team schedule', 'Show the entire team’s schedule this week.']]
-    : [['My next shift', 'When is my next shift?'], ['Find openings', 'Find an open shift Thursday.'], ['Save availability', 'I can take one shift Thursday between 2 PM and 6 PM.']];
+    ? [['Create a shift', 'Help me create a shift.'], ['Draft multiple shifts', 'Draft two shifts: '], ['Team schedule', 'Show the entire team’s schedule this week.'], ['Attention summary', 'Show the attention summary for this week.']]
+    : [['My next shift', 'When is my next shift?'], ['My working week', 'Show my working week.'], ['Find openings', 'Find an open shift Thursday.'], ['Save availability', 'I can take one shift Thursday between 2 PM and 6 PM.']];
   for (const [label, text] of prompts) {
     const button = element('button', '', label); button.type = 'button';
     button.addEventListener('click', () => {
@@ -183,7 +211,7 @@ export function mountAiChat(account, csrfToken) {
     const coworkerDateReply = !manager && previous?.topic === 'coworkers' &&
       /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification' &&
       !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
-    const routed = routeChat(text, manager, previous && previous.topic !== 'clarification' ? mode : null);
+    const routed = routeChat(text, manager, previous?.topic === 'summary' ? 'summary' : previous && previous.topic !== 'clarification' ? mode : null);
     const openingReply = !manager && previous?.topic === 'explanation' &&
       previous.text.startsWith(OPENING_CLARIFICATION) && routed === 'clarification' &&
       !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
@@ -220,6 +248,20 @@ export function mountAiChat(account, csrfToken) {
       say('assistant', reply);
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
+    }
+    if (target === 'summary') {
+      const week = workingSummaryWeek(text);
+      explanations?.reset();
+      say('user', text);
+      if (!week) {
+        showSuggestion(null);
+        appendTurn('Which summary should I show, this week or next week?');
+        notice('Reply with this week or next week.');
+        return;
+      }
+      appendTurn('I’ll check the saved records for that week.');
+      await loadWorkingSummary(week);
+      return;
     }
     const { alternateTo, criteria, explainedShiftId } = chat.value;
     const rememberedShift = previous?.topic === 'explanation' ? explainedShiftId || alternateTo

@@ -12,13 +12,19 @@ export const MIXED_INTENT_QUESTION = 'Which should I handle first:';
 
 const taskLabels = {
   draft: 'draft a shift', search: 'find open shifts', availability: 'draft availability',
-  questions: 'check the schedule', coworkers: 'check coworker availability',
+  questions: 'check the schedule', summary: 'show a working-week summary', coworkers: 'check coworker availability',
   alternatives: 'find alternatives', explanation: 'explain a match or request', rules: 'check saved rules',
 };
 
 function explicitRoute(text, manager) {
   const message = normalizedMessage(text);
   if (/^(?:do not|don't|never)\b/.test(message)) return null;
+  if (/^(?:show|list|summari[sz]e|give me|what|which|do i|how many|check|(?:my |team )?(?:working week|attention summary|weekly summary))\b/.test(message)) {
+    const summary = manager
+      ? /\b(?:attention summary|what needs (?:my )?attention|weekly summary|pending approvals|claims awaiting approval|needs? cover|unresolved coverage|open (?:coverage|requests for cover))\b/
+      : /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/;
+    if (summary.test(message)) return 'summary';
+  }
   if (manager && requestsShiftBatch(message)) return 'draft';
   if (manager && /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
   if (!manager) {
@@ -68,9 +74,17 @@ export function routeChat(text, manager, current) {
   if (!manager && /^(?:i (?:can work|am available|'m available)|available on)\b/.test(message)) {
     return current === 'availability' ? current : 'clarification';
   }
+  if (current === 'summary' && /^(?:(?:what|how) about )?(?:this|next) week[.!?]*$/.test(message)) return 'summary';
   const editable = manager ? current === 'draft' : ['search', 'availability'].includes(current);
   if (editable && /^(?:only|just|instead|actually|move|change|make it|rename|remove|leave it|extend|shorten|start|end|from|until|after|before|all day|noon|midnight|today|tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|\d+)/i.test(message)) return current;
   return 'clarification';
+}
+
+export function workingSummaryWeek(text) {
+  const message = normalizedMessage(text);
+  const weeks = [...message.matchAll(/\b(this|next) week\b/g)].map(match => match[1]);
+  if (new Set(weeks).size > 1 || /\b(?:today|tomorrow|yesterday|weekend|(?:last|previous) week|(?:this|next|last) month|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december)\b|\d{1,4}[-/]\d|\b\d+ (?:days?|weeks?|months?)\b/.test(message)) return null;
+  return weeks[0] || 'this';
 }
 
 export function chatClarification(text, manager) {
