@@ -10,15 +10,23 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
   const fieldIds = { title: 'shift-title', assignedWorkerId: 'shift-worker', startLocal: 'shift-start', endLocal: 'shift-end' };
   const planner=mountWeekPlanner({startInput:find('shift-start'),endInput:find('shift-end'),timezone:account.business.timezone,followPeriod:true});
   let aiDraftId = null;
-  document.addEventListener('ai:cancel-review', () => { aiDraftId = null; find('ai-replace-confirmation')?.remove(); });
+  document.addEventListener('ai:cancel-review', () => {
+    find('ai-replace-confirmation')?.remove();
+    if (!aiDraftId || saving || uncertain) return;
+    aiDraftId = null;
+    for (const id of Object.values(fieldIds)) find(id).value = '';
+    planner.read();
+    find('create-feedback').hidden = true;
+  });
   registerAiReviewer(suggestion => {
     if (saving || uncertain || form.hidden) return false;
     const draft = suggestion.draft;
     if (suggestion.timezone !== account.business.timezone || ![...find('shift-worker').options].some(option => option.value === draft.assignedWorkerId)) return false;
     // Explicit confirmation if fields already contain a manual draft.
-    let confirmation = find('ai-replace-confirmation');
-    if (confirmation) confirmation.remove();
+    find('ai-replace-confirmation')?.remove();
+    let confirmation;
     const apply = () => {
+      if (confirmation && !confirmation.isConnected) return;
       aiDraftId = suggestion.id || null;
       for (const [field, id] of Object.entries(fieldIds)) {
         find(id).value = draft[field]; find(id).removeAttribute('aria-invalid'); find(`${field}-error`).hidden = true;

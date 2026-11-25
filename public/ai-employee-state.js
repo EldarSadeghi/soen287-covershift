@@ -1,15 +1,21 @@
 // Cache conversation and search criteria, never a reusable claim authorization.
 export const EMPLOYEE_CHAT_KEY = 'covershift.ai.employee.v1';
 export function createEmployeeChatState(storage, owner, now = Date.now) {
-  const empty = () => ({ owner, messages: [], composer: '', mode: 'search', criteria: null, outcome: null });
+  const empty = () => ({ owner, messages: [], composer: '', mode: 'search', criteria: null, availabilityDraft: null, outcome: null });
   let state = empty();
   try {
     const saved = JSON.parse(storage.getItem(EMPLOYEE_CHAT_KEY));
     if (saved?.owner === owner && now() >= saved.updatedAt && now() - saved.updatedAt < 8 * 3600000 && Array.isArray(saved.messages) && saved.messages.length <= 10 && saved.messages.length % 2 === 0 && JSON.stringify(saved.messages).length < 10000 && saved.messages.every((m, i) => m && m.role === (i % 2 ? 'assistant' : 'user') && typeof m.text === 'string' && m.text.length <= 1500)) {
       state.messages = saved.messages;
+      if (saved.draftCancelled === true) state.draftCancelled = true;
+      if (saved.refinementPending === true) state.refinementPending = true;
       if (['availability','questions'].includes(saved.mode)) state.mode=saved.mode;
       if (typeof saved.composer === 'string' && saved.composer.length <= 1500) state.composer = saved.composer;
       if (saved.criteria && Object.keys(saved.criteria).length === 4 && ['date', 'startLocal', 'endLocal', 'title'].every(k => typeof saved.criteria[k] === 'string' && saved.criteria[k].length <= 100)) state.criteria = saved.criteria;
+      const draft = saved.availabilityDraft;
+      if (state.mode === 'availability' && draft && Object.keys(draft).length === 5 &&
+          ['startLocal', 'endLocal', 'title', 'timezone'].every(key => typeof draft[key] === 'string' && draft[key].length <= 100) &&
+          Number.isInteger(draft.maxClaims) && draft.maxClaims >= 1 && draft.maxClaims <= 5) state.availabilityDraft = draft;
       if (saved.outcome && ['pending', 'uncertain', 'availability_saved', 'availability_uncertain'].includes(saved.outcome.kind) && typeof saved.outcome.title === 'string' && saved.outcome.title.length <= 100) state.outcome = { kind: saved.outcome.kind, title: saved.outcome.title };
     }
   } catch { /* In-memory fallback. */ }

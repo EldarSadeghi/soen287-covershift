@@ -22,6 +22,7 @@ export function createChatState(storage, owner, now = Date.now) {
     const saved = JSON.parse(storage.getItem(CHAT_KEY));
     if (saved?.owner === owner && now() - saved.updatedAt < 8 * 60 * 60 * 1000 && now() >= saved.updatedAt && Array.isArray(saved.messages) && saved.messages.length <= 10 && saved.messages.length % 2 === 0 && JSON.stringify(saved.messages).length < 10000 && saved.messages.every((m, i) => m && m.role === (i % 2 ? 'assistant' : 'user') && typeof m.text === 'string' && m.text.length <= 1500)) {
       state.messages = saved.messages;
+      if (saved.refinementPending === true) state.refinementPending = true;
       if(saved.mode==='questions')state.mode='questions';
       if (typeof saved.composer === 'string' && saved.composer.length <= 1500) state.composer = saved.composer;
       if (saved.suggestion && validDraft(saved.suggestion.draft) && typeof saved.suggestion.workerName === 'string' && saved.suggestion.workerName.length <= 100 && typeof saved.suggestion.timezone === 'string' && saved.suggestion.timezone.length <= 100) state.suggestion = { ...saved.suggestion, id: validId(saved.suggestion.id) ? saved.suggestion.id : crypto.randomUUID() };

@@ -176,3 +176,23 @@ test('overnight drafts work, inactive workers are excluded, and failed provider 
  await assert.rejects(failing(store, 'manager_morgan', input, () => now), status(503));
  await assert.rejects(failing(store, 'manager_morgan', input, () => now), status(429)); assert.equal(calls, 1);
 });
+
+test('manager revisions preserve untouched fields and clarify before applying an ambiguous change', async t => {
+ const { store, make } = await fixture(t);
+ const base = { title: complete.title, assignedWorkerId: 'worker_jamie', startLocal: complete.startLocal, endLocal: complete.endLocal };
+ const emptyPatch = { title: null, worker: null, startLocal: null, endLocal: null };
+ const before = await readFile(store.filename, 'utf8');
+ const ai = make(async (_, init) => {
+  const body = JSON.parse(init.body);
+  const context = JSON.parse(body.input);
+  assert.deepEqual(context.pendingDraft, { title: base.title, worker: 'w1', startLocal: base.startLocal, endLocal: base.endLocal });
+  assert.equal(body.text.format.schema.properties.worker.anyOf[1].type, 'null');
+  return reply(context.request === 'Move it to 2'
+   ? { kind: 'clarification', question: '2 AM or 2 PM?', ...emptyPatch }
+   : { kind: 'draft', question: '', ...emptyPatch, startLocal: '2026-12-03T14:00' });
+ });
+ assert.equal((await ai(store, 'manager_morgan', { description: 'Move it to 2', base }, () => now)).kind, 'clarification');
+ assert.deepEqual((await ai(store, 'manager_morgan', { description: '2 PM', base }, () => now)).draft, { ...base, startLocal: '2026-12-03T14:00' });
+ await assert.rejects(ai(store, 'manager_morgan', { description: '2 PM', base: { ...base, assignedWorkerId: 'other_worker' } }, () => now), status(422));
+ assert.equal(await readFile(store.filename, 'utf8'), before);
+});

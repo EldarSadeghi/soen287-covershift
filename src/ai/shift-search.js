@@ -1,3 +1,4 @@
+import { refinementFormat, applyRefinement, refinementInstructions } from './refinement.js';
 import { HttpError } from '../auth/errors.js';
 import { coverageAccount } from '../requests/coverage.js';
 import { openShiftBoard } from '../requests/open.js';
@@ -41,18 +42,20 @@ export async function searchExistingShifts(store, userId, input, clock = Date.no
 export function createAiShiftSearcher({ apiKey, model = 'gpt-6-luna', allowance, fetchImpl = fetch, timeoutMs = 11000 } = {}) {
   const active = new Set();
   return async (store, userId, input, clock = Date.now) => {
-    input = validateChatInput(input);
+    input = validateChatInput(input, true);
     const { business } = workerAccount(await store.read(), userId);
     if (!apiKey || model !== 'gpt-6-luna' || !allowance) throw unavailable();
     if (active.has(userId) || active.size >= 2) throw new HttpError(429, 'AI search is busy. Wait for the current request or use Open shifts.');
     const now = clock();
-    const context = { currentInstant: new Date(now).toISOString(), currentBusinessTime: new Intl.DateTimeFormat('en-CA', { timeZone: business.timezone, dateStyle: 'full', timeStyle: 'long', hourCycle: 'h23' }).format(now), timezone: business.timezone, conversation: input.history, request: input.description };
-    const body = JSON.stringify({ model, store: false, reasoning: { effort: 'none' }, max_output_tokens: 1200, instructions, input: JSON.stringify(context), text: { format: { type: 'json_schema', name: 'existing_shift_search', strict: true, schema } } });
+    const base = input.base;
+    if (base !== undefined) validateSearchCriteria(base, business.timezone);
+    const context = { currentInstant: new Date(now).toISOString(), currentBusinessTime: new Intl.DateTimeFormat('en-CA', { timeZone: business.timezone, dateStyle: 'full', timeStyle: 'long', hourCycle: 'h23' }).format(now), timezone: business.timezone, conversation: input.history, request: input.description, ...(base && { pendingDraft: base }) };
+    const body = JSON.stringify({ model, store: false, reasoning: { effort: 'none' }, max_output_tokens: 1200, instructions: instructions + (base ? refinementInstructions : ''), input: JSON.stringify(context), text: { format: { type: 'json_schema', name: 'existing_shift_search', strict: true, schema: refinementFormat(schema, base) } } });
     if (Buffer.byteLength(body) > 16000) throw new HttpError(422, 'This chat is too long. Start a new chat with a shorter message.');
     active.add(userId);
     try {
       await allowance.reserve(userId, now);
-      const result = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
+      const result = applyRefinement(await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable }), base, unavailable);
       if (!result || Array.isArray(result) || Object.keys(result).length !== fields.length || !fields.every(key => typeof result[key] === 'string')) throw unavailable();
       const current = workerAccount(await store.read(), userId);
       if (current.business.id !== business.id || current.business.timezone !== business.timezone) throw new HttpError(409, 'Your workspace changed. Search again.');

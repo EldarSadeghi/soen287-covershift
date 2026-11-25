@@ -1,6 +1,7 @@
+import { refinementFormat, applyRefinement, refinementInstructions } from './refinement.js';
 import { structuredResponse } from './structured-response.js';
 import { HttpError } from '../auth/errors.js';
-import { managerBusiness, assignmentFields, validateShiftInput } from '../shifts/create.js';
+import { businessInstant, managerBusiness, assignmentFields, validateShiftInput } from '../shifts/create.js';
 
 const unavailable = () => new HttpError(503, 'AI drafting is unavailable. Your description is preserved; use the manual shift form or try again later.');
 const keys = ['kind', 'question', 'title', 'worker', 'startLocal', 'endLocal'];
@@ -18,17 +19,17 @@ Use only the supplied workers. Resolve a worker only when the name uniquely iden
 Use the supplied business timezone and current date/time, never your training date. "Next Thursday" means the next occurrence strictly after today's business date; "next week" means the next Monday-Sunday calendar week. For a weekday without a week or date ask for an exact date. A time like "9 to 3" without AM/PM is ambiguous: ask. Use 24-hour values only when explicitly 24-hour (e.g. 09:00 to 15:00), or when AM/PM is stated. Overnight end dates must be explicit or clearly described as overnight; never silently reverse dates. Ask about nonexistent/repeated local times when known.
 For a complete single shift return kind=draft, question="", title, worker reference, and startLocal/endLocal in YYYY-MM-DDTHH:mm with no offset. For clarification return kind=clarification, a concise helpful question (max 500 characters), and all four draft fields empty. Do not return prose, HTML, secrets, or emails.`;
 
-export function validateChatInput(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input) || !Object.keys(input).every(key => ['description', 'history'].includes(key)) || typeof input.description !== 'string' || !input.description.trim() || input.description.length > 1500) throw new HttpError(422, 'Write a message using 1–1,500 characters.');
+export function validateChatInput(input, allowRefinement = false) {
+  if (!input || typeof input !== 'object' || Array.isArray(input) || !Object.keys(input).every(key => ['description', 'history'].includes(key) || allowRefinement && key === 'base') || typeof input.description !== 'string' || !input.description.trim() || input.description.length > 1500) throw new HttpError(422, 'Write a message using 1–1,500 characters.');
   const history = Object.hasOwn(input, 'history') ? input.history : [];
   if (!Array.isArray(history) || history.length > 10 || history.length % 2 !== 0 || Buffer.byteLength(JSON.stringify(history)) > 4500 || history.some((message, index) => !message || Array.isArray(message) || Object.keys(message).length !== 2 || message.role !== (index % 2 ? 'assistant' : 'user') || typeof message.text !== 'string' || !message.text.trim() || message.text.length > 1500)) throw new HttpError(422, 'This chat is too long or invalid. Start a new chat and describe the shift again.');
-  return { description: input.description.trim(), history };
+  return { description: input.description.trim(), history, ...(Object.hasOwn(input, 'base') && { base: input.base }) };
 }
 
 export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, fetchImpl = fetch, timeoutMs = 11000 } = {}) {
   const active = new Set();
   return async function draftShift(store, managerId, input, clock = Date.now) {
-    input = validateChatInput(input);
+    input = validateChatInput(input, true);
     let db = await store.read(); let business = managerBusiness(db, managerId);
     if (!apiKey || model !== 'gpt-6-luna' || !allowance) throw unavailable();
     if (active.has(managerId) || active.size >= 2) throw new HttpError(429, 'AI drafting is already busy. Wait for the current request or use the manual form.');
@@ -37,25 +38,37 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
     // Never silently truncate a roster: that could select the wrong same-name worker.
     if (workers.length > 50) throw new HttpError(422, 'AI drafting supports teams of up to 50 active workers. Use the manual form for this team.');
     const now = clock();
+    const businessId = business.id;
+    let base;
+    if (input.base !== undefined) {
+      const draft = validateShiftInput(input.base);
+      if (Object.hasOwn(draft, 'duties')) throw new HttpError(422, 'Refine the shift shown in chat.');
+      businessInstant(draft.startLocal, business.timezone, 'startLocal');
+      businessInstant(draft.endLocal, business.timezone, 'endLocal');
+      const selected = workers.find(worker => worker.id === draft.assignedWorkerId);
+      if (!selected) throw new HttpError(422, 'Choose an active worker in your business.');
+      base = { title: draft.title, worker: selected.ref, startLocal: draft.startLocal, endLocal: draft.endLocal };
+    }
     const context = {
       currentInstant: new Date(now).toISOString(),
       currentBusinessTime: new Intl.DateTimeFormat('en-CA', { timeZone: business.timezone, dateStyle: 'full', timeStyle: 'long', hourCycle: 'h23' }).format(now),
       timezone: business.timezone,
       workers: workers.map(({ ref, name }) => ({ ref, name })),
       conversation: input.history,
+      ...(base && { pendingDraft: base }),
       request: input.description,
     };
     const body = JSON.stringify({ model, store: false, reasoning: { effort: 'none' }, max_output_tokens: 1200,
-      instructions, input: JSON.stringify(context), text: { format: { type: 'json_schema', name: 'shift_draft', strict: true, schema: schema(workers) } } });
+      instructions: instructions + (base ? refinementInstructions : ''), input: JSON.stringify(context), text: { format: { type: 'json_schema', name: 'shift_draft', strict: true, schema: refinementFormat(schema(workers), base) } } });
     if (Buffer.byteLength(body) > 16000) throw new HttpError(422, 'This description and team are too large for AI drafting. Use a shorter description or the manual form.');
     active.add(managerId);
     try {
       await allowance.reserve(managerId, now);
-      const result = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
+      const result = applyRefinement(await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable }), base, unavailable);
       if (!result || Array.isArray(result) || Object.keys(result).length !== keys.length || !keys.every(key => typeof result[key] === 'string')) throw unavailable();
       // Recheck current membership after inference; model output never authorizes access.
       db = await store.read(); business = managerBusiness(db, managerId);
-      if (context.timezone !== business.timezone) throw new HttpError(409, 'Your business timezone changed. Request a new draft.');
+      if (businessId !== business.id || context.timezone !== business.timezone) throw new HttpError(409, 'Your business timezone changed. Request a new draft.');
       if (result.kind === 'clarification') {
         if (!result.question.trim() || result.question.length > 500 || ['title', 'worker', 'startLocal', 'endLocal'].some(key => result[key] !== '')) throw unavailable();
         return { kind: 'clarification', question: result.question, timezone: business.timezone };
