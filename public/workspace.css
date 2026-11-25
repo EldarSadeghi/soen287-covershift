@@ -162,3 +162,19 @@
 .availability-shift-check>summary{min-height:44px;font-weight:700;cursor:pointer}
 .availability-upcoming-error{padding:1rem;background:#f8e9df;color:#763b1c;border-radius:8px}
 .availability-page #av-own-range{color:var(--av-muted);margin:0 0 1rem}
+/* CS-040: directed cover invitation confirmation and inbox. */
+.cover-dialog{max-width:620px;width:calc(100% - 32px);box-sizing:border-box;border:1px solid #d8dfd5;border-radius:14px;padding:24px;color:#223e33;background:#fff;max-height:calc(100dvh - 32px);overflow:auto}
+.cover-dialog::backdrop{background:#162c2566}
+.cover-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cover-dialog h2{margin:0;font-size:22px}.cover-dialog h3{font-size:17px}
+.cover-dialog p,.cover-card p{overflow-wrap:anywhere}
+.cover-dialog label{display:block;font-size:14px;font-weight:700;margin:16px 0 8px}
+.cover-dialog input,.cover-dialog select{box-sizing:border-box;width:100%;min-width:0;padding:12px;border:1px solid #d8dfd5;border-radius:8px;background:#fff;color:inherit;font:inherit;min-height:44px}
+.cover-dialog button,.cover-card button{min-height:44px;font-size:14px;margin:8px 8px 0 0;white-space:normal}
+.cover-inbox-link{display:block;margin-top:20px}.cover-dialog .create-actions .logout-button{border:1px solid #d8dfd5}
+.cover-card{padding:24px;margin:18px 0}.cover-card h3{margin:0;font-size:18px}.cover-note{white-space:pre-wrap}
+.cover-card .cover-history{margin:16px 0}.cover-history summary{min-height:44px;cursor:pointer}
+.cover-group{margin:28px 0}.cover-group h2{font-size:20px}.cover-decision{margin-top:16px}
+#cover-error,.cover-dialog [data-error]{padding:16px;background:#f8e9df;color:#763b1c;border-radius:8px;overflow-wrap:anywhere}
+@media(max-width:650px){.cover-dialog{padding:16px}.cover-card{padding:16px}.cover-dialog input,.cover-dialog select{font-size:16px}.cover-dialog .create-actions{flex-direction:column;align-items:stretch}}
+.cover-dialog button:disabled,.cover-card button:disabled{opacity:.55;cursor:wait}

@@ -8,12 +8,13 @@ export function workerRemovalState(db, worker, now) {
   const rules = (db.availabilityRules || []).filter(r => r.workerId === worker.id && r.businessId === worker.businessId);
   const leave=(db.timeOffRequests||[]).filter(r=>r.workerId===worker.id&&r.businessId===worker.businessId);
   const windows=(db.availabilityWindows||[]).filter(r=>r.workerId===worker.id&&r.businessId===worker.businessId);
+  const invitations=(db.coverInvitations||[]).filter(r=>r.businessId===worker.businessId&&(r.senderId===worker.id||r.recipientId===worker.id));
   const blockers = assigned.filter(s => Date.parse(s.endsAt) > now).map(s => ({ id:s.id, title:s.title, kind:'assignment', startsAt:s.startsAt, endsAt:s.endsAt }));
   for (const r of requests.filter(r => r.status === 'pending' && r.claimantId === worker.id)) {
     const shift = db.shifts.find(s => s.id === r.shiftId);
     if (Date.parse(shift.endsAt) > now) blockers.push({id:shift.id,title:shift.title,kind:'pending_claim',startsAt:shift.startsAt,endsAt:shift.endsAt});
   }
-  return { revision: createHash('sha256').update(JSON.stringify([worker,assigned,requests,...(rules.length ? [rules] : []),...(leave.length ? [leave] : []),...(windows.length ? [windows] : [])])).digest('hex'), canDelete: assigned.length === 0 && requests.length === 0 && rules.length === 0 && leave.length === 0 && windows.length === 0, canDeactivate: !worker.deactivation && blockers.length === 0, blockers };
+  return { revision: createHash('sha256').update(JSON.stringify([worker,assigned,requests,...(rules.length ? [rules] : []),...(leave.length ? [leave] : []),...(windows.length ? [windows] : []),...(invitations.length ? [invitations] : [])])).digest('hex'), canDelete: assigned.length === 0 && requests.length === 0 && rules.length === 0 && leave.length === 0 && windows.length === 0 && invitations.length === 0, canDeactivate: !worker.deactivation && blockers.length === 0, blockers };
 }
 export async function removeWorker(store, managerId, workerId, action, input, clock=Date.now) {
   return store.transaction(db => {

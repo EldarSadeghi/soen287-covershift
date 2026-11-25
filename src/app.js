@@ -1,3 +1,4 @@
+import {coverOptions,listCoverInvitations,sendCoverInvitation,decideCoverInvitation} from './cover/service.js';
 import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability,coworkerUpcomingWindows} from './availability/windows.js';
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
@@ -23,6 +24,7 @@ import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverag
 import { openShiftBoard } from './requests/open.js';
 import { checkClaim, claimCoverage } from './requests/claim.js';
 const assets = new Map([
+  ['/cover-ui.js',['cover-ui.js','text/javascript; charset=utf-8']],
   ['/availability-view.js',['availability-view.js','text/javascript; charset=utf-8']],
   ['/time-off.js', ['time-off.js', 'text/javascript; charset=utf-8']],
   ['/ai-response-card.js', ['ai-response-card.js', 'text/javascript; charset=utf-8']],
@@ -102,7 +104,7 @@ async function readJson(request) {
   catch { throw new HttpError(400, 'This request could not be read. Please try again.'); }
 }
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
-const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability'] };
+const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability', 'cover'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability', 'cover'] };
 
 export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null }) {
   const availabilityWindowStore=store; // General windows do not participate in automatic claims.
@@ -122,6 +124,23 @@ export function createAppServer({ store, signup = registerManager, login = authe
     let pathname;
     try {
       pathname = new URL(request.url, 'http://localhost').pathname;
+      if(pathname==='/api/worker/cover-options'){
+        requireMethod(request,response,'GET');const account=await requireAccount(store,sessions,request.headers.cookie,'worker'),query=new URL(request.url,'http://localhost').searchParams;
+        if(query.size!==1||query.getAll('recipientId').length!==1)throw new HttpError(400,'Select one coworker.');
+        sendJson(response,200,await coverOptions(store,account.user.id,query.get('recipientId'),shiftClock));return;
+      }
+      const coverRoute=pathname.match(/^\/api\/(worker|manager)\/cover-invitations(?:\/([a-zA-Z0-9_-]{1,80})\/(accept|decline|cancel))?$/);
+      if(coverRoute){
+        const [,role,id,action]=coverRoute,listing=!id&&request.method==='GET';
+        requireMethod(request,response,role==='manager'||listing?'GET':'POST');const account=await requireAccount(store,sessions,request.headers.cookie,role);
+        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Cover invitations use your signed-in account.');
+        if(listing){sendJson(response,200,await listCoverInvitations(store,account.user.id,shiftClock));return;}
+        if(role!=='worker')throw new HttpError(403,'Only employees can send or respond to invitations.');
+        protectMutation(request,publicOrigin);if(!sessions.validCsrf(account.session,request.headers['x-csrf-token']))throw new HttpError(403,'Refresh the page and try again.');
+        limitCoverage(account.user.id);const input=await readJson(request);
+        if(id)sendJson(response,200,await decideCoverInvitation(store,account.user.id,id,action,input,shiftClock));
+        else{const result=await sendCoverInvitation(store,account.user.id,input,shiftClock);sendJson(response,result.replayed?200:201,result);}return;
+      }
       if(pathname==='/api/worker/coworker-windows'){
         requireMethod(request,response,'GET');const account=await requireAccount(store,sessions,request.headers.cookie,'worker');
         if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Upcoming coworker windows use 14 calendar days in your business timezone.');

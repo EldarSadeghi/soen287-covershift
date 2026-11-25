@@ -96,3 +96,7 @@ Creation enforces future/one-year and366-day local duration bounds, with ambiguo
 ## CS-031 general availability (schema 10)
 
 `availabilityWindows` stores independently confirmed employee windows with scoped owner/business references, canonical UTC endpoints, source timezone, unique employee submission UUID, confirmed/withdrawn status and timestamps. Schema 1–9 files remain readable; first save initializes the newer collections without losing history. General windows do not participate in matching. Deactivation withdraws them, while history prevents hard deletion. See [employee availability](employee-availability.md).
+
+## CS-040 directed cover invitations (schema 11)
+
+`coverInvitations` stores same-business worker participants, immutable shift snapshot/timezone/fingerprint, sender-scoped submission UUID, optional plain-text note, pending/accepted/declined/cancelled/expired state, linked coverage request ID and strict actor/timestamp history. One pending record per shift; snapshots preserve history after shift deletion. `coverNotifications` stores uniquely scoped event delivery/read receipts. Older schemas stay readable and are upgraded atomically on first send. Accepted coverage retains the existing manager approval and history model. See [Request cover](request-cover.md).

@@ -2,14 +2,14 @@
 
 ## Authoritative current identities — 2026-11-24
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–040 are Todo; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is in Your review; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-041 Deployment and final submission is always last** (formerly CS-040 / CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
 
-No feature is currently in review. Remaining Todo sequence: CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-040 request cover (#75), CS-041 final deployment (#70). Completed tasks are CS-001–031; original PR/evidence names remain historical.
+CS-040 (#75) is in Your review, not pushed or merged. Remaining Todo sequence: CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-041 final deployment (#70). Completed tasks are CS-001–031; original PR/evidence names remain historical.
 
 
-Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User authorized adding CS-040 Request cover (#75), verified Todo on the project; do not implement until selected. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
+Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. Local implementation is now in Your review: 314 tests pass, isolated preview3041/3042, evidence docs/acceptance/cs040. No push/merge authorization. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
 
 ## Workflow rules and historical log
 
@@ -94,3 +94,10 @@ CS-031 coworker visibility extension (2026-11-24) supersedes earlier manager-onl
 CS-031 next14-day extension (2026-11-24): coworker Upcoming windows automatically lists derived free intervals grouped by peer, subtracting commitments and preserving private causes. Own view uses same rest-of-today+13-local-date horizon with Later availability/history and explicit whole-record withdrawal on clipped cards. Exact-period checker retained. 296 tests pass; browser auto-list/read retry/own later/clipped withdrawal/320px documented in `docs/acceptance/cs031/USER-STORIES.md`. Your review, not pushed/merged. Preview3039 preserved, Alex employee.
 
 User explicitly approved all current CS-031 changes for push/merge on 2026-11-24, including manager/employee UI, coworker visibility, next14-day free windows, later/history retention and acceptance evidence (296 tests). Earlier no-merge requests are superseded by this approval. After verified merge, add Request cover as a Todo planning task only; do not implement it yet. Final deployment/submission must remain last.
+
+
+CS-040 (#75) selected 2026-11-24 on `codex/CS-040-request-cover`. User confirmed one pending invitation per shift, open-board competition and manager approval after coworker acceptance. Local implementation includes full-window eligibility, review/confirmation, private note/inbox/notifications, accept/decline/cancel, stale expiry and lost-ack reconciliation. 314 tests pass; real browser send/accept/approve/decline/cancel, dropped-response recovery, read retry, 320px and Escape return-focus checks documented in docs/acceptance/cs040/USER-STORIES.md. Isolated fictional previews3041/3042; normal data preserved. Board Your review, issue open. No push or merge authorized; CS-041 remains last.
+
+CS-040 review correction: user cancelled Monday’s accepted coverage, exposing overbroad anti-repeat guard. Cancelled invitations/linked cancelled coverage now allow a fresh eligible invitation; pending uniqueness, declined/expired restrictions and quotas remain. 315 tests pass; browser Monday Nov30 2–5 selectable again, left unsent. Evidence docs/acceptance/cs040/monday-cancelled-retry.jpg. Still Your review, no push/merge.
+
+CS-040 December1 review: previous QA invitation declined, not a time-fit failure. Composer now gives specific declined-shift reason and participant-scoped invitation link. Decline restriction unchanged; 316 tests pass including scoped reason regression and browser proof docs/acceptance/cs040/declined-explanation.jpg. No push/merge authorization.
