@@ -86,6 +86,12 @@ export function mountAiChat(account, csrfToken) {
   });
   launcher.addEventListener('click', () => { dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); composer.focus({preventScroll:true});if(!card.hidden)revealResponse(card); });
   composer.addEventListener('input', () => { chat.value.composer = composer.value; chat.save(); });
+  composer.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' || event.defaultPrevented || event.shiftKey ||
+        event.ctrlKey || event.altKey || event.metaKey || event.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    if (!event.repeat && !busy && !send.disabled) form.requestSubmit(send);
+  });
   function reviewSuggestion(data) {
     if (busy || chat.value.refinementPending || chat.value.completion || chat.value.uncertainDraftId || data.id !== chat.value.suggestion?.id) return;
     chat.value.pending = { id: data.id, draft: data.draft, timezone: data.timezone, createdAt: Date.now() };
