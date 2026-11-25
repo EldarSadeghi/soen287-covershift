@@ -7,7 +7,11 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
   let generation = 0;
   let busy = false;
   let alternativeContext = null;
-  function reset() { generation++; alternativeContext = null; }
+  function reset() {
+    generation++;
+    alternativeContext = null;
+    chat.value.explainedShiftId = null;
+  }
   function action(label, handler) {
     const button = element('button', 'ai-chat-review', label);
     button.type = 'button'; button.addEventListener('click', handler);
@@ -30,6 +34,8 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
       if (response.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
       if (!response.ok) {
         if (response.status === 404) {
+          chat.value.selectedOpeningId = null;
+          chat.save();
           card.replaceChildren(responseNote(response.data.message), action('Choose a current request', () => {
             if (version === generation) void load({ description: 'Show my coverage requests and openings' });
           }));
@@ -55,6 +61,8 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
         return;
       }
       if (data.kind !== 'availability_explanation') throw new Error('Could not explain that request.');
+      chat.value.selectedOpeningId = data.requestId;
+      chat.save();
       responseHeader(card, 'Availability explanation', data.shift.title);
       card.append(savedShiftFields(data.shift, data.timezone), responseFields([['Request status', data.status]]));
       if (data.recorded.length) card.append(element('h4', '', 'Recorded outcome'), ...data.recorded.map(line => element('p', '', line)));
@@ -83,6 +91,7 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
         if (!saved || saved.date === date) {
           const criteria = saved || { date, startLocal: '', endLocal: '', title: '' };
           alternativeContext = { shiftId: data.shiftId, criteria, bounded: Boolean(saved) };
+          if (saved) chat.value.explainedShiftId = data.shiftId;
           card.append(action(saved ? 'Find alternatives within my search limits' : 'Find alternatives on this date (any hours)', () => {
             if (version === generation && !busy) void onAlternatives(data.shiftId, criteria);
           }));

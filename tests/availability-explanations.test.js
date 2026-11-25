@@ -9,6 +9,7 @@ import { explainAvailability } from '../src/availability/explanations.js';
 import { changeAvailability, listAvailability } from '../src/availability/rules.js';
 import { reconcileAvailability } from '../src/availability/matching.js';
 import { createShift } from '../src/shifts/create.js';
+import { cancelCoverage, requestRevision } from '../src/requests/coverage.js';
 import { routeChat } from '../public/ai-chat-routing.js';
 
 const clock = () => Date.parse('2026-11-24T20:00:00Z');
@@ -104,4 +105,13 @@ test('the chat explanation endpoint requires an authenticated employee and CSRF'
   const allowed = await send(own);
   assert.equal(allowed.status, 200);
   assert.equal((await allowed.json()).status, 'pending');
+});
+
+test('a remembered opening is checked again when its original worker cancels it', async t => {
+  const { store, scenarios, explain } = await fixture(t);
+  const { requestId } = await explain({ requestId: scenarios.manualRequest });
+  const db = await store.read();
+  const request = db.coverageRequests.find(row => row.id === requestId);
+  await cancelCoverage(store, 'worker_alex', requestId, { revision: requestRevision(request) }, () => clock() + 60_000);
+  await assert.rejects(explain({ requestId }), { status: 404 });
 });

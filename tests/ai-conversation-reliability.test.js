@@ -73,3 +73,15 @@ test('unrelated requests and negated actions do not inherit an editable workflow
   assert.equal(routeChat('Can you explain payroll?', false, 'search'), 'clarification');
   assert.equal(routeChat('Actually, start at 2 PM', true, 'draft'), 'draft');
 });
+
+test('opening follow-ups distinguish explicit positions, a selection, and ambiguous references', () => {
+  const results = ['open-one', 'open-two'];
+  assert.equal(routeChat('Why can’t I take the second one?', false, 'search'), 'explanation');
+  assert.equal(routeChat('How come that one?', false, 'search'), 'explanation');
+  assert.equal(openingReference('Why can’t I take the second one?', results, 'open-one'), 'open-two');
+  assert.equal(openingReference('Second.', results, null), 'open-two');
+  assert.equal(openingReference('Why not that one?', [], 'open-two'), 'open-two');
+  assert.equal(openingReference('Why not that one?', results, null), null);
+  assert.equal(openingReference('Why not the first or second one?', results, null), null);
+  assert.equal(openingReference('Second.', [], 'open-one'), null);
+});

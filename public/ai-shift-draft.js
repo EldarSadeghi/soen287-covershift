@@ -1,5 +1,5 @@
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -41,6 +41,7 @@ export function mountAiChat(account, csrfToken) {
 
   async function showAlternatives(shiftId, criteria) {
     if (await employeeRequests.alternatives(shiftId, criteria)) {
+      explanations.reset();
       mode = 'search';
       chat.value.mode = mode;
       chat.save();
@@ -155,8 +156,14 @@ export function mountAiChat(account, csrfToken) {
     const coworkerDateReply = !manager && previous?.topic === 'coworkers' &&
       /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification' &&
       !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
-    const target = (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
-      routeChat(text, manager, previous && previous.topic !== 'clarification' ? mode : null);
+    const routed = routeChat(text, manager, previous && previous.topic !== 'clarification' ? mode : null);
+    const openingReply = !manager && previous?.topic === 'explanation' &&
+      previous.text.startsWith(OPENING_CLARIFICATION) && routed === 'clarification' &&
+      !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
+    const shortExplanation = !manager && previous?.topic === 'explanation' &&
+      routed === 'clarification' && /^why not[.!?]*$/i.test(text) && employeeRequests.openingContext().selectedId;
+    const target = ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
+      routed;
     const sameTopic = mode === target;
     const inScope = chat.value.messages.slice(-8);
     let history = [];
@@ -183,7 +190,11 @@ export function mountAiChat(account, csrfToken) {
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
     }
-    const alternative = explanations?.alternativeContext();
+    const { alternateTo, criteria, explainedShiftId } = chat.value;
+    const rememberedShift = previous?.topic === 'explanation' ? explainedShiftId || alternateTo
+      : ['alternatives', 'search'].includes(previous?.topic) ? alternateTo : null;
+    const alternative = explanations?.alternativeContext() ||
+      (rememberedShift && criteria ? { shiftId: rememberedShift, criteria, bounded: true } : null);
     if (target === 'alternatives') {
       say('user', text);
       if (!alternative?.bounded) {
@@ -198,6 +209,10 @@ export function mountAiChat(account, csrfToken) {
       return;
     }
     explanations?.reset();
+    if (!manager && !['search', 'explanation', 'clarification'].includes(target)) {
+      chat.value.criteria = null;
+      chat.value.alternateTo = null;
+    }
     if (target === 'coworkers') {
       employeeRequests.reset();
       availability.reset();
@@ -256,14 +271,18 @@ export function mountAiChat(account, csrfToken) {
     }
     if (target === 'explanation') {
       const { visibleIds, selectedId } = employeeRequests.openingContext();
-      const reference = openingReference(text, visibleIds, selectedId);
+      const reference = /^why not[.!?]*$/i.test(text) && selectedId
+        ? selectedId : openingReference(text, visibleIds, selectedId);
       if (reference === null) {
         say('user', text);
-        appendTurn('Which opening do you mean? Use its shift title or a position in the displayed results.');
+        appendTurn(visibleIds.length
+          ? `${OPENING_CLARIFICATION} Use its shift title or a position in the last results.`
+          : `${OPENING_CLARIFICATION} Use its shift title, or refresh the search to refer to a result by position.`);
         notice('Choose an opening to continue.');
         return;
       }
-      employeeRequests.reset(); availability.reset();
+      chat.value.alternateTo = null;
+      employeeRequests.reset({ keepSearch: true }); availability.reset();
       chat.value.refinementPending = true;
       say('user', text);
       appendTurn('I’ll check the saved request and your current eligibility.');
@@ -274,7 +293,7 @@ export function mountAiChat(account, csrfToken) {
       chat.value.refinementPending = true;
       chat.value.pending = null;
       document.dispatchEvent(new Event('ai:cancel-review'));
-      employeeRequests?.reset(); availability?.reset(); showSuggestion(null);
+      employeeRequests?.reset({ keepSearch: !manager && mode === 'search' }); availability?.reset(); showSuggestion(null);
       say('user', text);
       const reply = chatClarification(text, manager);
       appendTurn(reply);

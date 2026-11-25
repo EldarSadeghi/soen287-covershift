@@ -8,10 +8,18 @@ export function employeeSearchMessage(data) {
 }
 export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy, onOutcome, request = requestJSON }) {
   let generation = 0; let busy = false;
-  let visibleIds = []; let selectedId = null;
+  let visibleIds = [];
   const link = (text, href) => { const node = element('a', 'ai-chat-review', text); node.href = href; return node; };
   const button = (text, fn) => { const node = element('button', 'ai-chat-review', text); node.type = 'button'; if(/^(Cancel|Keep|Refresh)/.test(text))node.classList.add('ai-response-secondary'); node.addEventListener('click', fn); return node; };
-  function reset() { generation++; visibleIds = []; selectedId = null; card.replaceChildren(); card.hidden = true; }
+  function reset({ keepSearch = false } = {}) {
+    generation++;
+    if (!keepSearch) {
+      visibleIds = [];
+      chat.value.selectedOpeningId = null;
+    }
+    card.replaceChildren();
+    card.hidden = true;
+  }
   function outcome() {
     reset(); card.hidden = false;
     const value = chat.value.outcome;
@@ -65,7 +73,8 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
       };
       const review = button('Review request', async () => {
         if (busy || version !== generation) return;
-        selectedId = opening.id;
+        chat.value.selectedOpeningId = opening.id;
+        chat.save();
         setWorking(true); confirm.hidden = true; feedback.textContent = 'Checking current availability…';
         try {
           const checked = await post(`/api/worker/requests/${encodeURIComponent(opening.id)}/claim-check`, { revision: opening.revision });
@@ -132,7 +141,7 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
   function restore() {
     if (chat.value.outcome) { outcome(); return; }
     if (!chat.value.criteria) return;
-    reset(); card.hidden = false; card.append(element('p', '', 'Your last search is saved. Refresh to see current openings; nothing is reserved.'), button('Refresh matches', refresh), link('Browse Open shifts', '/workspace/worker/open'));
+    reset({ keepSearch: true }); card.hidden = false; card.append(element('p', '', 'Your last search is saved. Refresh to see current openings; nothing is reserved.'), button('Refresh matches', refresh), link('Browse Open shifts', '/workspace/worker/open'));
   }
-  return { show, restore, reset, alternatives, openingContext: () => ({ visibleIds, selectedId }) };
+  return { show, restore, reset, alternatives, openingContext: () => ({ visibleIds, selectedId: chat.value.selectedOpeningId }) };
 }
