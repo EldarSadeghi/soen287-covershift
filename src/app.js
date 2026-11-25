@@ -60,6 +60,7 @@ const assets = new Map([
   ['/login.js', ['login.js', 'text/javascript; charset=utf-8']],
   ['/workspace.js', ['workspace.js', 'text/javascript; charset=utf-8']],
   ['/workspace.css', ['workspace.css', 'text/css; charset=utf-8']],
+  ['/notification-view.js', ['notification-view.js', 'text/javascript; charset=utf-8']],
   ['/worker-shifts.js', ['worker-shifts.js', 'text/javascript; charset=utf-8']],
   ['/shift-time.js', ['shift-time.js', 'text/javascript; charset=utf-8']],
   ['/shift-card.js', ['shift-card.js', 'text/javascript; charset=utf-8']],
