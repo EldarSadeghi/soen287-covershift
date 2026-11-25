@@ -14,7 +14,7 @@ export async function managerDashboard(store, userId, now = Date.now()) {
   const businessShifts = new Map(db.shifts.filter(shift => shift.businessId === business.id).map(shift => [shift.id, shift]));
   const person = id => { const worker = workers.get(id); if (!worker) throw new Error('Invalid business worker reference'); return { id: worker.id, name: worker.name }; };
   const timing = shift => Date.parse(shift.endsAt) <= now ? 'completed' : Date.parse(shift.startsAt) <= now ? 'in_progress' : 'upcoming';
-  const shiftView = shift => ({ id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, status: timing(shift), revision: shiftRevision(shift), lockReason: shiftLockReason(db, shift, now), assignedWorker: person(shift.assignedWorkerId) });
+  const shiftView = shift => ({ id: shift.id, title: shift.title, duties:shift.duties||[], startsAt: shift.startsAt, endsAt: shift.endsAt, status: timing(shift), revision: shiftRevision(shift), lockReason: shiftLockReason(db, shift, now), assignedWorker: person(shift.assignedWorkerId) });
   const shifts = [...businessShifts.values()].filter(shift => Date.parse(shift.endsAt) > now)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id)).map(shiftView);
   const coverage = db.coverageRequests.filter(request => request.businessId === business.id);

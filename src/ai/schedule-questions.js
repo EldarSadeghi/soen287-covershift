@@ -16,7 +16,7 @@ function account(db,userId){
 }
 const day=value=>typeof value==='string' && /^20\d{2}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value+'T12:00:00Z')) && new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
 function safeShift(db,s,role,timezone,now=Date.now()){
- const worker=db.users.find(u=>u.id===s.assignedWorkerId);return {id:s.id,title:s.title,startsAt:s.startsAt,endsAt:s.endsAt,status:Date.parse(s.endsAt)<=now?'completed':Date.parse(s.startsAt)<=now?'in_progress':'upcoming',workerName:worker.name,href:`/workspace/${role}/${role==='manager'?'schedule':'shifts'}?shift=${s.id}`,timezone};
+ const worker=db.users.find(u=>u.id===s.assignedWorkerId);return {id:s.id,title:s.title,duties:s.duties||[],startsAt:s.startsAt,endsAt:s.endsAt,status:Date.parse(s.endsAt)<=now?'completed':Date.parse(s.startsAt)<=now?'in_progress':'upcoming',workerName:worker.name,href:`/workspace/${role}/${role==='manager'?'schedule':'shifts'}?shift=${s.id}`,timezone};
 }
 export async function scheduleShiftDetails(store,userId,shiftId){const db=await store.read(),{user,business}=account(db,userId);const s=db.shifts.find(s=>s.id===shiftId && s.businessId===business.id && (user.role==='manager'||s.assignedWorkerId===user.id));if(!s)throw new HttpError(404,'This shift is no longer available in your assigned schedule.');return {shift:safeShift(db,s,user.role,business.timezone),timezone:business.timezone,asOf:new Date().toISOString()};}
 export async function answerScheduleQuestion(store,userId,input,clock=Date.now){

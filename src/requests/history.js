@@ -17,7 +17,7 @@ export async function coverageHistory(store, userId, role, now = Date.now()) {
     const shift = db.shifts.find(s => s.id === r.shiftId && s.businessId === business.id);
     const events = r.history || [{ action: 'legacy', actorId: null, at: r.updatedAt, status: r.status }];
     return { id: r.id, status: r.status, ...coverageDisplayState(r, shift, now), updatedAt: r.updatedAt, originalWorkerName: person(r.originalWorkerId), claimantName: person(r.claimantId), reviewerName: person(r.reviewerId), assignedWorkerName: person(shift.assignedWorkerId),
-      shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, status: Date.parse(shift.endsAt) <= now ? 'completed' : Date.parse(shift.startsAt) <= now ? 'in_progress' : 'upcoming' },
+      shift: { id: shift.id, title: shift.title, duties:shift.duties||[], startsAt: shift.startsAt, endsAt: shift.endsAt, status: Date.parse(shift.endsAt) <= now ? 'completed' : Date.parse(shift.startsAt) <= now ? 'in_progress' : 'upcoming' },
       events: events.map(e => ({ action: e.action, status: e.status, at: e.at, actorName: person(e.actorId) })) };
   }).sort((a,b) => b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id));
   return { records, timezone: business.timezone, asOf: new Date(now).toISOString() };

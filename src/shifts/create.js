@@ -26,13 +26,18 @@ export function businessInstant(value, timezone, field) {
   return new Date(candidates[0]).toISOString();
 }
 
+export function validateDuties(duties){
+ if(!Array.isArray(duties)||duties.length>10||duties.some(d=>typeof d!=='string'||!d.trim()||d.trim().length>160||/[\x00-\x1f\x7f]/.test(d)))throw new HttpError(422,'Use up to 10 duties, each 1–160 characters on a single line.',{duties:'Use up to 10 duties, each 1–160 characters.'});
+ return duties.map(d=>d.trim());
+}
+export function dutiesSchema(db){db.schemaVersion=Math.max(db.schemaVersion,12);for(const key of ['availabilityRules','availabilityMatches','notifications','timeOffRequests','availabilityWindows','coverInvitations','coverNotifications'])db[key]||=[];}
 export function validateShiftInput(input) {
   const keys = ['title', 'assignedWorkerId', 'startLocal', 'endLocal'];
-  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== keys.length || !keys.every(key => Object.hasOwn(input, key))) throw new HttpError(422, 'Submit only the shift title, worker, start and end times.');
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(k=>![...keys,'duties'].includes(k)) || !keys.every(key => Object.hasOwn(input, key))) throw new HttpError(422, 'Submit only the shift title, worker, start and end times.');
   const title = typeof input.title === 'string' ? input.title.trim() : '';
   if (!title || title.length > 100) throw new HttpError(422, 'Enter a shift title using 1–100 characters.', { title: 'Enter a shift title using 1–100 characters.' });
   if (typeof input.assignedWorkerId !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(input.assignedWorkerId)) throw new HttpError(422, 'Choose a worker from your team.', { assignedWorkerId: 'Choose a worker from your team.' });
-  return { ...input, title };
+  return { ...input, title, ...(Object.hasOwn(input,'duties')?{duties:validateDuties(input.duties)}:{}) };
 }
 export function managerBusiness(db, managerId) {
   const manager = db.users.find(user => user.id === managerId);
@@ -51,18 +56,18 @@ export function assignmentFields(db, business, input, now, excludeId = null) {
   if (endsAt <= startsAt) throw new HttpError(422, 'The end must be after the start. For overnight shifts, choose the next day.', { endLocal: 'Choose an end date and time after the start.' });
   if (leaveConflicts(db,worker.id,{startsAt,endsAt}).length) throw new HttpError(409, 'This employee has approved time off during this shift. Choose another employee or time.', {assignedWorkerId:'This employee has approved time off.'});
   if (db.shifts.some(shift => shift.id !== excludeId && shift.businessId === business.id && shift.assignedWorkerId === worker.id && shift.startsAt < endsAt && startsAt < shift.endsAt)) throw new HttpError(409, 'This worker already has an overlapping shift. Choose another worker or time.', { assignedWorkerId: 'This worker has an overlapping shift.' });
-  return { businessId: business.id, assignedWorkerId: worker.id, title: input.title, startsAt, endsAt };
+  return { businessId: business.id, assignedWorkerId: worker.id, title: input.title, startsAt, endsAt, ...(Object.hasOwn(input,'duties')?{duties:input.duties}:{}) };
 }
 export function savedShift(db, shift, timezone) {
   const worker = db.users.find(user => user.id === shift.assignedWorkerId);
-  return { shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, assignedWorker: { id: worker.id, name: worker.name } }, timezone };
+  return { shift: { id: shift.id, title: shift.title, duties:shift.duties||[], startsAt: shift.startsAt, endsAt: shift.endsAt, assignedWorker: { id: worker.id, name: worker.name } }, timezone };
 }
 export async function createShift(store, managerId, input, clock = Date.now) {
   input = validateShiftInput(input);
   return store.transaction(db => {
     const business = managerBusiness(db, managerId);
     const shift = createRecord(assignmentFields(db, business, input, clock()));
-    db.shifts.push(shift);
+    if(Object.hasOwn(shift,'duties'))dutiesSchema(db);db.shifts.push(shift);
     return savedShift(db, shift, business.timezone);
   });
 }
