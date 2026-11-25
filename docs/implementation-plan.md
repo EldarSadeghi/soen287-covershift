@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is in Your review; CS-042 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 
 Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. User approved merging CS-040 on 2026-11-24 after 316 passing tests and a clean browser walkthrough. Merged PR #76 (`0e60396fa96479f8ee16d2dc984f04a900f2d490`); issue #75 closed and project Done verified. Evidence: docs/acceptance/cs040. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
@@ -49,7 +49,7 @@ Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e
 | CS-038 | Manager batch shift creation through chat | Todo | [#58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-054 | — |
 | CS-039 | AI working-week and attention summaries | Todo | [#59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-055 | — |
 | CS-040 | Request cover from a coworker | Done | [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75) | New | #76 |
-| CS-041 | Quiet Workspace interface | Your review | [#77](https://github.com/EldarSadeghi/soen287-covershift/issues/77) | New | — |
+| CS-041 | Quiet Workspace interface | Done | [#77](https://github.com/EldarSadeghi/soen287-covershift/issues/77) | New | #78 |
 | CS-042 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
 CS-001–031 are complete. Remaining work is CS-032 duties, CS-033 publication, CS-034 refinement, CS-035 chat rule management, CS-036 explanations, CS-037 alternatives, CS-038 batch creation, CS-039 summaries and CS-040 directed cover requests, followed by CS-041 final deployment. Request cover was selected ahead of CS-032 by the user and is complete in PR #76. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
@@ -311,3 +311,5 @@ User explicitly approved CS-040 push/merge on 2026-11-24. Completed PR #76, merg
 
 
 Authoritative update 2026-11-24: User selected Quiet Workspace implementation. New CS-041 issue #77; deployment issue #70 is now CS-042 and remains last, superseding earlier deployment041 aliases. Branch `codex/CS-041-quiet-workspace`, Todo verified then In Progress. Shared responsive shell/icons/typography and compact cover cards/Active-History/progress implemented locally. 316 tests pass; desktop/mobile320px/keyboard/confirmation and manager shell checks documented in docs/acceptance/cs041/USER-STORIES.md. Preview3041 employee/localhost3041 manager. Your review; no push/merge authorized.
+
+User explicitly approved CS-041 merge on 2026-11-24. Merged PR #78 (`041bb66baf0f4bc467eb1da8f0dff1469d485008`), issue #77 closed/completed and board Done verified. 316 tests pass. Earlier review-only snapshots are superseded. CS-042 deployment remains last. Notification redesign suggestions requested only; no implementation selected.

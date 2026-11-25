@@ -2,7 +2,7 @@
 
 ## Authoritative current identities — 2026-11-24
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is in Your review; CS-042 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-042 Deployment and final submission is always last** (formerly CS-040 / CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
 
@@ -107,3 +107,5 @@ User explicitly approved CS-040 push/merge on 2026-11-24. Completed PR #76, merg
 
 
 Authoritative update 2026-11-24: User selected Quiet Workspace implementation. New CS-041 issue #77; deployment issue #70 is now CS-042 and remains last, superseding earlier deployment041 aliases. Branch `codex/CS-041-quiet-workspace`, Todo verified then In Progress. Shared responsive shell/icons/typography and compact cover cards/Active-History/progress implemented locally. 316 tests pass; desktop/mobile320px/keyboard/confirmation and manager shell checks documented in docs/acceptance/cs041/USER-STORIES.md. Preview3041 employee/localhost3041 manager. Your review; no push/merge authorized.
+
+User explicitly approved CS-041 merge on 2026-11-24. Merged PR #78 (`041bb66baf0f4bc467eb1da8f0dff1469d485008`), issue #77 closed/completed and board Done verified. 316 tests pass. Earlier review-only snapshots are superseded. CS-042 deployment remains last. Notification redesign suggestions requested only; no implementation selected.

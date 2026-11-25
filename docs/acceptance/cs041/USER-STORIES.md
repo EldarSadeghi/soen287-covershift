@@ -25,3 +25,7 @@ Employee http://127.0.0.1:3041/workspace/worker/cover ; manager http://localhost
 ## Limits
 
 No live-provider evaluation needed for this presentation increment. Existing lost-ack transport/guards are retained; this pass did not repeat fault injection. Full screen-reader/device certification is outside this targeted browser check. Review before push/merge. Deployment renumbered to CS-042 (#70), always last.
+
+## Approved completion
+
+User approved merging on 2026-11-24. PR #78 merged, issue #77 closed and board Done verified. Earlier no-approval notes describe pre-approval review.
