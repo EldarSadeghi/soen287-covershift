@@ -37,6 +37,7 @@ const assets = new Map([
   ['/ai-availability.js', ['ai-availability.js', 'text/javascript; charset=utf-8']],
   ['/ai-employee-request.js', ['ai-employee-request.js', 'text/javascript; charset=utf-8']],
   ['/ai-employee-state.js', ['ai-employee-state.js', 'text/javascript; charset=utf-8']],
+  ['/ai-chat-routing.js', ['ai-chat-routing.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-state.js', ['ai-chat-state.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-draft.js', ['ai-shift-draft.js', 'text/javascript; charset=utf-8']],
   ['/remove-worker.js', ['remove-worker.js', 'text/javascript; charset=utf-8']],
