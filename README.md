@@ -95,3 +95,7 @@ Automatic availability matching (CS-031C): [execution, limits, approval and veri
 Employee time off (CS-030): both roles have **Time off**, with full-day/partial-day requests, confirmed decisions/cancellation, private history and approved-leave scheduling safeguards. See [workflow, policy and recovery](docs/time-off.md).
 
 Employee availability (CS-031): employees confirm dated windows in **Availability**; managers check Available / Unavailable / Unknown against saved windows and current conflicts. General windows are separate from automatic chat rules. See [policy and recovery](docs/employee-availability.md).
+
+### Request cover (CS-040, local review)
+
+Employees can invite an available coworker to cover a whole assigned shift; acceptance still requires manager approval. See [workflow and review accounts](docs/request-cover.md) and [acceptance evidence](docs/acceptance/cs040/USER-STORIES.md). This increment is awaiting review and has not been pushed or merged.

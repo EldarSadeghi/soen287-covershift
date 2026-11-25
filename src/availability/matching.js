@@ -1,3 +1,4 @@
+import {settleCoverInvitations} from '../cover/lifecycle.js';
 import { coverageEventKeys, publishCoverageNotifications } from '../notifications/service.js';
 import { randomUUID } from 'node:crypto';
 import { claimRevision, claimCommitments, claimInDatabase } from '../requests/claim.js';
@@ -42,15 +43,15 @@ export function withAvailabilityMatching(store, clock = Date.now) {
   return {
     filename:store.filename,
     read:()=>store.read(),
-    transaction:change=>store.transaction(async db=>{const before=coverageEventKeys(db);const result=await change(db);matchAvailability(db,clock());publishCoverageNotifications(db,before);return result;}),
+    transaction:change=>store.transaction(async db=>{const before=coverageEventKeys(db);settleCoverInvitations(db,clock());const result=await change(db);matchAvailability(db,clock());settleCoverInvitations(db,clock());publishCoverageNotifications(db,before);return result;}),
   };
 }
 export async function reconcileAvailability(store, clock = Date.now) {
   // Avoid rewriting a read-only/no-match database every polling interval. The
   // exclusive transaction still recomputes everything, never trusts this probe.
   const snapshot = await store.read();
-  if (!matchAvailability(snapshot,clock())) return 0;
-  return store.transaction(db=>{const before=coverageEventKeys(db);const count=matchAvailability(db,clock());publishCoverageNotifications(db,before);return count;});
+  const expired=settleCoverInvitations(snapshot,clock());if (!matchAvailability(snapshot,clock())&&!expired) return 0;
+  return store.transaction(db=>{const before=coverageEventKeys(db);const expired=settleCoverInvitations(db,clock());const count=matchAvailability(db,clock());settleCoverInvitations(db,clock());publishCoverageNotifications(db,before);return count+expired;});
 }
 export function startAvailabilityMatching(store,{clock=Date.now,intervalMs=30000,onError=()=>console.error('Availability matching failed. Check storage health; next reconciliation will retry.')}={}) {
   let running=false,stopped=false;

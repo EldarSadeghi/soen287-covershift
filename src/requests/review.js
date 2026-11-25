@@ -1,3 +1,4 @@
+import {directedApprovalReason} from '../cover/eligibility.js';
 import { recordCoverageEvent } from './history.js';
 import { HttpError } from '../auth/errors.js';
 import { managerBusiness } from '../shifts/create.js';
@@ -9,7 +10,7 @@ export function reviewState(db, request, shift, now) {
   const claimant = db.users.find(u => u.id === request.claimantId && u.businessId === request.businessId && u.role === 'worker');
   const reason = request.status !== 'pending' ? 'This claim is no longer pending.' : shift.assignedWorkerId !== request.originalWorkerId ? 'The original assignment changed.' : Date.parse(shift.startsAt) <= now ? 'This shift has started. Decisions are no longer available.' : null;
   const conflicts = claimant ? findClaimConflicts(shift, claimCommitments(db, claimant, now)) : [];
-  const approvalReason = reason || (!claimant || claimant.passwordHash === null ? 'The claimant needs an active employee account.' : conflicts.length ? 'The claimant has overlapping assigned shifts, pending claims or approved time off.' : null);
+  const approvalReason = reason || directedApprovalReason(db,request,shift,now) || (!claimant || claimant.passwordHash === null ? 'The claimant needs an active employee account.' : conflicts.length ? 'The claimant has overlapping assigned shifts, pending claims or approved time off.' : null);
   return { revision: claimRevision(request, shift), canApprove: !approvalReason, canReject: !reason, approvalReason, rejectionReason: reason, conflicts };
 }
 export async function reviewCoverage(store, managerId, requestId, decision, input, clock = Date.now) {

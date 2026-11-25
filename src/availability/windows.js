@@ -1,3 +1,6 @@
+import {settleCoverInvitations} from '../cover/lifecycle.js';
+import {coversPeriod} from './intervals.js';
+export {coversPeriod} from './intervals.js';
 import {createHash,randomUUID} from 'node:crypto';
 import {HttpError} from '../auth/errors.js';
 import {availabilityAccount} from './rules.js';
@@ -24,7 +27,7 @@ export async function listWindows(store,userId,clock=Date.now){
 export async function saveWindow(store,userId,input,clock=Date.now){
   if(!exact(input,['window','submissionId'])||typeof input.submissionId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(input.submissionId))throw new HttpError(422,'Confirm the availability window shown.');
   return store.transaction(db=>{
-    const {user,business}=workerAccount(db,userId),now=clock(),values=windowFields(input.window,business.timezone,now,false);
+    const {user,business}=workerAccount(db,userId),now=clock();settleCoverInvitations(db,now);const values=windowFields(input.window,business.timezone,now,false);
     const mine=(db.availabilityWindows||[]).filter(r=>r.workerId===user.id&&r.businessId===business.id),existing=mine.find(r=>r.submissionId===input.submissionId);
     if(existing){if(Object.keys(values).some(k=>existing[k]!==values[k]))throw new HttpError(409,'This submission was already used for different times. Refresh your availability.');return {window:dto(existing,now),replayed:true,message:'This window was already saved. Check its current status.'};}
     windowFields(input.window,business.timezone,now);
@@ -41,14 +44,9 @@ export async function withdrawWindow(store,userId,id,input,clock=Date.now){
     const {user,business}=workerAccount(db,userId),now=clock(),r=(db.availabilityWindows||[]).find(r=>r.id===id&&r.workerId===user.id&&r.businessId===business.id);
     if(!r)throw new HttpError(404,'Availability window not found.');
     if(windowRevision(r)!==input.revision||r.status!=='confirmed'||Date.parse(r.endsAt)<=now)throw new HttpError(409,'This window changed or expired. Refresh before trying again.');
-    r.status='withdrawn';r.updatedAt=new Date(Math.max(now,Date.parse(r.updatedAt)+1)).toISOString();
+    r.status='withdrawn';r.updatedAt=new Date(Math.max(now,Date.parse(r.updatedAt)+1)).toISOString();settleCoverInvitations(db,now);
     return {window:dto(r,now),message:'Availability withdrawn. Existing shifts, coverage requests and automatic rules are unchanged.'};
   });
-}
-export function coversPeriod(windows,period){
-  let end=period.startsAt;
-  for(const r of [...windows].sort((a,b)=>a.startsAt.localeCompare(b.startsAt))){if(r.startsAt>end)break;if(r.endsAt>end)end=r.endsAt;if(end>=period.endsAt)return true;}
-  return false;
 }
 function availabilitySnapshot(db,business,input,now,excludeWorkerId=null){
   const period=windowFields(input,business.timezone,now);

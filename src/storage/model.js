@@ -16,8 +16,8 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(db.schemaVersion), 'unsupported schema version');
-  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests' || db.schemaVersion >= 10 && key === 'availabilityWindows'), 'unknown collection');
+  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests' || db.schemaVersion >= 10 && key === 'availabilityWindows' || db.schemaVersion >= 11 && ['coverInvitations','coverNotifications'].includes(key)), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
     const seen = new Set();
@@ -200,6 +200,38 @@ export function validateDatabase(db) {
       requireValue(timestamp(r.startsAt)&&timestamp(r.endsAt)&&r.startsAt<r.endsAt&&Date.parse(r.endsAt)-Date.parse(r.startsAt)<=25*3600000&&timestamp(r.createdAt)&&timestamp(r.updatedAt)&&r.updatedAt>=r.createdAt,'invalid general availability dates');
       requireValue(text(r.timezone)&&['confirmed','withdrawn'].includes(r.status)&&(!worker.deactivation||r.status==='withdrawn'),'invalid general availability status');
       try{new Intl.DateTimeFormat('en',{timeZone:r.timezone});}catch{throw new Error('Invalid database: general availability timezone');}
+    }
+  }
+  if(db.schemaVersion>=11){
+    requireValue(Array.isArray(db.coverInvitations)&&Array.isArray(db.coverNotifications),'cover collections must be arrays');
+    const seen=new Set(),submissions=new Set(),pending=new Set(),linked=new Set();
+    const invitationFields=['id','businessId','senderId','recipientId','shiftId','shiftSnapshot','submissionId','note','status','requestId','createdAt','updatedAt','history'];
+    for(const r of db.coverInvitations){
+      requireValue(r&&typeof r==='object'&&!Array.isArray(r)&&Object.keys(r).length===invitationFields.length&&invitationFields.every(k=>Object.hasOwn(r,k)),'invalid cover invitation fields');
+      const sender=users.get(r.senderId),recipient=users.get(r.recipientId),shift=shifts.get(r.shiftId),snapshot=r.shiftSnapshot;
+      requireValue(id(r.id)&&!seen.has(r.id)&&businesses.has(r.businessId)&&sender?.businessId===r.businessId&&recipient?.businessId===r.businessId&&sender.role==='worker'&&recipient.role==='worker'&&sender.id!==recipient.id&&id(r.shiftId)&&(!shift||shift.businessId===r.businessId),'invalid cover identity or scope');seen.add(r.id);
+      requireValue(typeof r.submissionId==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(r.submissionId)&&!submissions.has(r.senderId+':'+r.submissionId),'invalid cover submission');submissions.add(r.senderId+':'+r.submissionId);
+      requireValue(snapshot&&typeof snapshot==='object'&&!Array.isArray(snapshot)&&Object.keys(snapshot).length===5&&['title','startsAt','endsAt','timezone','revision'].every(k=>Object.hasOwn(snapshot,k))&&text(snapshot.title)&&timestamp(snapshot.startsAt)&&timestamp(snapshot.endsAt)&&snapshot.startsAt<snapshot.endsAt&&typeof snapshot.revision==='string'&&/^[a-f0-9]{64}$/.test(snapshot.revision),'invalid cover shift snapshot');
+      try{new Intl.DateTimeFormat('en',{timeZone:snapshot.timezone});}catch{throw new Error('Invalid database: cover timezone');}
+      requireValue(text(snapshot.timezone)&&typeof r.note==='string'&&r.note===r.note.trim()&&r.note.length<=500&&!/[\x00-\x1f]/.test(r.note)&&timestamp(r.createdAt)&&timestamp(r.updatedAt)&&r.updatedAt>=r.createdAt&&['pending','accepted','declined','cancelled','expired'].includes(r.status),'invalid cover details');
+      const request=db.coverageRequests.find(c=>c.id===r.requestId);
+      requireValue(r.status==='accepted'?request&&request.businessId===r.businessId&&request.shiftId===r.shiftId&&request.originalWorkerId===r.senderId&&request.claimantId===r.recipientId&&!linked.has(r.requestId):r.requestId===null,'invalid cover claim link');if(r.requestId)linked.add(r.requestId);
+      if(r.status==='pending'){requireValue(!pending.has(r.shiftId),'multiple pending invitations for a shift');pending.add(r.shiftId);}
+      requireValue(Array.isArray(r.history)&&r.history.length>=1&&r.history.length<=2,'invalid cover history');let previousAt=r.createdAt;
+      for(const [index,e]of r.history.entries()){
+        requireValue(e&&typeof e==='object'&&Object.keys(e).length===3&&['action','actorId','at'].every(k=>Object.hasOwn(e,k))&&timestamp(e.at)&&e.at>=previousAt&&e.at<=r.updatedAt,'invalid cover event');
+        requireValue(index===0?e.action==='sent'&&e.actorId===r.senderId:['accepted','declined','cancelled','expired'].includes(e.action)&&(e.action==='expired'?e.actorId===null:e.actorId===(e.action==='cancelled'?r.senderId:r.recipientId)),'invalid cover transition/actor');previousAt=e.at;
+      }
+      requireValue(r.history.at(-1).action==={pending:'sent',accepted:'accepted',declined:'declined',cancelled:'cancelled',expired:'expired'}[r.status]&&previousAt===r.updatedAt,'cover status/history mismatch');
+    }
+    const notices=new Set();for(const n of db.coverNotifications){
+      const expected=['id','businessId','userId','invitationId','action','createdAt','readAt'];
+      requireValue(n&&typeof n==='object'&&!Array.isArray(n)&&Object.keys(n).length===expected.length&&expected.every(k=>Object.hasOwn(n,k)),'invalid cover notice fields');
+      const r=db.coverInvitations.find(r=>r.id===n.invitationId),user=users.get(n.userId),e=r?.history.find(e=>e.action===n.action&&e.at===n.createdAt);
+      const key=[n.invitationId,n.action,n.createdAt,n.userId].join(':');
+      requireValue(typeof n.id==='string'&&/^[a-f0-9]{64}$/.test(n.id)&&!notices.has(n.id)&&!notices.has(key)&&r&&user?.businessId===r.businessId&&n.businessId===r.businessId&&e,'invalid cover notice identity/event');notices.add(n.id);notices.add(key);
+      requireValue(['sent','cancelled'].includes(n.action)?n.userId===r.recipientId:['accepted','declined'].includes(n.action)?n.userId===r.senderId:n.action==='expired'&&[r.senderId,r.recipientId].includes(n.userId),'invalid cover notice recipient');
+      requireValue(timestamp(n.createdAt)&&(n.readAt===null||timestamp(n.readAt)&&n.readAt>=n.createdAt),'invalid cover notice timestamps');
     }
   }
   return db;
