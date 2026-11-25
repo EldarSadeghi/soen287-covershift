@@ -40,3 +40,5 @@ Temporary fictional data only, independent of normal accounts and the normal dem
 Fictional password for all three: `CoverShift demo access!`. Hostnames/ports keep these sessions separate. Try Jamie’s December 3 window to send a fresh invitation; Monday November 30 was cancelled during user review and is now ready to request again. The initial November 26 example was approved; December 1 declined and December 2 cancelled.
 
 Validation: [acceptance report](acceptance/cs040/USER-STORIES.md).
+
+If a compatible shift was previously declined, the composer explains that decision and links to the declined invitation. General availability does not override a coworker’s decision about a particular shift.

@@ -23,7 +23,8 @@ function eligible(db,user,shift,to,now){
 }
 export async function coverOptions(store,userId,recipientId,clock=Date.now){
   const db=await store.read(),{user,business}=account(db,userId),to=recipient(db,user,recipientId),now=clock();
-  return {recipient:{id:to.id,name:to.name},timezone:business.timezone,shifts:db.shifts.filter(s=>eligible(db,user,s,to,now)).sort((a,b)=>a.startsAt.localeCompare(b.startsAt)||a.id.localeCompare(b.id)).map(s=>({id:s.id,title:s.title,startsAt:s.startsAt,endsAt:s.endsAt,revision:optionRevision(db,s,to.id,now)}))};
+  const declined=(db.coverInvitations||[]).filter(r=>r.senderId===user.id&&r.recipientId===to.id&&r.status==='declined').flatMap(r=>{const s=db.shifts.find(s=>s.id===r.shiftId&&s.assignedWorkerId===user.id&&s.businessId===business.id&&Date.parse(s.startsAt)>now&&r.shiftSnapshot.revision===coverShiftFingerprint(s));return s?[{id:s.id,title:s.title,startsAt:s.startsAt,endsAt:s.endsAt,invitationId:r.id,reason:to.name+' already declined this shift. Choose another coworker or use the open-shift board.'}]:[];});
+  return {recipient:{id:to.id,name:to.name},timezone:business.timezone,unavailable:declined,shifts:db.shifts.filter(s=>eligible(db,user,s,to,now)).sort((a,b)=>a.startsAt.localeCompare(b.startsAt)||a.id.localeCompare(b.id)).map(s=>({id:s.id,title:s.title,startsAt:s.startsAt,endsAt:s.endsAt,revision:optionRevision(db,s,to.id,now)}))};
 }
 function dto(db,r,user,now){
   const status=coverDisplayStatus(db,r,now),shift=db.shifts.find(s=>s.id===r.shiftId);
