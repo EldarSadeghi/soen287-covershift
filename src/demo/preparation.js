@@ -1,3 +1,4 @@
+import { addPresentationScenarios } from './presentation.js';
 import {mkdir,mkdtemp,lstat,readFile,writeFile,rename,unlink} from 'node:fs/promises';
 import {join,resolve} from 'node:path';import {randomUUID} from 'node:crypto';
 import {JsonStore} from '../storage/json-store.js';import {assertLocalDemo,buildDemoFixtures,DEMO_PASSWORD} from './fixtures.js';
@@ -13,7 +14,7 @@ export async function prepareDemo(root,{now=Date.now(),timezone='America/Toronto
  assertLocalDemo();root=await rootDirectory(root,true);
  try{await pointer(root);}catch(e){if(e.code!=='ENOENT')throw e;}
  const runDirectory=await mkdtemp(join(root,'runs',`run-${new Date(now).toISOString().slice(0,10)}-`)),runId=runDirectory.split(/[\\/]/).at(-1),store=new JsonStore(join(runDirectory,'covershift.json'));
- const manifest=await buildDemoFixtures(store,{now,timezone,...(hash?{hash}:{})});await writeFile(join(runDirectory,'manifest.json'),JSON.stringify({...manifest,runId},null,2)+'\n',{flag:'wx',mode:0o600});await writeFile(join(runDirectory,'WALKTHROUGH.md'),demoGuide({...manifest,runId}),{flag:'wx',mode:0o600});
+ const fixtures=await buildDemoFixtures(store,{now,timezone,...(hash?{hash}:{})});const manifest=await addPresentationScenarios(store,fixtures,now);await writeFile(join(runDirectory,'manifest.json'),JSON.stringify({...manifest,runId},null,2)+'\n',{flag:'wx',mode:0o600});await writeFile(join(runDirectory,'WALKTHROUGH.md'),demoGuide({...manifest,runId}),{flag:'wx',mode:0o600});
  const latest=join(root,'latest.json'),temp=join(root,`.latest-${randomUUID()}.tmp`);try{await writeFile(temp,JSON.stringify({version:1,runId})+'\n',{flag:'wx',mode:0o600});await rename(temp,latest);}finally{await unlink(temp).catch(e=>{if(e.code!=='ENOENT')throw e;});}
  return {root,runDirectory,runId,store,manifest:{...manifest,runId}};
 }
@@ -21,4 +22,51 @@ export async function loadDemo(root){assertLocalDemo();root=await rootDirectory(
  if(manifest.version!==1||manifest.runId!==runId||typeof manifest.businessId!=='string'||!manifest.businessId.startsWith('business_demo_')||!manifest.dates?.thursday||manifest.timezone!=='America/Toronto')throw new Error('Invalid demo manifest. Prepare a new demo.');
  await regular(join(runDirectory,'covershift.json'));const store=new JsonStore(join(runDirectory,'covershift.json')),db=await store.read();if(db.businesses.length!==1||db.businesses[0].id!==manifest.businessId||db.businesses[0].timezone!==manifest.timezone||!db.users.some(u=>u.id==='manager_morgan'&&u.role==='manager'&&u.businessId===manifest.businessId)||!db.users.some(u=>u.id==='worker_jamie'&&u.role==='worker'&&u.businessId===manifest.businessId))throw new Error('Selected database does not match this fictional demo run.');return {root,runDirectory,runId,manifest,store};
 }
-export function demoGuide(m){const d=m.dates;return `# CoverShift presentation demo\n\nPrepared ${m.createdAt}; business timezone ${m.timezone}. Run ${m.runId}. All accounts and records are fictional.\n\n## Start\n\nRun \`npm run demo:start\`. Default manager URL http://localhost:3035/login; employee URL http://127.0.0.1:3035/login. Use the printed port if you set DEMO_PORT. Keep the terminal running.\n\nManager: manager_morgan@example.test (Morgan Chen). Employee: worker_jamie@example.test (Jamie Lee). Fictional demo passphrase for both: ${DEMO_PASSWORD}\n\n## Five-minute walkthrough\n\n1. Manager Overview: five future shifts, one pending claim, four fictional employees. Employee My shifts: Opening service on ${d.thursday} 9AM–12PM and Afternoon service on ${d.friday} 2–6PM (7 assigned hours).\n2. Employee AI assistant → Ask about schedules: “When is my next shift?” Or ask “How many hours am I working from ${d.thursday} through ${d.sunday}?” Pending claims are excluded from assigned hours.\n3. Employee Find existing shifts: “Find an open shift on ${d.thursday} between 2 PM and 6 PM.” Review Afternoon coverage, then Confirm request. Manual fallback: Open shifts → claim the same opening. Assignment stays with Alex pending approval.\n4. Manager Approvals: approve Afternoon coverage (${d.thursday} 2–5PM). Employee bell → Refresh: approved receipt. Close chat and Refresh My shifts: assignment appears. History records actors and outcome.\n5. Optional automatic matching: employee AI assistant → Saved availability → Resume the paused Weekend service rule (${d.saturday} 2–6PM). This immediately requests the existing Weekend service opening (${d.saturday} 2–5PM). Manager still approves; before approval Alex remains assigned. Refresh the manager queue and both notification bells.\n\n## Other prepared scenarios\n\n- Morning coverage on ${d.friday} 9AM–12PM already awaits approval for Jamie. Approve/reject this as an alternative to step3.\n- History has approved Completed coverage on ${d.historyApproved} and cancelled coverage on ${d.historyCancelled}. Historical receipts start read; current pending receipts are unread.\n- Optional manager AI drafting: “Create a shift titled Presentation shift for Sam Rivera on ${d.sunday} from 9 AM to 12 PM.” Review editable form, then Create and assign shift. Manual Schedule form is available without AI.\n\n## Rehearse/reset\n\nStop the demo server with Ctrl+C. Run \`npm run demo:prepare\`, then \`npm run demo:start\`. Each preparation selects a NEW isolated run; previous populated runs are preserved. Sign in again in both role tabs. The unique business/session identity prevents old chat/session state being reused. No command overwrites the normal data folder or desktop accounts.\n\nPrepare shortly before the presentation; these are real dates, not a frozen clock. Starting after the Thursday has begun requires a fresh preparation. Check the printed scenario dates, not memorized weekday assumptions.\n\n## Backup\n\nBefore presenting, record one successful walkthrough and save screenshots. If the provider/network is unavailable, use saved schedules, Open shifts, Approvals, notifications and History manually. AI uses the existing private environment configuration and real provider. Limits are 5 AI attempts per account per 10 minutes and 20 per UTC day, within the project allowance. Preparing a new demo does not reset persisted usage accounting. Rehearse a few messages, then use manual controls for repeated practice. No key is copied into this guide. An unavailable or limited AI service must not be described as working live. This local demo is not deployment or submission (CS-018).\n`;}
+export function demoGuide(m) {
+  const { thursday } = m.dates;
+  const { startsOn, endsOn, summaryWeek, batchPrompt, searchPrompt } = m.presentation;
+  return `# CoverShift presentation demo
+
+Prepared ${m.createdAt}. Business timezone ${m.timezone}. Run ${m.runId}. All accounts and records are fictional.
+
+## Sign in
+
+Run \`npm run demo:start\` for the normal demo or \`DEMO_SCRIPTED_AI=1 npm run demo:start\` for the two recorded prompts below. Use the printed port if you set \`DEMO_PORT\`.
+
+- Morgan Chen, manager: manager_morgan@example.test at http://localhost:3035/login
+- Jamie Lee, employee: worker_jamie@example.test at http://127.0.0.1:3035/login
+- Alex Morgan, employee: worker_alex@example.test at http://127.0.0.1:3035/login in a separate browser profile or private window
+
+Demo passphrase for all three: ${DEMO_PASSWORD}
+
+## Jamie: Search, follow up, and summarize
+
+Send this exact search prompt in a new chat:
+
+> ${searchPrompt}
+
+The assistant should show Afternoon coverage, Evening coverage, and Closing coverage. Ask “Why can't I take the second one?” to check Evening coverage. Then ask “What else is available?” to see two alternatives using the same date, time and title filters. Reviewing an alternative keeps it unrequested until you confirm.
+
+Ask “Show my working week for ${summaryWeek} week.” Jamie starts with two assignments and one pending coverage claim in the Thursday–Saturday scenario week. The working-week and other saved-record queries do not require a provider.
+
+## Alex and Morgan: Shared availability and attention
+
+Alex already has a confirmed availability window on ${thursday}, 5–8 PM. In a new chat as Jamie, ask “Who’s free on ${thursday}?” to see Alex's available hours. Alex can inspect the original window in Availability.
+
+As Morgan, ask “What needs my attention ${summaryWeek} week?” before approving or claiming anything. The demo starts with one pending approval and four open requests for cover. These are requests on existing assigned shifts. Open Approvals and Schedule from the summary for the current saved records.
+
+## Morgan: Batch review and publication
+
+Send this exact prompt in a new chat:
+
+> ${batchPrompt}
+
+Review both proposals and edit any field before confirmation. The second shift ends the next day. **Confirm and save 2 shifts** stages both drafts together. As Jamie, refresh My shifts and check that Presentation opening is still private. Morgan can review the prepared ${startsOn}–${endsOn} schedule and manually publish it. Refresh Jamie’s schedule to see the assignment. The demo supports rehearsing the publish action outside the normal Monday due date.
+
+## Rehearse again
+
+Stop the demo server with Ctrl+C. Run \`npm run demo:prepare\` to select a new isolated run, then start it again. Preparing a new run preserves previous runs and normal accounts. Prepare shortly before the presentation because the schedule uses real calendar dates.
+
+Scripted mode uses recorded replies for the two quoted prompts and exercises real schedule validation, search, save, and publication. The normal demo uses the configured provider. If the provider is unavailable, use scripted mode or the manual workspace controls. This local demo is separate from CS-043 deployment and final submission.
+`;
+}
