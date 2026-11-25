@@ -29,7 +29,7 @@ function explicitRoute(text, manager) {
   if (manager && /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
   if (!manager) {
     if (/\b(?:co[ -]?workers?|colleagues?|teammates?)\b/.test(message) &&
-        /\b(?:available|availability|free|can work|could work)\b/.test(message) ||
+        /\b(?:available|availability|availbility|free|can work|could work)\b/.test(message) ||
         /^who(?:'s| is) (?:free|available)\b|^who (?:can|could) (?:cover|fill in)\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/.test(message)) return 'coworkers';
     if (/^(?:what else(?: is available)?|(?:any|what) other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/.test(message)) return 'alternatives';
     if (/^(?:why|how come|explain)\b/.test(message) &&
