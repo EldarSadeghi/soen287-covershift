@@ -15,7 +15,7 @@ Issue [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75). Local
 - One pending invitation per shift. A pending invitation does not reserve the shift or automatically publish it. An existing public opening stays open; manual or automatic competing claims can win, expiring the invitation.
 - Sending is limited to the existing next-14-local-date availability horizon. The coworker must be active, ready to sign in, and in the same business, with confirmed general availability covering the whole shift and no assigned-work, pending-claim or approved-leave conflict.
 - Eligibility is rechecked when sending, accepting and approving. Shift edits/deletion, deactivation, availability withdrawal, competing claims or shift start expire invalid unanswered invitations. Periodic reconciliation persists expiry receipts; reads derive current status without writes.
-- Declined/cancelled/expired invitations cannot be repeated to the same coworker for an unchanged shift. A different eligible coworker can be invited once the earlier invitation is terminal. Limit: 20 invitations per rolling 24 hours and 1,000 lifetime records per sender.
+- Declined/expired invitations cannot be repeated to the same coworker for an unchanged shift. Cancelled invitations, including accepted invitations whose linked coverage was cancelled, may be sent again after fresh eligibility checks. Earlier history stays unchanged. A different eligible coworker can be invited once the earlier invitation is terminal. Limit: 20 invitations per rolling 24 hours and 1,000 lifetime records per sender.
 - Messages are optional single-line plain text, maximum 500 characters; only participants and business managers may read them. No contact details, private leave reasons or AI provider calls are introduced.
 - Accepted invitations follow their linked coverage outcome. Accepted pending claims display Expired after shift start under the existing coverage semantics; a separate new accepted-start expiry notification is not added.
 
@@ -37,6 +37,6 @@ Temporary fictional data only, independent of normal accounts and the normal dem
 | Jamie Lee, recipient employee | http://127.0.0.1:3042/workspace/worker/cover | worker_jamie@example.test |
 | Morgan Chen, manager | http://localhost:3041/workspace/manager/approvals | manager_morgan@example.test |
 
-Fictional password for all three: `CoverShift demo access!`. Hostnames/ports keep these sessions separate. Try Jamie’s December 3 window to send a fresh invitation; Monday November 30 is already awaiting manager approval. The initial November 26 example was approved; December 1 declined and December 2 cancelled.
+Fictional password for all three: `CoverShift demo access!`. Hostnames/ports keep these sessions separate. Try Jamie’s December 3 window to send a fresh invitation; Monday November 30 was cancelled during user review and is now ready to request again. The initial November 26 example was approved; December 1 declined and December 2 cancelled.
 
 Validation: [acceptance report](acceptance/cs040/USER-STORIES.md).

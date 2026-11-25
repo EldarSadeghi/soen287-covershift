@@ -4,7 +4,7 @@ Issue #75; branch `codex/CS-040-request-cover`; status **Your review**. User sel
 
 ## Results
 
-`npm run verify`: **314 tests passed, 0 failed**, including **18 new request-cover tests**, all existing regressions and the offline AI corpus. See [full verification output](verification.txt). Final frontend-only feedback/focus refinements passed Node syntax checks and the browser checks below. Existing offline AI tests use recorded provider replies; no new live-provider evaluation or paid API calls were needed.
+`npm run verify`: **315 tests passed, 0 failed**, including **19 new request-cover tests**, all existing regressions and the offline AI corpus. See [full verification output](verification.txt). Final frontend-only feedback/focus refinements passed Node syntax checks and the browser checks below. Existing offline AI tests use recorded provider replies; no new live-provider evaluation or paid API calls were needed.
 
 | ID | User story / acceptance criterion | Evidence and result |
 | --- | --- | --- |
@@ -28,3 +28,7 @@ See [workflow and local accounts](../../request-cover.md). Alex Morgan is an emp
 This is a focused local/service/browser acceptance pass, not exhaustive device or assistive-technology certification. Periodic expiration was verified in automated controlled-clock tests; a real overnight wall-clock wait was not performed. Accepted-start expiry follows existing coverage display semantics and does not introduce a separate new notification. One invitation per unchanged shift/coworker, 20 per rolling24h and 1,000 lifetime per sender are deliberate anti-repeat limits. See workflow documentation for cancellation after acceptance and full-availability requirements.
 
 GitHub issue remains open. Board verified **Your review**; [board evidence](github-review.jpg). Await explicit approval before any push, PR or merge.
+
+## Review correction: cancelled request retry
+
+User reported Monday Nov30 2–5 PM missing despite Jamie’s12–6 availability. The earlier accepted invitation’s linked coverage was cancelled, but the unchanged-shift anti-repeat rule incorrectly blocked a new request. Cancelled invitations and accepted invitations with cancelled linked coverage can now be re-invited after fresh eligibility checks; declines/expiry and quotas retain their existing protection. New regression covers cancel→new invitation→accept with old history unchanged and one new pending claim. Full315 tests pass. Browser verified Monday appears and can be selected; left unsent for user review. [Evidence](monday-cancelled-retry.jpg). This supersedes the earlier preserved Monday awaiting-approval preview state. No push/merge.

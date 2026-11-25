@@ -18,7 +18,7 @@ function eligible(db,user,shift,to,now){
   if(!shift||shift.businessId!==user.businessId||shift.assignedWorkerId!==user.id||shift.startsAt<h.startsAt||shift.endsAt>h.endsAt||Date.parse(shift.startsAt)<=now)return false;
   if(coverEligibility(db,to.id,shift,now)||pendingFor(db,shift,now))return false;
   if(db.coverageRequests.some(c=>c.shiftId===shift.id&&c.status==='pending'))return false;
-  if((db.coverInvitations||[]).some(r=>r.shiftId===shift.id&&r.recipientId===to.id&&r.shiftSnapshot.revision===coverShiftFingerprint(shift)))return false;
+  if((db.coverInvitations||[]).some(r=>r.shiftId===shift.id&&r.recipientId===to.id&&r.shiftSnapshot.revision===coverShiftFingerprint(shift)&&coverDisplayStatus(db,r,now)!=='cancelled'))return false;
   return true;
 }
 export async function coverOptions(store,userId,recipientId,clock=Date.now){
