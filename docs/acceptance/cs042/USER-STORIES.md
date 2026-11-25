@@ -21,3 +21,7 @@ Twenty events per API page. Load older appends and deduplicates instead of repla
 [Desktop](desktop.jpg), [mobile](mobile.jpg). Browser checks used existing isolated fictional preview3041; normal accounts, Desktop checkout and provider keys were unchanged. No schema migration or scheduling/approval change. Pagination accumulation is unit tested with real API cursor regressions; this small browser fixture did not contain more than20 events, so the Load older button was not exercised manually. No full assistive-technology certification or live-provider calls.
 
 Local preview http://127.0.0.1:3041/workspace/worker/cover . Click bell. Employee Alex:worker_alex@example.test; fictional password `CoverShift demo access!`. QA marked Alex’s existing updates read; All still shows grouped examples. Temporary fault proxy stopped after checks; normal review server retained.
+
+## Approved completion
+
+User approved merge on 2026-11-24. PR #80 merged, issue #79 closed and board Done verified. Earlier no-approval notes describe the pre-approval state.
