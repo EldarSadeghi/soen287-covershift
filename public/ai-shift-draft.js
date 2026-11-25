@@ -1,5 +1,6 @@
+import { createBatchReview } from './ai-shift-batch.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -40,6 +41,8 @@ export function mountAiChat(account, csrfToken) {
     }
     chat.save();
   }
+  const batchReview = manager ? createBatchReview({ card, chat, csrfToken, notice, setBusy: working,
+    onOutcome: outcomeText, canAct: () => !busy }) : null;
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
 
   const explanations = !manager ? createAvailabilityExplanations({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText,
@@ -59,7 +62,7 @@ export function mountAiChat(account, csrfToken) {
   composer.value = chat.value.composer;
   composer.placeholder = 'Ask or describe what you need…';
   const prompts = manager
-    ? [['Create a shift', 'Help me create a shift.'], ['Team schedule', 'Show the entire team’s schedule this week.']]
+    ? [['Create a shift', 'Help me create a shift.'], ['Draft multiple shifts', 'Draft two shifts: '], ['Team schedule', 'Show the entire team’s schedule this week.']]
     : [['My next shift', 'When is my next shift?'], ['Find openings', 'Find an open shift Thursday.'], ['Save availability', 'I can take one shift Thursday between 2 PM and 6 PM.']];
   for (const [label, text] of prompts) {
     const button = element('button', '', label); button.type = 'button';
@@ -136,7 +139,9 @@ export function mountAiChat(account, csrfToken) {
   }
   function syncResponse(){const bubbles=[...messages.children];for(const bubble of bubbles)bubble.hidden=false;const last=bubbles.at(-1);if(!card.hidden && last?.classList.contains('ai-chat-assistant'))last.hidden=true;}
   const observer=new MutationObserver(()=>{syncResponse();if(dialog.open&&!card.hidden)requestAnimationFrame(()=>revealResponse(card));});observer.observe(card,{childList:true,attributes:true,attributeFilter:['hidden']});
-  if (manager) showSuggestion(chat.value.refinementPending ? null : chat.value.suggestion); else if (!availability.restore() && !chat.value.refinementPending) employeeRequests.restore();
+  if (manager && chat.value.batch) batchReview.show(chat.value.batch);
+  else if (manager) showSuggestion(chat.value.refinementPending ? null : chat.value.suggestion);
+  else if (!availability.restore() && !chat.value.refinementPending) employeeRequests.restore();
   if (!manager && chat.value.availabilityDraft && !chat.value.outcome) notice('Continue describing your availability to review a fresh draft.');
   if (chat.value.completion) notice('Shift saved successfully.');
   else if (chat.value.uncertainDraftId) notice('Save not confirmed. Check the saved schedule before trying again.');
@@ -154,6 +159,10 @@ export function mountAiChat(account, csrfToken) {
     showSuggestion(chat.value.suggestion); notice('Save not confirmed. Check the saved schedule before trying again.');
   });
   find('.ai-chat-controls .ai-chat-new').addEventListener('click', () => {
+    if (chat.value.batch?.status === 'uncertain') {
+      notice('Check the batch receipt or retry the same batch before starting a new chat.');
+      return;
+    }
     revision++; explanations?.reset(); employeeRequests?.reset(); availability?.reset(); const ruleChangePending = chat.value.ruleChangePending; chat.reset();
     if (ruleChangePending) chat.value.ruleChangePending = true;
     mode = manager ? 'draft' : 'search'; chat.save(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';samples.hidden = false;
@@ -161,6 +170,10 @@ export function mountAiChat(account, csrfToken) {
   });
   form.addEventListener('submit', async event => {
     event.preventDefault(); if (busy) return;
+    if (chat.value.batch?.status === 'uncertain') {
+      notice('Check the batch receipt or retry the same batch before sending another message.');
+      return;
+    }
     const text = composer.value.trim();
     if (!text) { notice('Write a message first.'); composer.focus(); return; }
     const timingStart = performance.now();
@@ -176,8 +189,12 @@ export function mountAiChat(account, csrfToken) {
       !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
     const shortExplanation = !manager && previous?.topic === 'explanation' &&
       routed === 'clarification' && /^why not[.!?]*$/i.test(text) && employeeRequests.openingContext().selectedId;
-    const target = ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
+    const batchReply = manager && chat.value.batchClarifying && routed === 'clarification' &&
+      !chatClarification(text, true).startsWith(MIXED_INTENT_QUESTION);
+    const target = (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routed;
+    const wasClarifyingBatch = manager && chat.value.batchClarifying;
+    const batch = manager && target === 'draft' && (requestsShiftBatch(text) || wasClarifyingBatch);
     const sameTopic = mode === target;
     const inScope = chat.value.messages.slice(-8);
     let history = [];
@@ -305,6 +322,8 @@ export function mountAiChat(account, csrfToken) {
     }
     if (target === 'clarification') {
       chat.value.refinementPending = true;
+      chat.value.batch = null;
+      chat.value.batchClarifying = false;
       chat.value.pending = null;
       document.dispatchEvent(new Event('ai:cancel-review'));
       employeeRequests?.reset({ keepSearch: !manager && mode === 'search' }); availability?.reset(); showSuggestion(null);
@@ -337,11 +356,13 @@ export function mountAiChat(account, csrfToken) {
       notice('Reply with the hours to continue.');
       return;
     }
-    const base = previous?.topic === 'clarification' ? null : mode === 'draft' ? chat.value.suggestion?.draft : mode === 'availability' ? chat.value.availabilityDraft : mode === 'search' ? chat.value.criteria : null;
-    const body = JSON.stringify({ description: text, history, ...(base && { base }) });
+    const base = batch || previous?.topic === 'clarification' ? null : mode === 'draft' ? chat.value.suggestion?.draft : mode === 'availability' ? chat.value.availabilityDraft : mode === 'search' ? chat.value.criteria : null;
+    const body = JSON.stringify({ description: text, history, ...(batch && { batch: true }), ...(base && { base }) });
     if (encoder.encode(body).length > 8000) { notice('This chat has reached its context limit. Start a new chat and include the shift details again.'); return; }
     const version = ++revision; busy = true; send.disabled = true; send.textContent = 'Thinking…';
     if (manager) {
+      chat.value.batch = null;
+      chat.value.batchClarifying = false;
       chat.value.pending = null;
       chat.value.refinementPending = Boolean(base);
       document.dispatchEvent(new Event('ai:cancel-review'));
@@ -380,12 +401,18 @@ export function mountAiChat(account, csrfToken) {
         if (!refreshed.ok) { const failure = new Error(); failure.userMessage = refreshed.data.message; throw failure; }
         data = refreshed.data;
       }
-      if (!(mode==='questions' ? ['schedule_answer','clarification'] : manager ? ['draft', 'clarification'] : ['matches', 'availability', 'clarification']).includes(data.kind)) throw new Error('AI could not prepare a reply.');
-      const reply = data.kind === 'clarification' ? data.question : data.kind==='schedule_answer' ? scheduleAnswerMessage(data) : data.kind==='availability' ? availabilitySummary(data) : !manager ? employeeSearchMessage(data) : `Proposed shift: ${data.draft.title} for ${data.workerName}, ${data.draft.startLocal} to ${data.draft.endLocal}, ${data.timezone}. Nothing has been saved. You can ask me to change it or select Review shift.`;
+      if (!(mode==='questions' ? ['schedule_answer','clarification'] : manager ? [batch ? 'batch' : 'draft', 'clarification'] : ['matches', 'availability', 'clarification']).includes(data.kind)) throw new Error('AI could not prepare a reply.');
+      const reply = data.kind === 'clarification' ? data.question : data.kind === 'batch' ? `${data.shifts.length} proposed shifts. Review and confirm the batch to save it.` : data.kind==='schedule_answer' ? scheduleAnswerMessage(data) : data.kind==='availability' ? availabilitySummary(data) : !manager ? employeeSearchMessage(data) : `Proposed shift: ${data.draft.title} for ${data.workerName}, ${data.draft.startLocal} to ${data.draft.endLocal}, ${data.timezone}. Nothing has been saved. You can ask me to change it or select Review shift.`;
       chat.value.draftCancelled = false;
       appendTurn(reply);
       if (data.kind==='schedule_answer') showScheduleAnswer(card,data);
+      else if (manager && data.kind === 'batch') {
+        chat.value.suggestion = null;
+        chat.value.refinementPending = false;
+        batchReview.open(data);
+      }
       else if (manager) {
+        chat.value.batchClarifying = batch && data.kind === 'clarification';
         if (data.kind === 'draft') chat.value.suggestion = { ...data, id: crypto.randomUUID() };
         chat.value.refinementPending = data.kind === 'clarification';
         showSuggestion(chat.value.refinementPending ? null : chat.value.suggestion);
@@ -405,6 +432,7 @@ export function mountAiChat(account, csrfToken) {
       pendingBubble.remove();
       if (version === revision && !chat.value.completion && !chat.value.uncertainDraftId) {
         card.replaceChildren(); card.hidden = true;
+        if (batch && wasClarifyingBatch) chat.value.batchClarifying = true;
         chat.value.composer = composer.value; chat.save();
         notice(error.userMessage || `AI is unavailable or took too long. Your message is preserved. Try sending again later${mode==='questions' ? ' or open your saved schedule' : manager ? ' or use the manual Schedule form' : mode==='availability' ? '; Saved availability remains available' : ' or use Open shifts'}. An attempt may still count toward your allowance.`);
       }

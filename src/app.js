@@ -20,6 +20,7 @@ import { SessionStore, requireAccount, safeAccount } from './auth/sessions.js';
 import { upcomingWorkerShifts } from './shifts/upcoming.js';
 import { managerDashboard } from './manager/dashboard.js';
 import { listWorkers, addWorker, reissueSetup, setupDetails, completeSetup } from './manager/workers.js';
+import { getShiftBatchReceipt, saveShiftBatch } from './shifts/batch.js';
 import { createShift } from './shifts/create.js';
 import { manageShift } from './shifts/manage.js';
 import { requestCoverage, cancelCoverage, ownRequests } from './requests/coverage.js';
@@ -41,6 +42,7 @@ const assets = new Map([
   ['/ai-availability-explanation.js', ['ai-availability-explanation.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-routing.js', ['ai-chat-routing.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-state.js', ['ai-chat-state.js', 'text/javascript; charset=utf-8']],
+  ['/ai-shift-batch.js', ['ai-shift-batch.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-draft.js', ['ai-shift-draft.js', 'text/javascript; charset=utf-8']],
   ['/remove-worker.js', ['remove-worker.js', 'text/javascript; charset=utf-8']],
   ['/accessibility.css', ['accessibility.css', 'text/css; charset=utf-8']],
@@ -346,6 +348,19 @@ export function createAppServer({ store, signup = registerManager, login = authe
         const input = await readJson(request);
         if (!aiDraft) throw new HttpError(503, 'AI drafting is not configured. Use the manual shift form.');
         sendJson(response, 200, await aiDraft(store, account.user.id, input, shiftClock)); return;
+      }
+      if (pathname === '/api/manager/shift-batches') {
+        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'This action uses your signed-in business.');
+        limitShifts(account.user.id);
+        sendJson(response, 201, await saveShiftBatch(store, account.user.id, await readJson(request), shiftClock)); return;
+      }
+      if (/^\/api\/manager\/shift-batches\/[a-f0-9-]{36}$/.test(pathname)) {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
+        sendJson(response, 200, await getShiftBatchReceipt(store, account.user.id, pathname.split('/').at(-1))); return;
       }
       if (pathname === '/api/manager/shifts') {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);

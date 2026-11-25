@@ -24,12 +24,12 @@ export function effectiveShifts(db) {
   const changed=new Set((db.scheduleDrafts||[]).map(d=>d.id));
   return [...db.shifts.filter(s=>!changed.has(s.id)),...(db.scheduleDrafts||[]).filter(d=>!d.deleted).map(d=>d.shift)];
 }
-function upgrade(db){dutiesSchema(db);db.schemaVersion=13;db.schedulePeriods||=[];db.scheduleDrafts||=[];db.schedulePublications||=[];db.scheduleNotifications||=[];}
+export function ensureScheduleSchema(db){dutiesSchema(db);db.schemaVersion=Math.max(db.schemaVersion,13);db.schedulePeriods||=[];db.scheduleDrafts||=[];db.schedulePublications||=[];db.scheduleNotifications||=[];}
 export function assertPrepared(db, business, shift) {
   if(!(db.schedulePeriods||[]).some(p=>p.businessId===business.id&&inPeriod(shift,p)))throw new HttpError(409,'Prepare a two-week schedule containing this shift’s start date before saving it.');
 }
 export function stageShift(db,business,shift,original,deleted=false){
-  assertPrepared(db,business,shift);upgrade(db);
+  assertPrepared(db,business,shift);ensureScheduleSchema(db);
   const existing=draftShift(db,shift.id);
   const record={id:shift.id,businessId:business.id,baseRevision:existing?existing.baseRevision:original?digest(original):null,deleted,shift};
   db.scheduleDrafts=db.scheduleDrafts.filter(d=>d.id!==shift.id);
@@ -50,7 +50,7 @@ function view(db,business,start,now){
 export async function getSchedulePeriod(store,userId,start,now=Date.now()) {const db=await store.read(),b=managerBusiness(db,userId);return view(db,b,start||nextScheduleMonday(now,b.timezone),now);}
 export async function prepareSchedule(store,userId,input,clock=Date.now){
   if(!input||Object.keys(input).sort().join(',')!=='startsOn')throw new HttpError(422,'Submit only the schedule start date.');
-  return store.transaction(db=>{const b=managerBusiness(db,userId),dates=periodDates(input.startsOn),now=clock();if(dates.endsOn<localDate(now,b.timezone))throw new HttpError(422,'Prepare a current or future schedule.');upgrade(db);if(!db.schedulePeriods.some(p=>p.businessId===b.id&&p.startsOn===dates.startsOn))db.schedulePeriods.push({id:randomUUID(),businessId:b.id,...dates,timezone:b.timezone});return view(db,b,dates.startsOn,now);});
+  return store.transaction(db=>{const b=managerBusiness(db,userId),dates=periodDates(input.startsOn),now=clock();if(dates.endsOn<localDate(now,b.timezone))throw new HttpError(422,'Prepare a current or future schedule.');ensureScheduleSchema(db);if(!db.schedulePeriods.some(p=>p.businessId===b.id&&p.startsOn===dates.startsOn))db.schedulePeriods.push({id:randomUUID(),businessId:b.id,...dates,timezone:b.timezone});return view(db,b,dates.startsOn,now);});
 }
 function validateFutureShift(db,b,shift,now){
   const local=t=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:b.timezone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(t)).map(p=>[p.type,p.value]));return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;};

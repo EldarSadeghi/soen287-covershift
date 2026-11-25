@@ -60,7 +60,7 @@ CS-048 adds 19 deterministic tests. Browser review on port 3056 confirmed “Who
 | CS-035 | Manage employee availability rules through chat | Done | [#60](https://github.com/EldarSadeghi/soen287-covershift/issues/60) | CS-051 | #86 |
 | CS-036 | Explain availability matches and scheduling conflicts | Done | [#55](https://github.com/EldarSadeghi/soen287-covershift/issues/55) | CS-052 | #87 |
 | CS-037 | Suggest eligible alternative shifts | Done | [#56](https://github.com/EldarSadeghi/soen287-covershift/issues/56) | CS-053 | #88 |
-| CS-038 | Manager batch shift creation through chat | Todo | [#58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-054 | — |
+| CS-038 | Manager batch shift creation through chat | Your review | [#58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-054 | — |
 | CS-039 | AI working-week and attention summaries | Todo | [#59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-055 | — |
 | CS-040 | Request cover from a coworker | Done | [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75) | New | #76 |
 | CS-041 | Quiet Workspace interface | Done | [#77](https://github.com/EldarSadeghi/soen287-covershift/issues/77) | New | #78 |

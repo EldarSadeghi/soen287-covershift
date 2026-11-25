@@ -22,6 +22,13 @@ export function createChatState(storage, owner, now = Date.now) {
     const saved = JSON.parse(storage.getItem(CHAT_KEY));
     if (saved?.owner === owner && now() - saved.updatedAt < 8 * 60 * 60 * 1000 && now() >= saved.updatedAt && Array.isArray(saved.messages) && saved.messages.length <= 10 && saved.messages.length % 2 === 0 && JSON.stringify(saved.messages).length < 10000 && saved.messages.every((m, i) => m && m.role === (i % 2 ? 'assistant' : 'user') && typeof m.text === 'string' && m.text.length <= 1500)) {
       state.messages = saved.messages;
+      const batch = saved.batch;
+      if (batch && validId(batch.id) && ['review', 'uncertain', 'saved'].includes(batch.status) &&
+          typeof batch.timezone === 'string' && batch.timezone.length <= 100 &&
+          Array.isArray(batch.shifts) && batch.shifts.length >= 2 && batch.shifts.length <= 5 && batch.shifts.every(validDraft) &&
+          Array.isArray(batch.workers) && batch.workers.length <= 50 && batch.workers.every(worker =>
+            validId(worker?.id) && typeof worker.name === 'string' && worker.name.length <= 100)) state.batch = batch;
+      if (saved.batchClarifying === true) state.batchClarifying = true;
       if (saved.refinementPending === true) state.refinementPending = true;
       if(saved.mode==='questions')state.mode='questions';
       if (typeof saved.composer === 'string' && saved.composer.length <= 1500) state.composer = saved.composer;
