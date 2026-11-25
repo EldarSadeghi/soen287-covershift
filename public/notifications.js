@@ -1,60 +1,38 @@
-import { requestJSON } from './request.js';
-import { element } from './shift-card.js';
-export function mountNotifications(account,csrfToken) {
-  const bell=element('button','logout-button notification-bell');bell.type='button';bell.setAttribute('aria-label','Notifications');bell.setAttribute('aria-haspopup','dialog');
-  bell.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="notification-count" hidden></span>';
-  document.querySelector('.profile').prepend(bell);
-  const dialog=element('dialog','notification-dialog');dialog.setAttribute('aria-labelledby','notification-heading');
-  dialog.innerHTML='<div class="panel-head"><h2 id="notification-heading">Notifications</h2><button type="button" class="logout-button" data-close>Close</button></div><p class="section-note">Coverage updates for your account. Assignment still requires manager approval.</p><div class="notification-tools"><button type="button" class="logout-button" data-refresh>Refresh</button><button type="button" class="logout-button" data-read>Mark displayed as read</button></div><p role="status" aria-live="polite" data-state></p><div data-list></div><button type="button" class="logout-button" data-more hidden>Load older notifications</button>';
-  document.body.append(dialog);
-  const count=bell.querySelector('span'),list=dialog.querySelector('[data-list]'),state=dialog.querySelector('[data-state]'),refresh=dialog.querySelector('[data-refresh]'),read=dialog.querySelector('[data-read]'),more=dialog.querySelector('[data-more]');
-  let stopped=false,busy=false,writing=false,rows=[],next=null;
-  const date=new Intl.DateTimeFormat(undefined,{timeZone:account.business.timezone,dateStyle:'medium',timeStyle:'short'});
-  function badge(n){count.textContent=n>99?'99+':String(n);count.hidden=n===0;bell.setAttribute('aria-label',`Notifications, ${n} unread`);}
-  function controls(){refresh.disabled=more.disabled=busy||writing;read.disabled=busy||writing||!rows.some(n=>!n.readAt);}
-  function render(){
-    list.replaceChildren();
-    if(!rows.length)list.append(element('p','section-note','No notifications yet. New coverage updates will appear here.'));
-    for(const n of rows){
-      const card=element('article',`notification-item ${n.readAt?'':'notification-unread'}`);
-      card.append(element('h3','',n.title),element('p','',n.message),element('p','section-note',`${date.format(new Date(n.createdAt))} · ${n.readAt?'Read':'Unread'} · Current status: ${n.currentStatus}`));
-      const link=element('a','', 'View request and current status');link.href=n.href;card.append(link);
-      if(!n.readAt){const button=element('button','logout-button','Mark as read');button.type='button';button.disabled=writing;button.addEventListener('click',()=>mark([n.id]));card.append(button);}
-      list.append(card);
-    }
-    more.hidden=!next;controls();
+import {requestJSON} from './request.js';
+import {element} from './shift-card.js';
+import {mergeNotificationPages,groupNotificationRows,localNotificationDay,notificationAge} from './notification-view.js';
+export function mountNotifications(account,csrfToken){
+ const bell=element('button','logout-button notification-bell');bell.type='button';bell.setAttribute('aria-label','Notifications');bell.setAttribute('aria-haspopup','dialog');bell.setAttribute('aria-expanded','false');
+ bell.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="notification-count" hidden></span>';document.querySelector('.profile').prepend(bell);
+ const dialog=element('dialog','notification-dialog quiet-notifications');dialog.setAttribute('aria-labelledby','notification-heading');
+ dialog.innerHTML='<header class="notice-header"><div><h2 id="notification-heading">Notifications</h2><span data-unread class="notice-new"></span></div><button type="button" class="logout-button notice-close" data-close aria-label="Close notifications">Close</button></header><div class="notice-toolbar"><div class="notice-filters" role="group" aria-label="Notification filters"><button type="button" aria-pressed="true" data-filter="all">All</button><button type="button" aria-pressed="false" data-filter="unread">Unread</button></div><button type="button" class="notice-text" data-read>Mark shown as read</button><button type="button" class="notice-text" data-refresh>Refresh</button></div><p role="status" aria-live="polite" data-state></p><div data-list></div><button type="button" class="logout-button notice-more" data-more hidden>Load older updates</button><footer class="notice-footer">Assignments change only after manager approval.<small data-zone></small></footer>';
+ document.body.append(dialog);const q=s=>dialog.querySelector(s),count=bell.querySelector('span'),list=q('[data-list]'),state=q('[data-state]'),refresh=q('[data-refresh]'),read=q('[data-read]'),more=q('[data-more]');q('[data-zone]').textContent=account.business.timezone;
+ let stopped=false,busy=false,writing=false,uncertain=false,rows=[],next=null,filter='all';
+ const date=new Intl.DateTimeFormat(undefined,{timeZone:account.business.timezone,dateStyle:'medium',timeStyle:'short'}),period=new Intl.DateTimeFormat(undefined,{timeZone:account.business.timezone,dateStyle:'medium',timeStyle:'short'});
+ const shown=()=>groupNotificationRows(rows,filter),shownIds=()=>shown().flatMap(g=>g.unreadIds);
+ function badge(n){count.textContent=n>99?'99+':String(n);count.hidden=n===0;bell.setAttribute('aria-label',`Notifications, ${n} unread`);q('[data-unread]').textContent=n?n+' new':'All caught up';}
+ function controls(){refresh.disabled=more.disabled=busy||writing;read.disabled=busy||writing||uncertain||!shownIds().length;for(const b of dialog.querySelectorAll('[data-filter],[data-mark]'))b.disabled=busy||writing||uncertain;}
+ function render(){const expanded=new Set([...list.querySelectorAll('details[open]')].map(d=>d.dataset.group));list.replaceChildren();const groups=shown(),today=localNotificationDay(Date.now(),account.business.timezone);let prior=null;
+  if(!groups.length)list.append(element('p','notice-empty',filter==='unread'?'No unread updates in the loaded notifications.':'No notifications yet. New coverage updates appear here.'));
+  for(const group of groups){const n=group.latest,day=localNotificationDay(n.createdAt,account.business.timezone)===today?'Today':'Earlier';if(day!==prior){list.append(element('h3','notice-day',day));prior=day;}
+   const card=element('article','notice-item'+(group.unreadIds.length?' notice-unread':''));const icon=element('span','notice-symbol',n.currentStatus==='approved'?'✓':['pending','awaiting_approval'].includes(n.currentStatus)?'◷':'↔');icon.setAttribute('aria-hidden','true');const body=element('div','notice-body');body.append(element('h3','',n.headline||n.title),element('p','notice-shift',n.title+' · '+(n.startsAt?period.formatRange(new Date(n.startsAt),new Date(n.endsAt)):'')),element('p','notice-outcome',n.summary||n.message));const time=element('time','notice-age',notificationAge(n.createdAt));time.dateTime=n.createdAt;time.title=date.format(new Date(n.createdAt));body.append(time);const link=element('a','notice-link','View request ↗');link.href=n.href;body.append(link);
+   if(group.events.length>1){const details=element('details','notice-earlier');details.dataset.group=group.key;details.open=expanded.has(group.key);details.append(element('summary','',(group.events.length-1)+' earlier loaded update'+(group.events.length>2?'s':'')));for(const e of group.events.slice(1))details.append(element('p','',e.eventMessage+' · '+date.format(new Date(e.createdAt))+' · '+(e.readAt?'Read':'Unread')));body.append(details);}
+   card.append(icon,body);if(group.unreadIds.length){const b=element('button','notice-mark','●');b.type='button';b.dataset.mark='';b.setAttribute('aria-label','Mark '+n.title+' loaded updates as read');b.addEventListener('click',()=>void mark(group.unreadIds));card.append(b);}list.append(card);
   }
-  async function load(append=false,silent=false){
-    if(stopped||busy||writing)return;busy=true;if(!silent)controls();if(!silent)state.textContent='Loading notifications…';
-    try{
-      const response=await requestJSON('/api/notifications'+(append&&next?'?before='+next:''),{cache:'no-store'});
-      if(stopped)return;
-      if(response.status===401){clear();location.replace('/login?expired=1');return;}
-      if(!response.ok)throw new Error();badge(response.data.unreadCount);
-      // Background polling only updates the badge: never replace focused inbox controls.
-      if(!silent || dialog.open && !rows.length){rows=response.data.notifications;next=response.data.next;render();state.textContent=`${response.data.unreadCount} unread. Times shown in ${account.business.timezone}.`;}
-    }catch{if(!stopped){bell.setAttribute('aria-label','Notifications, updates unavailable');if(!silent || dialog.open && !rows.length)state.textContent='Notifications could not be loaded. Use Refresh to try again.';}}
-    finally{busy=false;if(!stopped)controls();}
-  }
-  async function mark(ids){
-    if(stopped||busy||writing)return;writing=true;controls();state.textContent='Saving read status…';
-    try{
-      const response=await requestJSON('/api/notifications/read',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:JSON.stringify({ids})});
-      if(stopped)return;
-      if(response.status===401){clear();location.replace('/login?expired=1');return;}
-      if(!response.ok)throw new Error();
-      for(const n of rows)if(ids.includes(n.id))n.readAt=new Date().toISOString();render();state.textContent='Selected notifications marked as read.';
-    }catch{if(!stopped)state.textContent='Read status could not be confirmed. Refresh to check before trying again.';}
-    finally{writing=false;if(!stopped){render();refresh.focus();void load(false,true);}}
-  }
-  bell.addEventListener('click',()=>{dialog.showModal();dialog.querySelector('[data-close]').focus();state.textContent='Loading notifications…';void load();});
-  dialog.querySelector('[data-close]').addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('close',()=>{if(!stopped)bell.focus();});
-  dialog.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...dialog.querySelectorAll('button:not(:disabled),a[href]')].filter(x=>!x.hidden);if(e.shiftKey&&document.activeElement===items[0]){e.preventDefault();items.at(-1).focus();}else if(!e.shiftKey&&document.activeElement===items.at(-1)){e.preventDefault();items[0].focus();}});
-  refresh.addEventListener('click',()=>void load());more.addEventListener('click',()=>void load(true));read.addEventListener('click',()=>void mark(rows.filter(n=>!n.readAt).map(n=>n.id)));
-  const visible=()=>{if(document.visibilityState==='visible')void load(false,true);};
-  document.addEventListener('visibilitychange',visible);
-  const timer=setInterval(visible,30000);
-  function clear(){stopped=true;clearInterval(timer);document.removeEventListener('visibilitychange',visible);rows=[];dialog.close();dialog.remove();bell.remove();}
-  void load(false,true);return {clear};
+  for(const b of dialog.querySelectorAll('[data-filter]'))b.setAttribute('aria-pressed',String(filter===b.dataset.filter));more.hidden=!next;controls();
+ }
+ function position(){if(innerWidth>600){const rect=bell.getBoundingClientRect();dialog.style.top=Math.max(8,Math.min(rect.bottom+10,innerHeight-180))+'px';dialog.style.right=Math.max(12,innerWidth-rect.right)+'px';}else{dialog.style.top='';dialog.style.right='';}}
+ async function load(append=false,silent=false){if(stopped||busy||writing)return;const origin=document.activeElement;busy=true;if(!silent)controls();if(!silent)state.textContent='Loading updates…';try{
+  const response=await requestJSON('/api/notifications'+(append&&next?'?before='+encodeURIComponent(next):''),{cache:'no-store'});if(stopped)return;if(response.status===401){clear();location.replace('/login?expired=1');return;}if(!response.ok)throw Error();badge(response.data.unreadCount);
+  if(!silent||dialog.open&&!rows.length){rows=append?mergeNotificationPages(rows,response.data.notifications):response.data.notifications;next=response.data.next;uncertain=false;render();state.textContent=append?'Older updates loaded.':'Updated. Showing '+rows.length+' loaded update'+(rows.length===1?'':'s')+'.';}
+ }catch{if(!stopped){bell.setAttribute('aria-label','Notifications, updates unavailable');if(!silent)state.textContent='Updates could not be loaded. Use Refresh to try again.';}}finally{busy=false;if(!stopped){controls();if(!silent&&[refresh,more].includes(origin))refresh.focus();}}}
+ async function mark(ids){if(stopped||busy||writing||uncertain||!ids.length)return;writing=true;controls();state.textContent='Saving read status…';try{const response=await requestJSON('/api/notifications/read',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:JSON.stringify({ids:ids.slice(0,100)})});if(stopped)return;if(response.status===401){clear();location.replace('/login?expired=1');return;}if(!response.ok)throw Error();for(const n of rows)if(ids.slice(0,100).includes(n.id))n.readAt=new Date().toISOString();state.textContent=ids.length>100?'100 loaded updates marked as read. Mark the remaining shown updates separately.':'Shown updates marked as read.';}
+ catch{if(!stopped){uncertain=true;state.textContent='Read status is uncertain. Refresh to check the saved result before trying again.';}}finally{writing=false;if(!stopped){render();refresh.focus();void load(false,true);}}}
+ bell.addEventListener('click',()=>{if(stopped)return;dialog.showModal();bell.setAttribute('aria-expanded','true');position();q('[data-close]').focus();void load();});q('[data-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('close',()=>{bell.setAttribute('aria-expanded','false');if(!stopped)bell.focus();});
+ // Native modal focus containment includes expandable history summaries and links.
+ dialog.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...dialog.querySelectorAll('button:not(:disabled),a[href],summary')].filter(x=>x.getClientRects().length);if(e.shiftKey&&document.activeElement===items[0]){e.preventDefault();items.at(-1)?.focus();}else if(!e.shiftKey&&document.activeElement===items.at(-1)){e.preventDefault();items[0]?.focus();}});
+ for(const b of dialog.querySelectorAll('[data-filter]'))b.addEventListener('click',()=>{if(busy||writing||uncertain)return;filter=b.dataset.filter;render();});refresh.addEventListener('click',()=>void load());more.addEventListener('click',()=>void load(true));read.addEventListener('click',()=>void mark(shownIds()));
+ const visible=()=>{if(document.visibilityState==='visible')void load(false,true);};document.addEventListener('visibilitychange',visible);window.addEventListener('resize',position);const timer=setInterval(visible,30000);
+ function clear(){stopped=true;clearInterval(timer);document.removeEventListener('visibilitychange',visible);window.removeEventListener('resize',position);rows=[];dialog.close();dialog.remove();bell.remove();}
+ void load(false,true);return {clear};
 }
