@@ -1,3 +1,4 @@
+import { refinementFormat, applyRefinement, refinementInstructions } from './refinement.js';
 import { HttpError } from '../auth/errors.js';
 import { availabilityAccount, availabilityFields } from '../availability/rules.js';
 import { validateChatInput } from './shift-draft.js';
@@ -11,16 +12,23 @@ For kind=availability return question='', startLocal/endLocal YYYY-MM-DDTHH:mm (
 export function createAiAvailabilityDrafter({apiKey,model='gpt-6-luna',allowance,fetchImpl=fetch,timeoutMs=11000}={}) {
  const active=new Set();
  return async(store,userId,input,clock=Date.now)=>{
-  input=validateChatInput(input);const {business}=availabilityAccount(await store.read(),userId);
+  input=validateChatInput(input, true);const {business}=availabilityAccount(await store.read(),userId);
   if(!apiKey || model!=='gpt-6-luna' || !allowance)throw unavailable();
   if(active.has(userId)||active.size>=2)throw new HttpError(429,'AI is busy. Wait for the current request.');
-  const now=clock(); const context={currentInstant:new Date(now).toISOString(),currentBusinessTime:new Intl.DateTimeFormat('en-CA',{timeZone:business.timezone,dateStyle:'full',timeStyle:'long',hourCycle:'h23'}).format(now),timezone:business.timezone,conversation:input.history,request:input.description};
-  const body=JSON.stringify({model,store:false,reasoning:{effort:'none'},max_output_tokens:1200,instructions,input:JSON.stringify(context),text:{format:{type:'json_schema',name:'availability_draft',strict:true,schema}}});
+  const now=clock();
+  let base;
+  if(input.base !== undefined){
+   availabilityFields(input.base,business.timezone,now,false);
+   const {startLocal,endLocal,title,maxClaims}=input.base;
+   base={startLocal,endLocal,title,maxClaims};
+  }
+  const context={currentInstant:new Date(now).toISOString(),currentBusinessTime:new Intl.DateTimeFormat('en-CA',{timeZone:business.timezone,dateStyle:'full',timeStyle:'long',hourCycle:'h23'}).format(now),timezone:business.timezone,conversation:input.history,request:input.description,...(base && {pendingDraft:base})};
+  const body=JSON.stringify({model,store:false,reasoning:{effort:'none'},max_output_tokens:1200,instructions:instructions+(base?refinementInstructions:''),input:JSON.stringify(context),text:{format:{type:'json_schema',name:'availability_draft',strict:true,schema:refinementFormat(schema,base)}}});
   if(Buffer.byteLength(body)>16000)throw new HttpError(422,'This chat is too long. Start a new chat.');
   active.add(userId);
   try{
    await allowance.reserve(userId,now);
-   const result=await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable});
+   const result=applyRefinement(await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable}),base,unavailable);
    if(!result || Array.isArray(result) || Object.keys(result).length!==keys.length || !keys.slice(0,-1).every(k=>typeof result[k]==='string') || !Number.isInteger(result.maxClaims))throw unavailable();
    const current=availabilityAccount(await store.read(),userId);
    if(current.business.id!==business.id || current.business.timezone!==business.timezone)throw new HttpError(409,'Your workspace changed. Request a new draft.');

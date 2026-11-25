@@ -29,7 +29,13 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
   function show(data) {
     reset(); chat.value.criteria = data.criteria; chat.value.outcome = null; chat.save(); card.hidden = false;
     responseHeader(card,'Openings · Not requested',data.total===1?'Here’s one matching opening.':data.total?`${data.total} matching openings.`:'No matching openings.');
-    card.append(responseMeta(`${localDate(data.criteria.date)} · ${data.timezone}`));
+    card.append(responseFields([
+      ['Date', localDate(data.criteria.date)],
+      ['From', data.criteria.startLocal.replace('T', ' ') || 'Any time'],
+      ['Until', data.criteria.endLocal.replace('T', ' ') || 'Any time'],
+      ['Shift title', data.criteria.title || 'Any title'],
+      ['Timezone', data.timezone],
+    ]));
     if(data.total>data.requests.length)card.append(responseMeta(`Showing ${data.requests.length} of ${data.total}. Browse Open shifts for all results.`));
     if (!data.requests.length) card.append(element('p', '', 'No matching openings you can request right now. Try another date or check Open shifts.'));
     const version = generation;

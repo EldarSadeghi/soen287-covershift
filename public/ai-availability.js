@@ -28,12 +28,14 @@ export function createAvailabilityControls({chat,card,notice,csrfToken,setBusy,o
  }
  function show(data){
   reset();const version=generation;card.hidden=false;
+  chat.value.availabilityDraft=data.draft;
   responseHeader(card,'Availability draft · Not saved','Is this availability correct?');
   card.append(availabilityFields(data.window,data.draft.timezone,data.draft.maxClaims,data.draft.title),responseNote('Confirming enables automatic requests for eligible openings. Your manager still approves assignment.'),responseDetails('How matching works','The full shift must fit inside this window. Existing assignments, pending claims, rule priority and your request limit are checked before submission.'));
   const confirmationId=crypto.randomUUID();
   const actions=element('div','ai-response-actions');card.append(actions);
-  actions.append(button('Cancel draft',()=>{if(busy)return;reset();onOutcome('Availability draft cancelled. Nothing was saved.');notice('Draft cancelled. Nothing saved.');}),button('Confirm availability',async()=>{
+  actions.append(button('Cancel draft',()=>{if(busy||version!==generation)return;reset();chat.value.availabilityDraft=null;chat.value.draftCancelled=true;onOutcome('Availability draft cancelled. Nothing was saved.');notice('Draft cancelled. Nothing saved.');}),button('Confirm availability',async()=>{
    if(busy||version!==generation)return;working(true);
+   chat.value.availabilityDraft=null;
    chat.value.outcome={kind:'availability_uncertain',title:'Availability'};onOutcome('Availability submission started; confirmation is pending. Check saved availability if interrupted.');chat.save();
    try{
     const result=await call('/api/worker/availability-rules',{confirmationId,draft:data.draft});if(version!==generation)return;

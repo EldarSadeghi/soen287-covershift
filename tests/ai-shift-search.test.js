@@ -158,3 +158,17 @@ test('employee tab state isolates owners, expires, clears, and restores criteria
  chat.save(); assert.equal(createEmployeeChatState(storage, 'b:w', () => now + 9 * 3600000).value.criteria, null);
  chat.reset(); assert.equal(chat.value.outcome, null); chat.clear(); assert.equal(storage.getItem(EMPLOYEE_CHAT_KEY), undefined);
 });
+
+test('search follow-up narrows the time while retaining the reviewed date and title', async t => {
+ const f = await fixture(t);
+ await f.opening('worker_alex');
+ const late = await f.opening('worker_alex', '2026-11-26T15:00', '2026-11-26T17:00');
+ const base = { ...criteria, title: 'Opening' };
+ const ai = f.make(async (_, init) => {
+  assert.deepEqual(JSON.parse(JSON.parse(init.body).input).pendingDraft, base);
+  return reply({ kind: 'search', question: '', date: null, title: null, startLocal: '2026-11-26T14:00', endLocal: null });
+ });
+ const result = await ai(f.store, 'worker_jamie', { description: 'Only after 2 PM', base }, clock);
+ assert.deepEqual(result.criteria, { ...base, startLocal: '2026-11-26T14:00' });
+ assert.deepEqual(result.requests.map(opening => opening.id), [late]);
+});

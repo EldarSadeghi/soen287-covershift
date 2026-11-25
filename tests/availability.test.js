@@ -114,3 +114,14 @@ test('availability chat mode and uncertain receipt persist under owner/expiry bo
  const restored=createEmployeeChatState(storage,'b:w',clock);assert.equal(restored.value.mode,'availability');assert.equal(restored.value.outcome.kind,'availability_uncertain');assert.equal(restored.value.draft,undefined);
  assert.equal(createEmployeeChatState(storage,'foreign:w',clock).value.outcome,null);chat.save();assert.equal(createEmployeeChatState(storage,'b:w',()=>now+9*3600000).value.outcome,null);chat.reset();assert.equal(chat.value.outcome,null);
 });
+
+test('availability follow-up changes the request limit without saving or losing window and title', async t => {
+ const {store,dir}=await fixture(t);
+ const base={...draft,title:'Opening',maxClaims:3};
+ const ai=createAiAvailabilityDrafter({apiKey:'test',allowance:new AiAllowance(join(dir,'use')),fetchImpl:async()=>reply({
+  kind:'availability',question:'',startLocal:null,endLocal:null,title:null,maxClaims:1,
+ })});
+ const result=await ai(store,'worker_jamie',{description:'Just one shift',base},clock);
+ assert.deepEqual(result.draft,{...base,maxClaims:1});
+ assert.equal((await listAvailability(store,'worker_jamie',clock)).rules.length,0);
+});

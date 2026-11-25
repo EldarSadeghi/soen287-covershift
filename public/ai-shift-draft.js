@@ -48,7 +48,7 @@ export function mountAiChat(account, csrfToken) {
    for(const [label,text] of prompts){const b=element('button','',label);b.type='button';b.addEventListener('click',()=>{if(busy)return;composer.value=text;chat.value.composer=text;chat.save();composer.focus();});samples.append(b);}samples.hidden=chat.value.messages.length>0;
   }
   updateMode();
-  modeSelect?.addEventListener('change',()=>{if(busy)return;revision++;mode=modeSelect.value;employeeRequests?.reset();availability?.reset();chat.reset();chat.value.mode=mode;chat.save();messages.replaceChildren();composer.value='';showSuggestion(null);updateMode();notice(mode==='questions'?'Ask about assigned shifts, a date/week, or hours. This task is read-only.':mode==='availability'?'Describe one dated availability window. Nothing saves until you confirm. Confirming enables automatic requests; assignment still needs manager approval.':manager?'Describe a shift to prepare an editable draft. Nothing saves until you review and create it.':'Find existing openings. Review and confirm before requesting.');composer.focus();});
+  modeSelect?.addEventListener('change',()=>{if(busy)return;revision++;document.dispatchEvent(new Event('ai:cancel-review'));mode=modeSelect.value;employeeRequests?.reset();availability?.reset();chat.reset();chat.value.mode=mode;chat.save();messages.replaceChildren();composer.value='';showSuggestion(null);updateMode();notice(mode==='questions'?'Ask about assigned shifts, a date/week, or hours. This task is read-only.':mode==='availability'?'Describe one dated availability window. Nothing saves until you confirm. Confirming enables automatic requests; assignment still needs manager approval.':manager?'Describe a shift to prepare an editable draft. Nothing saves until you review and create it.':'Find existing openings. Review and confirm before requesting.');composer.focus();});
   if(!manager)rulesButton?.addEventListener('click',()=>{if(busy)return;revision++;employeeRequests.reset();availability.list();});
   function say(role, text) {
     const bubble = element('div', `ai-chat-bubble ai-chat-${role}`);
@@ -76,7 +76,7 @@ export function mountAiChat(account, csrfToken) {
   launcher.addEventListener('click', () => { dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); composer.focus({preventScroll:true});if(!card.hidden)revealResponse(card); });
   composer.addEventListener('input', () => { chat.value.composer = composer.value; chat.save(); });
   function reviewSuggestion(data) {
-    if (chat.value.completion || chat.value.uncertainDraftId || data.id !== chat.value.suggestion?.id) return;
+    if (busy || chat.value.refinementPending || chat.value.completion || chat.value.uncertainDraftId || data.id !== chat.value.suggestion?.id) return;
     chat.value.pending = { id: data.id, draft: data.draft, timezone: data.timezone, createdAt: Date.now() };
     const persisted = chat.save();
     if (location.pathname === '/workspace/manager/schedule') {
@@ -107,7 +107,8 @@ export function mountAiChat(account, csrfToken) {
   }
   function syncResponse(){const bubbles=[...messages.children];for(const bubble of bubbles)bubble.hidden=false;const last=bubbles.at(-1);if(!card.hidden && last?.classList.contains('ai-chat-assistant'))last.hidden=true;}
   const observer=new MutationObserver(()=>{syncResponse();if(dialog.open&&!card.hidden)requestAnimationFrame(()=>revealResponse(card));});observer.observe(card,{childList:true,attributes:true,attributeFilter:['hidden']});
-  if (manager) showSuggestion(chat.value.suggestion); else if (!availability.restore()) employeeRequests.restore();
+  if (manager) showSuggestion(chat.value.refinementPending ? null : chat.value.suggestion); else if (!chat.value.refinementPending && !availability.restore()) employeeRequests.restore();
+  if (!manager && chat.value.availabilityDraft && !chat.value.outcome) notice('Continue describing your availability to review a fresh draft.');
   if (chat.value.completion) notice('Shift saved successfully.');
   else if (chat.value.uncertainDraftId) notice('Save not confirmed. Check the saved schedule before trying again.');
   document.addEventListener('ai:shift-created', event => {
@@ -131,29 +132,57 @@ export function mountAiChat(account, csrfToken) {
     event.preventDefault(); if (busy) return;
     const text = composer.value.trim();
     if (!text) { notice('Write a message first.'); composer.focus(); return; }
-    const history = chat.value.messages.map(({ role, text }) => ({ role, text }));
-    const body = JSON.stringify({ description: text, history });
-    if (history.length >= 10 || new TextEncoder().encode(JSON.stringify(history)).length > 4500 || new TextEncoder().encode(body).length > 8000) { notice('This chat has reached its context limit. Start a new chat and include the shift details again.'); return; }
+    const history = (chat.value.draftCancelled ? [] : chat.value.messages.slice(-8)).map(({ role, text }) => ({ role, text }));
+    const encoder = new TextEncoder();
+    while (history.length && encoder.encode(JSON.stringify(history)).length > 4500) history.splice(0, 2);
+    if (chat.value.completion || chat.value.uncertainDraftId || chat.value.outcome) {
+      notice('Use the saved schedule, coverage or availability controls for existing records. Start a new chat for a new draft.');
+      return;
+    }
+    const base = mode === 'draft' ? chat.value.suggestion?.draft : mode === 'availability' ? chat.value.availabilityDraft : mode === 'search' ? chat.value.criteria : null;
+    const body = JSON.stringify({ description: text, history, ...(base && { base }) });
+    if (encoder.encode(body).length > 8000) { notice('This chat has reached its context limit. Start a new chat and include the shift details again.'); return; }
     const version = ++revision; busy = true; send.disabled = true; if(modeSelect)modeSelect.disabled=true;if(rulesButton)rulesButton.disabled=true; send.textContent = 'Thinking…';
-    if (manager) { chat.value.suggestion = null; chat.value.pending = null; chat.value.completion = null; chat.value.uncertainDraftId = null; showSuggestion(null); }
-    else { employeeRequests.reset(); availability.reset(); chat.value.criteria = null; chat.value.outcome = null; }
+    if (manager) {
+      chat.value.pending = null;
+      chat.value.refinementPending = Boolean(base);
+      document.dispatchEvent(new Event('ai:cancel-review'));
+      showSuggestion(null);
+    }
+    else {
+      chat.value.refinementPending = Boolean(base);
+      employeeRequests.reset(); availability.reset();
+    }
     chat.save();
     for(const bubble of messages.children)bubble.hidden=false;
     const pendingBubble = say('user', text);
     notice('Preparing a reply… You can close this panel and keep working.');
     try {
       const response = await requestJSON(mode==='questions' ? '/api/ai-schedule-question' : manager ? '/api/manager/ai-shift-draft' : mode==='availability'?'/api/worker/ai-availability-draft':'/api/worker/ai-shift-search', { method: 'POST', readOnly: true, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body });
-      if (version !== revision) return;
+      if (version !== revision || chat.value.completion || chat.value.uncertainDraftId) {
+        pendingBubble.remove();
+        return;
+      }
       if (response.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
       if (!response.ok) { const failure = new Error(); failure.userMessage = response.data.message || 'AI could not prepare a reply.'; throw failure; }
       const data = response.data;
       if (!(mode==='questions' ? ['schedule_answer','clarification'] : manager ? ['draft', 'clarification'] : ['matches', 'availability', 'clarification']).includes(data.kind)) throw new Error('AI could not prepare a reply.');
       const reply = data.kind === 'clarification' ? data.question : data.kind==='schedule_answer' ? scheduleAnswerMessage(data) : data.kind==='availability' ? availabilitySummary(data) : !manager ? employeeSearchMessage(data) : `Proposed shift: ${data.draft.title} for ${data.workerName}, ${data.draft.startLocal} to ${data.draft.endLocal}, ${data.timezone}. Nothing has been saved. You can ask me to change it or select Review shift.`;
-      chat.value.messages.push({ role: 'user', text }, { role: 'assistant', text: reply }); say('assistant', reply);
+      chat.value.draftCancelled = false;
+      chat.value.messages = [...history, { role: 'user', text }, { role: 'assistant', text: reply }];
+      while (messages.children.length > chat.value.messages.length - 1) messages.firstElementChild.remove();
+      say('assistant', reply);
       if (data.kind==='schedule_answer') showScheduleAnswer(card,data);
-      else if (manager) { chat.value.suggestion = data.kind === 'draft' ? { ...data, id: crypto.randomUUID() } : null; showSuggestion(chat.value.suggestion); }
-      else if (data.kind === 'availability') availability.show(data);
-      else if (data.kind === 'matches') employeeRequests.show(data);
+      else if (manager) {
+        if (data.kind === 'draft') chat.value.suggestion = { ...data, id: crypto.randomUUID() };
+        chat.value.refinementPending = data.kind === 'clarification';
+        showSuggestion(chat.value.refinementPending ? null : chat.value.suggestion);
+      }
+      else if (data.kind === 'availability' || data.kind === 'matches') {
+        chat.value.refinementPending = false;
+        if (data.kind === 'availability') availability.show(data);
+        else employeeRequests.show(data);
+      }
       // Preserve anything the user typed while waiting, without sending it yet.
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
@@ -161,8 +190,9 @@ export function mountAiChat(account, csrfToken) {
       syncResponse();if(!card.hidden)revealResponse(card);
       if (dialog.open) composer.focus({preventScroll:true});
     } catch (error) {
-      if (version === revision) {
-        pendingBubble.remove();card.replaceChildren();card.hidden=true;
+      pendingBubble.remove();
+      if (version === revision && !chat.value.completion && !chat.value.uncertainDraftId) {
+        card.replaceChildren(); card.hidden = true;
         chat.value.composer = composer.value; chat.save();
         notice(error.userMessage || `AI is unavailable or took too long. Your message is preserved. Try sending again later${mode==='questions' ? ' or open your saved schedule' : manager ? ' or use the manual Schedule form' : mode==='availability' ? '; Saved availability remains available' : ' or use Open shifts'}. An attempt may still count toward your allowance.`);
       }
