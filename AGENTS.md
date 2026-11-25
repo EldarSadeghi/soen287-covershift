@@ -2,7 +2,7 @@
 
 ## Authoritative current identities — 2026-11-24
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032 is Your review; CS-033–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-043 Deployment and final submission is always last** (formerly CS-040 / CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
 
@@ -114,3 +114,6 @@ User explicitly approved CS-041 merge on 2026-11-24. Merged PR #78 (`041bb66baf0
 Authoritative 2026-11-24 update: CS-042 Quiet notification panel (#79) selected after approved Bell panel concept; Todo verified then In Progress. Local grouping/current-status metadata, compact anchored/mobile panel, All/Unread, loaded-history/paging/read recovery implemented. 322 tests pass; browser desktop320px/keyboard/uncertain saved read/GET retry/manager/logout checks in docs/acceptance/cs042/USER-STORIES.md. Your review; no push/merge authorized. Deployment #70 now CS-043 and remains last; earlier CS-042 deployment references are superseded.
 
 User explicitly approved CS-042 merge on 2026-11-24. PR #80 merged as `af00c3d95c5313cf0aa9e76e5f8865889d9c89c5`; issue #79 closed/completed and board Done verified. 322 tests pass. Earlier local-review notes are superseded. Recommended next CS-032 Daily shift duties (#68), not started. CS-043 deployment remains last.
+
+
+CS-032 (#68) selected 2026-11-24: Todo verified then In Progress, branch `codex/CS-032-shift-duties`. Manager optional shift duties (10×160 plain-text), employee business-date view including overnight continuation, safe legacy DTOs/schema12, preserved assignment/coverage locks and duties retained after approved transfer. 327 tests pass; fictional create/edit/validation/day/transfer/320px browser evidence in `docs/acceptance/cs032-duties/USER-STORIES.md`. Preview3046 manager/Alex,3047 Jamie. Ready for Your review; no push/merge authorized. CS-033–039 remain Todo; CS-040–042 complete; CS-043 deployment (#70) remains last. Earlier conflicting status snapshots are historical.

@@ -1,6 +1,6 @@
 # CoverShift implementation plan
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032 is Your review; CS-033–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is completed; CS-042 notification panel is completed; CS-043 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 
 Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. User approved merging CS-040 on 2026-11-24 after 316 passing tests and a clean browser walkthrough. Merged PR #76 (`0e60396fa96479f8ee16d2dc984f04a900f2d490`); issue #75 closed and project Done verified. Evidence: docs/acceptance/cs040. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
@@ -40,7 +40,7 @@ Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e
 | CS-029 | Repeatable AI conversation acceptance tests | Done | [#62](https://github.com/EldarSadeghi/soen287-covershift/issues/62) | CS-045 | #72 |
 | CS-030 | Employee time-off requests | Done | [#66](https://github.com/EldarSadeghi/soen287-covershift/issues/66) | CS-046 | #73 |
 | CS-031 | Show employee availability | Done | [#67](https://github.com/EldarSadeghi/soen287-covershift/issues/67) | CS-047 | #74 |
-| CS-032 | Daily shift duties and employee task list | Todo | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | — |
+| CS-032 | Daily shift duties and employee task list | Your review | [#68](https://github.com/EldarSadeghi/soen287-covershift/issues/68) | CS-048 | — |
 | CS-033 | Monday publication of a two-week schedule | Todo | [#69](https://github.com/EldarSadeghi/soen287-covershift/issues/69) | CS-049 | — |
 | CS-034 | Refine AI drafts conversationally | Todo | [#57](https://github.com/EldarSadeghi/soen287-covershift/issues/57) | CS-050 | — |
 | CS-035 | Manage employee availability rules through chat | Todo | [#60](https://github.com/EldarSadeghi/soen287-covershift/issues/60) | CS-051 | — |
@@ -319,3 +319,6 @@ User explicitly approved CS-041 merge on 2026-11-24. Merged PR #78 (`041bb66baf0
 Authoritative 2026-11-24 update: CS-042 Quiet notification panel (#79) selected after approved Bell panel concept; Todo verified then In Progress. Local grouping/current-status metadata, compact anchored/mobile panel, All/Unread, loaded-history/paging/read recovery implemented. 322 tests pass; browser desktop320px/keyboard/uncertain saved read/GET retry/manager/logout checks in docs/acceptance/cs042/USER-STORIES.md. Your review; no push/merge authorized. Deployment #70 now CS-043 and remains last; earlier CS-042 deployment references are superseded.
 
 User explicitly approved CS-042 merge on 2026-11-24. PR #80 merged as `af00c3d95c5313cf0aa9e76e5f8865889d9c89c5`; issue #79 closed/completed and board Done verified. 322 tests pass. Earlier local-review notes are superseded. Recommended next CS-032 Daily shift duties (#68), not started. CS-043 deployment remains last.
+
+
+Current CS-032 (#68) local review, 2026-11-24: manager shift duties, employee day filter and coverage retention implemented on `codex/CS-032-shift-duties`. 327 tests pass; see `docs/acceptance/cs032-duties/USER-STORIES.md`. Todo verified before In Progress; now Your review. Nothing pushed or merged. Explicit approval still required. CS-043 deployment remains last.

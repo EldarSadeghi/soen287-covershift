@@ -17,6 +17,7 @@ export function shiftCard(shift, timezone, { workerName = null } = {}) {
   const end = element('time', '', formatted.endDate ? `${formatted.endDate} · ${formatted.endTime}` : formatted.endTime); end.dateTime = shift.endsAt;
   times.append(start, document.createTextNode(' – '), end);
   info.append(times, element('p', '', formatted.duration));
+  const dutySection=element('section','shift-duties');dutySection.setAttribute('aria-label','Shift duties');dutySection.append(element('h4','',shift.duties?.length?'Shift duties · '+shift.duties.length:'Shift duties'));if(shift.duties?.length){const list=element('ul');for(const duty of shift.duties)list.append(element('li','',duty));dutySection.append(list);}else dutySection.append(element('p','duty-empty','No duties added for this shift.'));info.append(dutySection);
   if (workerName) info.append(element('p', 'assigned-worker', `Assigned to ${workerName}`));
   const status = shift.status === 'in_progress' ? 'In progress' : shift.status === 'completed' ? 'Shift ended' : 'Upcoming';
   const badge = element('span', `badge${shift.status === 'upcoming' ? '' : ' amber'}`, status);

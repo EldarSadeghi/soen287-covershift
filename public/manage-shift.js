@@ -68,8 +68,9 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
           if (errors[key]) { input.setAttribute('aria-invalid', 'true'); error.textContent = errors[key]; error.hidden = false; }
         }
       }
+      const dutyField=element('div','team-field duty-field'),dutyLabel=element('label','','Shift duties (optional)'),duties=element('textarea');duties.id='edit-'+shift.id+'-duties';duties.rows=4;duties.maxLength=1700;duties.value=(shift.duties||[]).join('\n');dutyLabel.htmlFor=duties.id;const dutyHelp=element('p','section-note','One duty per line. Up to 10 duties, 160 characters each.');dutyField.append(dutyLabel,duties,dutyHelp);
       const buttons = element('div', 'create-actions'); const submit = element('button', 'solid-link', 'Save changes'); submit.type = 'submit'; buttons.append(submit, cancel);
-      form.append(grid, buttons); form.addEventListener('submit', event => {
+      form.append(grid,dutyField,buttons); form.addEventListener('submit', event => {
         event.preventDefault(); if (busy) return;
         editor.querySelector('.manage-error').hidden = true;
         const errors = {};
@@ -77,7 +78,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
         if (!inputs.title.value.trim()) errors.title = 'Enter a shift title.';
         markErrors(errors);
         if (Object.keys(errors).length) { message('Please check the highlighted fields before saving.'); return; }
-        mutate('edit', Object.fromEntries(new FormData(form)), submit, cancel, markErrors);
+        const values=Object.fromEntries(new FormData(form));values.duties=duties.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(values.duties.length>10||values.duties.some(d=>d.length>160)){message('Use up to 10 duties, 160 characters each.');return;}mutate('edit', values, submit, cancel, markErrors);
       });
       editor.append(form); inputs.title.focus();
     } catch { if (state.isConnected) { state.textContent = 'We couldn’t load the workers. Cancel and choose Edit shift to retry.'; message('Your shift has not changed. Please retry.'); } }

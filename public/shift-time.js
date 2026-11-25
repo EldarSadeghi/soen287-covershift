@@ -27,3 +27,5 @@ export function formatShiftTime(shift, timezone) {
     hours: minutes / 60,
   };
 }
+
+export function shiftOccursOnLocalDay(shift,day,timezone){const fmt=new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'});const local=t=>{const p=Object.fromEntries(fmt.formatToParts(new Date(t)).map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;};return local(shift.startsAt)<=day&&day<=local(Date.parse(shift.endsAt)-1);}

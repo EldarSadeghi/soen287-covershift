@@ -2,7 +2,7 @@ import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
 import { registerAiReviewer } from './ai-chat-state.js';
 export async function mountCreateShift(container, account, csrfToken, onCreated) {
-  container.innerHTML = '<section class="panel shift-creator"><div class="panel-head"><h2>Create a shift</h2><span class="badge">Manager access</span></div><p id="create-timezone" class="section-note"></p><p class="section-note">For overnight shifts, set the end date to the following day. Workers can be assigned while their login setup is pending.</p><div id="create-feedback" tabindex="-1" hidden></div><div id="roster-state" role="status">Loading your workers…</div><button id="retry-roster" class="logout-button" type="button" hidden>Retry loading workers</button><form id="create-shift-form" hidden novalidate><div class="create-fields"><div class="team-field"><label for="shift-title">Shift title</label><input id="shift-title" name="title" required maxlength="100" placeholder="e.g. Opening service" aria-describedby="title-error"><p id="title-error" class="field-error" hidden></p></div><div class="team-field"><label for="shift-worker">Assign to worker</label><select id="shift-worker" name="assignedWorkerId" required aria-describedby="assignedWorkerId-error"><option value="">Choose a worker</option></select><p id="assignedWorkerId-error" class="field-error" hidden></p></div><div class="team-field"><label for="shift-start">Start date and time</label><input id="shift-start" name="startLocal" type="datetime-local" required min="2000-01-01T00:00" max="2099-12-31T23:59" aria-describedby="create-timezone startLocal-error"><p id="startLocal-error" class="field-error" hidden></p></div><div class="team-field"><label for="shift-end">End date and time</label><input id="shift-end" name="endLocal" type="datetime-local" required min="2000-01-01T00:00" max="2099-12-31T23:59" aria-describedby="create-timezone endLocal-error"><p id="endLocal-error" class="field-error" hidden></p></div></div><div class="create-actions"><button id="save-shift" class="solid-link" type="submit">Create and assign shift →</button><a class="text-link" href="/workspace/manager/team">Manage team →</a></div></form></section>';
+  container.innerHTML = '<section class="panel shift-creator"><div class="panel-head"><h2>Create a shift</h2><span class="badge">Manager access</span></div><p id="create-timezone" class="section-note"></p><p class="section-note">For overnight shifts, set the end date to the following day. Workers can be assigned while their login setup is pending.</p><div id="create-feedback" tabindex="-1" hidden></div><div id="roster-state" role="status">Loading your workers…</div><button id="retry-roster" class="logout-button" type="button" hidden>Retry loading workers</button><form id="create-shift-form" hidden novalidate><div class="create-fields"><div class="team-field"><label for="shift-title">Shift title</label><input id="shift-title" name="title" required maxlength="100" placeholder="e.g. Opening service" aria-describedby="title-error"><p id="title-error" class="field-error" hidden></p></div><div class="team-field"><label for="shift-worker">Assign to worker</label><select id="shift-worker" name="assignedWorkerId" required aria-describedby="assignedWorkerId-error"><option value="">Choose a worker</option></select><p id="assignedWorkerId-error" class="field-error" hidden></p></div><div class="team-field"><label for="shift-start">Start date and time</label><input id="shift-start" name="startLocal" type="datetime-local" required min="2000-01-01T00:00" max="2099-12-31T23:59" aria-describedby="create-timezone startLocal-error"><p id="startLocal-error" class="field-error" hidden></p></div><div class="team-field"><label for="shift-end">End date and time</label><input id="shift-end" name="endLocal" type="datetime-local" required min="2000-01-01T00:00" max="2099-12-31T23:59" aria-describedby="create-timezone endLocal-error"><p id="endLocal-error" class="field-error" hidden></p></div></div><div class="team-field duty-field"><label for="shift-duties">Shift duties (optional)</label><textarea id="shift-duties" rows="4" maxlength="1700" aria-describedby="duties-help duties-error" placeholder="Open the register&#10;Restock the counter&#10;Clean the work area"></textarea><p id="duties-help" class="section-note">One duty per line. Up to 10 duties, 160 characters each.</p><p id="duties-error" class="field-error" hidden></p></div><div class="create-actions"><button id="save-shift" class="solid-link" type="submit">Create and assign shift →</button><a class="text-link" href="/workspace/manager/team">Manage team →</a></div></form></section>';
   const find = id => container.querySelector(`#${id}`);
   const form = find('create-shift-form');
   find('create-timezone').textContent = `Enter all dates and times in ${account.business.timezone}, your business timezone.`;
@@ -25,7 +25,7 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
       feedback('AI draft ready to review. Check all fields, then create the shift when you are ready.', true);
       find('shift-title').focus();
     };
-    if (Object.values(fieldIds).some(id => find(id).value)) {
+    if (find('shift-duties').value||Object.values(fieldIds).some(id => find(id).value)) {
       confirmation = element('div', 'coverage-confirm'); confirmation.id = 'ai-replace-confirmation'; confirmation.setAttribute('role', 'group'); confirmation.setAttribute('aria-label', 'Replace current shift draft');
       confirmation.append(element('p', '', 'You already have entries in this form. Replace them with the AI draft?'));
       const replace = element('button', 'logout-button', 'Replace with AI draft'); replace.type = 'button';
@@ -75,12 +75,14 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
     event.preventDefault(); if (saving || uncertain) return; find('create-feedback').hidden = true;
     for (const [field, id] of Object.entries(fieldIds)) { find(id).removeAttribute('aria-invalid'); find(`${field}-error`).hidden = true; }
     const values = Object.fromEntries(new FormData(form));
-    const submittedDraftId = aiDraftId;
+    values.duties=find('shift-duties').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    find('duties-error').hidden=true;const submittedDraftId = aiDraftId;
     const invalid = {};
     for (const [field, id] of Object.entries(fieldIds)) {
       const input = find(id);
       if (!input.validity.valid) invalid[field] = input.validationMessage;
     }
+    if(values.duties.length>10||values.duties.some(d=>d.length>160)){find('duties-error').textContent='Use up to 10 duties, 160 characters each.';find('duties-error').hidden=false;feedback('Please check the duties before saving.');return;}
     if (!values.title.trim()) invalid.title = 'Enter a shift title.';
     if (Object.keys(invalid).length) {
       for (const [field, message] of Object.entries(invalid)) { find(fieldIds[field]).setAttribute('aria-invalid', 'true'); find(`${field}-error`).textContent = message; find(`${field}-error`).hidden = false; }
@@ -93,6 +95,7 @@ export async function mountCreateShift(container, account, csrfToken, onCreated)
       const result = response.data;
       if (!response.ok) {
         for (const [field, message] of Object.entries(result.fields || {})) if (fieldIds[field]) { find(fieldIds[field]).setAttribute('aria-invalid', 'true'); find(`${field}-error`).textContent = message; find(`${field}-error`).hidden = false; }
+        if(result.fields?.duties){find('duties-error').textContent=result.fields.duties;find('duties-error').hidden=false;}
         feedback(result.message || 'The shift could not be saved. Please try again.'); return;
       }
       aiDraftId = null;

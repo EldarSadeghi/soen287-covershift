@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { HttpError } from '../auth/errors.js';
-import { validateShiftInput, managerBusiness, assignmentFields, savedShift } from './create.js';
+import { validateShiftInput, dutiesSchema, managerBusiness, assignmentFields, savedShift } from './create.js';
 
 // A digest of all stored shift fields prevents same-millisecond lost updates
 // without adding a schema version or returning private database fields.
@@ -13,7 +13,7 @@ export function shiftLockReason(db, shift, now) {
 export async function manageShift(store, managerId, shiftId, action, input, clock = Date.now) {
   const keys = action === 'edit' ? ['revision', 'title', 'assignedWorkerId', 'startLocal', 'endLocal'] : ['revision'];
   if (!['edit', 'delete'].includes(action)) throw new HttpError(404, 'Action not found.');
-  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== keys.length || !keys.every(key => Object.hasOwn(input, key)) || typeof input.revision !== 'string' || !/^[a-f0-9]{64}$/.test(input.revision)) throw new HttpError(422, 'Refresh the schedule and submit the requested fields with its current revision.');
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(k=>!keys.includes(k)&&!(action==='edit'&&k==='duties')) || !keys.every(key => Object.hasOwn(input, key)) || typeof input.revision !== 'string' || !/^[a-f0-9]{64}$/.test(input.revision)) throw new HttpError(422, 'Refresh the schedule and submit the requested fields with its current revision.');
   const { revision, ...values } = input;
   const edit = action === 'edit' ? validateShiftInput(values) : null;
   return store.transaction(db => {
@@ -28,6 +28,7 @@ export async function manageShift(store, managerId, shiftId, action, input, cloc
       db.shifts.splice(db.shifts.indexOf(shift), 1);
       return { message: 'The shift was deleted.', deletedId: shift.id };
     }
+    if(Object.hasOwn(edit,'duties'))dutiesSchema(db);
     const fields = assignmentFields(db, business, edit, now, shift.id);
     Object.assign(shift, fields, { updatedAt: new Date(Math.max(now, Date.parse(shift.updatedAt) + 1)).toISOString() });
     return savedShift(db, shift, business.timezone);

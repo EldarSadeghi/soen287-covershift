@@ -16,7 +16,7 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.te
 
 export function validateDatabase(db) {
   requireValue(db && typeof db === 'object' && !Array.isArray(db), 'expected an object');
-  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(db.schemaVersion), 'unsupported schema version');
+  requireValue([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(db.schemaVersion), 'unsupported schema version');
   requireValue(Object.keys(db).every(key => key === 'schemaVersion' || collections.includes(key) || db.schemaVersion >= 6 && key === 'availabilityRules' || db.schemaVersion >= 7 && key === 'availabilityMatches' || db.schemaVersion >= 8 && key === 'notifications' || db.schemaVersion >= 9 && key === 'timeOffRequests' || db.schemaVersion >= 10 && key === 'availabilityWindows' || db.schemaVersion >= 11 && ['coverInvitations','coverNotifications'].includes(key)), 'unknown collection');
   for (const name of collections) {
     requireValue(Array.isArray(db[name]), `${name} must be an array`);
@@ -25,7 +25,8 @@ export function validateDatabase(db) {
       requireValue(record && typeof record === 'object' && !Array.isArray(record) && id(record.id), `${name} has an invalid record ID`);
       const baseFields = name === 'coverageRequests' && db.schemaVersion >= 4 && Object.hasOwn(record, 'history') ? [...fields[name], 'history'] : fields[name];
       const userFields = name === 'users' && db.schemaVersion >= 5 && Object.hasOwn(record, 'deactivation') ? [...baseFields, 'deactivation'] : baseFields;
-      const expected = name === 'users' && db.schemaVersion >= 2 && Object.hasOwn(record, 'setup') ? [...userFields, 'setup'] : userFields;
+      const setupFields = name === 'users' && db.schemaVersion >= 2 && Object.hasOwn(record, 'setup') ? [...userFields, 'setup'] : userFields;
+      const expected = name==='shifts'&&db.schemaVersion>=12&&Object.hasOwn(record,'duties')?[...setupFields,'duties']:setupFields;
       requireValue(Object.keys(record).length === expected.length && expected.every(key => Object.hasOwn(record, key)), `${name} fields do not match the schema`);
       requireValue(!seen.has(record.id), `${name} has a duplicate ID`);
       seen.add(record.id);
@@ -60,6 +61,7 @@ export function validateDatabase(db) {
     requireValue(!Object.hasOwn(user, 'password'), 'plaintext passwords must never be stored');
   }
   for (const shift of db.shifts) {
+    if(Object.hasOwn(shift,'duties'))requireValue(Array.isArray(shift.duties)&&shift.duties.length<=10&&shift.duties.every(d=>typeof d==='string'&&d===d.trim()&&d.length>0&&d.length<=160&&!/[\x00-\x1f\x7f]/.test(d)), 'invalid shift duties');
     const worker = users.get(shift.assignedWorkerId);
     requireValue(businesses.has(shift.businessId) && worker?.businessId === shift.businessId && worker.role === 'worker', 'shift must reference a worker in its business');
     requireValue(text(shift.title) && timestamp(shift.startsAt) && timestamp(shift.endsAt) && shift.startsAt < shift.endsAt, 'shift title or time range is invalid');

@@ -100,3 +100,7 @@ Creation enforces future/one-year and366-day local duration bounds, with ambiguo
 ## CS-040 directed cover invitations (schema 11)
 
 `coverInvitations` stores same-business worker participants, immutable shift snapshot/timezone/fingerprint, sender-scoped submission UUID, optional plain-text note, pending/accepted/declined/cancelled/expired state, linked coverage request ID and strict actor/timestamp history. One pending record per shift; snapshots preserve history after shift deletion. `coverNotifications` stores uniquely scoped event delivery/read receipts. Older schemas stay readable and are upgraded atomically on first send. Accepted coverage retains the existing manager approval and history model. See [Request cover](request-cover.md).
+
+## CS-032 shift duties (schema 12)
+
+Optional `shifts[].duties` is an array of up to10 trimmed, nonempty plain-text strings, each at most160 characters and without ASCII control characters. Older shifts may omit it; DTOs expose an empty list. Versions1–11 remain readable without rewriting. A manager create/edit that supplies duties atomically upgrades to12 and initializes any missing prior-version collections. Omitting duties on edit preserves existing values; an explicit empty list clears them. Duties remain on the same shift when coverage transfers its assignee. Existing revision checks and started/coverage-history edit locks apply. See [shift duties](shift-duties.md).
