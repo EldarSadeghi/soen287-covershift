@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { routeChat, availabilityRuleCommand, matchingAvailabilityRules } from '../public/ai-chat-routing.js';
+import { routeChat, availabilityRuleCommand, matchingAvailabilityRules, chatClarification, clarificationReplyRoute, availabilityNeedsHours, openingReference } from '../public/ai-chat-routing.js';
 
 test('employees can switch topics, refine the last topic, and disambiguate availability', () => {
   assert.equal(routeChat('When’s my next shift?', false, null), 'questions');
@@ -38,4 +38,36 @@ test('rule selection uses the business-local start date and preserves ambiguity'
   assert.deepEqual(matchingAvailabilityRules(rules, '2026-11-28'), [first, second]);
   assert.deepEqual(matchingAvailabilityRules(rules, '2026-11-29'), []);
   assert.deepEqual(matchingAvailabilityRules(rules, 'weekend service'), [first]);
+});
+
+test('the three audited paraphrases select the right workflow', () => {
+  assert.equal(routeChat('Could you tell me when I work next?', false, null), 'questions');
+  assert.equal(routeChat('Can you put me down as available Friday?', false, null), 'availability');
+  assert.equal(routeChat('Would you show my saved availability?', false, null), 'rules');
+  assert.equal(routeChat('Please, could you find me an open shift Thursday?', false, null), 'search');
+  assert.equal(routeChat('Could you pause my Thursday rule?', false, null), 'rules');
+});
+
+test('focused prompts preserve the original availability or search intent', () => {
+  const availabilityQuestion = chatClarification('I can work Thursday', false);
+  assert.match(availabilityQuestion, /find an open shift.*draft availability/i);
+  assert.equal(clarificationReplyRoute('Save it.', availabilityQuestion), 'availability');
+  assert.equal(clarificationReplyRoute('Find it.', availabilityQuestion), 'search');
+  const lunchQuestion = chatClarification('Do you have anything after lunch?', false);
+  assert.match(lunchQuestion, /date and exact time/i);
+  assert.equal(clarificationReplyRoute('Thursday after 2 PM', lunchQuestion), 'search');
+  assert.equal(clarificationReplyRoute('Thursday', lunchQuestion), null);
+  assert.equal(availabilityNeedsHours('Can you put me down as available Friday?'), true);
+  assert.equal(availabilityNeedsHours('Can you put me down as available Friday 2 PM to 6 PM?'), false);
+  assert.equal(availabilityNeedsHours('Put me down as available all day Friday'), false);
+});
+
+test('opening references only resolve visible positions or an explicit prior selection', () => {
+  assert.equal(openingReference('Why did the second one not match?', ['open1', 'open2'], 'open1'), 'open2');
+  assert.equal(openingReference('Why can’t I claim this shift?', ['open1', 'open2'], 'open2'), 'open2');
+  assert.equal(openingReference('Why can’t I claim this shift?', ['open1', 'open2'], null), null);
+  assert.equal(openingReference('Explain the fifth opening', ['open1'], null), null);
+  assert.equal(openingReference('Why did Closing service not match?', ['open1'], null), undefined);
+  assert.equal(openingReference('Why did this shift called "Closing service" not match?', ['open1'], 'open1'), undefined);
+  assert.equal(routeChat('What else is available?', false, 'search'), 'alternatives');
 });
