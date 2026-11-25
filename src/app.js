@@ -7,7 +7,7 @@ import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
 import { withAvailabilityMatching } from './availability/matching.js';
 import { listAvailability, confirmAvailability, changeAvailability } from './availability/rules.js';
-import { searchExistingShifts } from './ai/shift-search.js';
+import { searchAlternativeShifts, searchExistingShifts } from './ai/shift-search.js';
 import { removeWorker } from './manager/offboarding.js';
 import { coverageHistory } from './requests/history.js';
 import { reviewCoverage } from './requests/review.js';
@@ -320,7 +320,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
         }
         return;
       }
-      if (['/api/worker/ai-shift-search', '/api/worker/shift-search'].includes(pathname)) {
+      if (['/api/worker/ai-shift-search', '/api/worker/shift-search', '/api/worker/shift-alternatives'].includes(pathname)) {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
         const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
         if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
@@ -330,7 +330,11 @@ export function createAppServer({ store, signup = registerManager, login = authe
           limitAi(account.user.id);
           if (!aiSearch) throw new HttpError(503, 'AI search is not configured. Use Open shifts.');
           sendJson(response, 200, await aiSearch(store, account.user.id, input, shiftClock));
-        } else { limitCoverage(account.user.id); sendJson(response, 200, await searchExistingShifts(store, account.user.id, input, shiftClock)); }
+        } else {
+          limitCoverage(account.user.id);
+          const search = pathname.endsWith('/shift-alternatives') ? searchAlternativeShifts : searchExistingShifts;
+          sendJson(response, 200, await search(store, account.user.id, input, shiftClock));
+        }
         return;
       }
       if (pathname === '/api/manager/ai-shift-draft') {
