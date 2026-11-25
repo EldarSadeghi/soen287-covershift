@@ -224,3 +224,7 @@
  .ai-batch-table td{min-width:0}
 .ai-batch-field span{display:block;margin-bottom:4px}
 @media(max-width:380px){.ai-batch-table tr{grid-template-columns:1fr}}
+
+.ai-working-summary-section{min-width:0;border-top:1px solid #dce4d8;padding-top:12px}
+.ai-working-summary-section h4{margin:0 0 8px;color:#213d32;font-size:14px}
+.ai-working-summary-item{padding:6px 0;overflow-wrap:anywhere}
