@@ -194,7 +194,7 @@ export function mountAiChat(account, csrfToken) {
     revision++; explanations?.reset(); employeeRequests?.reset(); availability?.reset(); const ruleChangePending = chat.value.ruleChangePending; chat.reset();
     if (ruleChangePending) chat.value.ruleChangePending = true;
     mode = manager ? 'draft' : 'search'; chat.save(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';samples.hidden = false;
-    notice(busy ? 'New chat started. The earlier request may still count toward your allowance; wait for it to finish before sending.' : (mode==='questions'?'Ask about your next assigned shift or a dated schedule/hours window.':manager ? 'New chat started. What shift would you like to create?' : (mode==='availability'?'New chat started. Describe one dated availability window.':'New chat started. Which day would you like to find a shift for?'))); composer.focus();
+    notice(busy ? 'New chat started. Wait for the earlier request to finish before sending.' : 'New chat started. Type your question below.'); composer.focus();
   });
   form.addEventListener('submit', async event => {
     event.preventDefault(); if (busy) return;

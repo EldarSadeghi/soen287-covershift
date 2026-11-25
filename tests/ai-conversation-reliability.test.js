@@ -12,6 +12,7 @@ const conversations = [
   ['employee', 'Would you show my saved availability?', 'search', 'rules'],
   ['employee', 'Can you put me down as available Friday?', null, 'availability'],
   ['employee', 'Is any of my coworkers available on December first?', 'availability', 'coworkers'],
+  ['employee', 'is there any availbility for my coworkers on december first ?', null, 'coworkers'],
   ['employee', 'Who’s free Friday?', null, 'coworkers'],
   ['employee', 'Could anyone cover tomorrow?', 'draft', 'coworkers'],
   ['employee', 'I can work Friday', 'search', 'clarification'],
