@@ -1,6 +1,6 @@
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat } from './ai-chat-routing.js';
-import {responseHeader,responseNote,responseDetails,responseMeta,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
+import { CHAT_ENDPOINTS, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
+import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
 import { createEmployeeChatState } from './ai-employee-state.js';
@@ -152,7 +152,9 @@ export function mountAiChat(account, csrfToken) {
     const text = composer.value.trim();
     if (!text) { notice('Write a message first.'); composer.focus(); return; }
     const previous = chat.value.messages.at(-1);
-    const target = (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
+    const coworkerDateReply = !manager && previous?.topic === 'coworkers' &&
+      /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification';
+    const target = (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routeChat(text, manager, previous && previous.topic !== 'clarification' ? mode : null);
     const sameTopic = mode === target;
     const inScope = chat.value.messages.slice(-8);
@@ -193,6 +195,62 @@ export function mountAiChat(account, csrfToken) {
       return;
     }
     explanations?.reset();
+    if (target === 'coworkers') {
+      employeeRequests.reset();
+      availability.reset();
+      chat.value.refinementPending = true;
+      say('user', text);
+      appendTurn('I’ll check your coworkers’ confirmed free windows.');
+      card.hidden = false;
+      card.append(element('p', '', 'Checking coworker availability…'));
+      working(true);
+      try {
+        const response = await requestJSON('/api/worker/coworker-windows');
+        if (response.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
+        if (!response.ok) throw new Error('Coworker availability could not load. Try asking again.');
+        const data = response.data;
+        const date = coworkerLookupDate(text, data.horizon.startDate);
+        card.replaceChildren();
+        if (!date) {
+          card.hidden = true;
+          outcomeText('Which date should I check? Say “December 1” or enter a date like 2026-12-01.');
+          notice('Reply with the date to continue.');
+          return;
+        }
+        const outside = date < data.horizon.startDate || date > data.horizon.endDate;
+        const asksForHours = /\b(?:\d{1,2}:\d{2}|\d{1,2}\s*[ap]m|morning|afternoon|evening|noon|midnight|all day)\b/i.test(text);
+        const coworkers = outside || asksForHours ? [] : coworkersFreeOnDate(data, date);
+        const reply = outside ? 'Coworker free windows are visible within the next 14 days.' :
+          asksForHours ? 'Use the specific-shift checker for exact hours or full-shift availability.' :
+          coworkers.length ? `${coworkers.map(worker => worker.name).join(', ')} ${coworkers.length === 1 ? 'has' : 'have'} confirmed free time on ${localDate(date)}.` :
+          `No confirmed free windows on ${localDate(date)}. A missing window does not mean someone is unavailable.`;
+        responseHeader(card, 'Coworker availability', localDate(date));
+        card.append(element('p', '', reply));
+        for (const worker of coworkers) {
+          card.append(element('h4', '', worker.name));
+          for (const window of worker.windows) {
+            const time = formatShiftTime(window, data.timezone);
+            card.append(element('p', '', `${time.date} · ${time.startTime} – ${time.endDate ? time.endDate + ' · ' : ''}${time.endTime}`));
+          }
+        }
+        card.append(responseMeta(data.timezone));
+        const link = element('a', 'ai-chat-review', 'Open Coworkers');
+        link.href = '/workspace/worker/availability#coworkers';
+        link.addEventListener('click', click => {
+          if (location.pathname !== '/workspace/worker/availability') return;
+          const switcher = document.querySelector('#av-coworker-view');
+          if (!switcher) return;
+          click.preventDefault();
+          close();
+          if (location.hash !== '#coworkers') switcher.click();
+        });
+        card.append(link);
+        outcomeText(reply); notice(reply, true);
+      } catch (error) {
+        card.hidden = true; outcomeText(error.message); notice(error.message);
+      } finally { working(false); }
+      return;
+    }
     if (target === 'explanation') {
       const { visibleIds, selectedId } = employeeRequests.openingContext();
       const reference = openingReference(text, visibleIds, selectedId);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { routeChat, availabilityRuleCommand, matchingAvailabilityRules, chatClarification, clarificationReplyRoute, availabilityNeedsHours, openingReference } from '../public/ai-chat-routing.js';
+import { routeChat, availabilityRuleCommand, matchingAvailabilityRules, chatClarification, clarificationReplyRoute, availabilityNeedsHours, openingReference, coworkerLookupDate, coworkersFreeOnDate } from '../public/ai-chat-routing.js';
 
 test('employees can switch topics, refine the last topic, and disambiguate availability', () => {
   assert.equal(routeChat('When’s my next shift?', false, null), 'questions');
@@ -70,4 +70,23 @@ test('opening references only resolve visible positions or an explicit prior sel
   assert.equal(openingReference('Why did Closing service not match?', ['open1'], null), undefined);
   assert.equal(openingReference('Why did this shift called "Closing service" not match?', ['open1'], 'open1'), undefined);
   assert.equal(routeChat('What else is available?', false, 'search'), 'alternatives');
+});
+
+test('coworker availability questions go to the Coworkers view', () => {
+  assert.equal(routeChat('is any of my coworkers available on december first?', false, 'availability'), 'coworkers');
+  assert.equal(routeChat('Are my co-workers free on December 1?', false, null), 'coworkers');
+  assert.equal(routeChat('Could any teammate cover on Friday?', false, null), 'coworkers');
+  assert.equal(routeChat('I am available on December 1', false, null), 'clarification');
+  assert.equal(routeChat('Find an open shift December 1', false, null), 'search');
+});
+
+test('coworker lookup resolves December first and includes only free windows on the local day', () => {
+  assert.equal(coworkerLookupDate('Is any coworker available on December first?', '2026-11-25'), '2026-12-01');
+  assert.equal(coworkerLookupDate('January 2', '2026-12-25'), '2027-01-02');
+  assert.equal(coworkerLookupDate('2026-02-30', '2026-02-20'), null);
+  const windows = [{ startsAt: '2026-12-01T14:00:00Z', endsAt: '2026-12-01T22:00:00Z' }];
+  const data = { timezone: 'America/Toronto', workers: [{ name: 'Alex Morgan', windows }, {
+    name: 'Another employee', windows: [{ startsAt: '2026-12-01T03:00:00Z', endsAt: '2026-12-01T05:00:00Z' }],
+  }] };
+  assert.deepEqual(coworkersFreeOnDate(data, '2026-12-01'), [{ name: 'Alex Morgan', windows }]);
 });
