@@ -8,27 +8,66 @@ export const CHAT_ENDPOINTS = {
 const normalizedMessage = text => text.trim().toLowerCase().replace(/[’‘]/g, "'")
   .replace(/^(?:(?:please[,\s]+)|(?:(?:could|would|can) you\s+))+/, '');
 
-export function routeChat(text, manager, current) {
+export const MIXED_INTENT_QUESTION = 'Which should I handle first:';
+
+const taskLabels = {
+  draft: 'draft a shift', search: 'find open shifts', availability: 'draft availability',
+  questions: 'check the schedule', coworkers: 'check coworker availability',
+  alternatives: 'find alternatives', explanation: 'explain a match or request', rules: 'check saved rules',
+};
+
+function explicitRoute(text, manager) {
   const message = normalizedMessage(text);
-  if (manager && /\b(?:draft|create|add|assign|make)\b.*\bshift\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
+  if (/^(?:do not|don't|never)\b/.test(message)) return null;
+  if (manager && /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
   if (!manager) {
     if (/\b(?:co[ -]?workers?|colleagues?|teammates?)\b/.test(message) &&
         /\b(?:available|availability|free|can work|could work)\b/.test(message) ||
-        /^who(?:'s| is) (?:free|available)\b|^who (?:can|could) cover\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/.test(message)) return 'coworkers';
+        /^who(?:'s| is) (?:free|available)\b|^who (?:can|could) (?:cover|fill in)\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/.test(message)) return 'coworkers';
     if (/^(?:what else(?: is available)?|(?:any|what) other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/.test(message)) return 'alternatives';
     if (/^(?:why|explain|what (?:blocked|prevented))\b/.test(message) &&
         /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/.test(message)) return 'explanation';
     if (availabilityRuleCommand(text) ||
         /^(?:(?:show|view|list|open|check) (?:me )?)?(?:my )?(?:saved (?:availability|rules)|availability rules)[.?!]*$/.test(message)) return 'rules';
-    if (/\b(?:open shifts?|openings?|coverage shifts?)\b|\b(?:find|look for|search for|pick up)\b.*\bshifts?\b/.test(message)) return 'search';
+    if (/\b(?:open shifts?|openings?|unfilled shifts?|unclaimed shifts?|coverage shifts?)\b|\b(?:find|look for|search for|pick up)\b.*\bshifts?\b/.test(message)) return 'search';
     if (/\b(?:put|mark|set) me down as available\b|\b(?:save|draft|set|record|confirm)\b.*\bavailability\b|\bavailability (?:rule|draft)\b|\b(?:i can take|i can pick up|limit|maximum)\b.*\bshifts?\b/.test(message)) return 'availability';
-    if (/^\s*(?:i (?:can work|am available|'m available)|available on)\b/.test(message) && current !== 'availability') return 'clarification';
   }
-  if (/\bwhen i (?:work|am working) next|^when'?s my next (?:shift|day at work)|^when do i (?:work|come in) next\b|^(?:when|what|which|how many|how long|who|show|list|tell me|am i|do i)\b|\b(?:my|team'?s?) (?:schedule|hours|next shift)\b/.test(message)) return 'questions';
-  return current && current !== 'clarification' && current !== 'rules' ? current : 'clarification';
+  if (/^(?:when|what|which|how many|how long|who|show|list|tell me|am i|do i|give me|pull up|check|remind me)\b/.test(message) &&
+      /\b(?:schedules?|roster|rota|shifts?|hours|working|work|come in|clock in|on duty|on the rota)\b/.test(message) ||
+      /\b(?:my|team'?s?) (?:schedule|hours|next shift)\b/.test(message)) return 'questions';
+  return null;
+}
+
+function mixedRoutes(text, manager) {
+  // Keep quoted shift or rule names intact, even if they contain a conjunction.
+  const clauses = text.split(/("[^"]*"|“[^”]*”|[!?;]+|\n+|\.(?=\s+[a-z])(?<![ap]\.m\.)|\band(?: then| also)?\b|\bthen\b)/i);
+  const requests = [''];
+  for (const part of clauses) {
+    if (/^(?:[.!?;]+|\n+|and(?: then| also)?|then)$/i.test(part)) requests.push('');
+    else requests[requests.length - 1] += part;
+  }
+  return [...new Set(requests.map(request => explicitRoute(request.trim().replace(/^also\s+/i, ''), manager)).filter(Boolean))];
+}
+
+export function routeChat(text, manager, current) {
+  if (mixedRoutes(text, manager).length > 1) return 'clarification';
+  const route = explicitRoute(text, manager);
+  if (route) return route;
+  const message = normalizedMessage(text);
+  if (!manager && /^(?:i (?:can work|am available|'m available)|available on)\b/.test(message)) {
+    return current === 'availability' ? current : 'clarification';
+  }
+  const editable = manager ? current === 'draft' : ['search', 'availability'].includes(current);
+  if (editable && /^(?:only|just|instead|actually|move|change|make it|rename|remove|leave it|extend|shorten|start|end|from|until|after|before|all day|noon|midnight|today|tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|\d+)/i.test(message)) return current;
+  return 'clarification';
 }
 
 export function chatClarification(text, manager) {
+  const routes = mixedRoutes(text, manager);
+  if (routes.length > 1) {
+    const choices = routes.map(route => taskLabels[route]).join(' or ');
+    return `${MIXED_INTENT_QUESTION} ${choices}? Send that request on its own with the details you want me to use.`;
+  }
   if (!manager && /\b(?:can work|am available|['’]m available|available on)\b/i.test(text)) {
     return 'Should I find an open shift for that time, or draft availability for automatic coverage requests?';
   }
@@ -42,8 +81,8 @@ export function chatClarification(text, manager) {
 export function clarificationReplyRoute(text, question) {
   const answer = normalizedMessage(text).replace(/[.?!]+$/, '');
   if (question?.startsWith('Should I find an open shift')) {
-    if (/^(?:find|search)(?: it| for me)?$/.test(answer)) return 'search';
-    if (/^(?:save|draft|set)(?: it| availability)?$/.test(answer)) return 'availability';
+    if (/^(?:find|search)(?: it| for me| for (?:an? )?open shifts?)?$/.test(answer)) return 'search';
+    if (/^(?:save|draft|set)(?: it| (?:my )?availability)?$/.test(answer)) return 'availability';
   }
   if (question?.startsWith('What date and exact time') &&
       /\b(?:today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|20\d{2}-\d{2}-\d{2})\b/.test(answer) &&

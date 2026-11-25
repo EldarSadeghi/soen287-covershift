@@ -1,5 +1,5 @@
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat, coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -153,13 +153,16 @@ export function mountAiChat(account, csrfToken) {
     if (!text) { notice('Write a message first.'); composer.focus(); return; }
     const previous = chat.value.messages.at(-1);
     const coworkerDateReply = !manager && previous?.topic === 'coworkers' &&
-      /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification';
+      /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification' &&
+      !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
     const target = (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routeChat(text, manager, previous && previous.topic !== 'clarification' ? mode : null);
     const sameTopic = mode === target;
     const inScope = chat.value.messages.slice(-8);
     let history = [];
-    if (previous?.topic === 'clarification' && target !== 'clarification') history = inScope.slice(-2);
+    if (previous?.topic === 'clarification' && !previous.text.startsWith(MIXED_INTENT_QUESTION) && target !== 'clarification') {
+      history = inScope.slice(-2);
+    }
     else if (sameTopic && !chat.value.draftCancelled) {
       const topicStart = inScope.findLastIndex(message => message.topic && message.topic !== target);
       history = inScope.slice(topicStart + 1);

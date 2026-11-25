@@ -46,3 +46,30 @@ test('coworker lookups resolve dates across month and year boundaries', () => {
   assert.equal(coworkerLookupDate('Who is available Tuesday or Friday?', '2026-11-25'), null);
   assert.equal(coworkerLookupDate('Is anyone free December first?', '2026-11-25'), '2026-12-01');
 });
+
+test('intent paraphrases reach the right role-specific workflows', () => {
+  assert.equal(routeChat('Pull up the rota and show my hours', true, null), 'questions');
+  assert.equal(routeChat('Put together a closing shift for Alex', true, null), 'draft');
+  assert.equal(routeChat('Who could fill in tomorrow?', false, null), 'coworkers');
+  assert.equal(routeChat('Any unclaimed shifts Friday?', false, null), 'search');
+  assert.equal(routeChat('Give me my shifts for this week', false, null), 'questions');
+  assert.equal(routeChat('Who could fill in tomorrow?', true, null), 'clarification');
+});
+
+test('distinct requests ask which workflow to handle first', () => {
+  const employee = 'Find unfilled shifts Friday and show my saved availability';
+  const manager = 'Pull up the team schedule; draft a closing shift for Alex';
+  assert.equal(routeChat(employee, false, 'search'), 'clarification');
+  assert.match(chatClarification(employee, false), /find open shifts or check saved rules/);
+  assert.equal(routeChat(manager, true, 'draft'), 'clarification');
+  assert.match(chatClarification(manager, true), /check the schedule or draft a shift/);
+  assert.equal(routeChat('Draft a shift for Alex on Friday from 2 PM and until 6 PM', true, null), 'draft');
+  assert.equal(routeChat('Pause the “Coffee and closing” rule', false, null), 'rules');
+});
+
+test('unrelated requests and negated actions do not inherit an editable workflow', () => {
+  assert.equal(routeChat('What is the weather?', true, 'draft'), 'clarification');
+  assert.equal(routeChat('Do not draft a shift', true, 'draft'), 'clarification');
+  assert.equal(routeChat('Can you explain payroll?', false, 'search'), 'clarification');
+  assert.equal(routeChat('Actually, start at 2 PM', true, 'draft'), 'draft');
+});
