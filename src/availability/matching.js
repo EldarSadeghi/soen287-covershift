@@ -4,6 +4,13 @@ import { randomUUID } from 'node:crypto';
 import { claimRevision, claimCommitments, claimInDatabase } from '../requests/claim.js';
 import { findClaimConflicts } from '../../public/claim-conflicts.js';
 
+export function ruleShiftLimits(rule, shift, used) {
+  return {
+    capacity: used >= rule.maxClaims,
+    window: shift.startsAt < rule.startsAt || shift.endsAt > rule.endsAt,
+    title: !shift.title.toLocaleLowerCase().includes(rule.title.toLocaleLowerCase()),
+  };
+}
 export const matchesForRule = (db, ruleId) => (db.availabilityMatches || []).filter(m => m.ruleId === ruleId);
 // Trusted business service: no provider call, timers, I/O, or nested transaction.
 // All decisions and the resulting claim+ledger commit share the caller's lock.
@@ -25,7 +32,8 @@ export function matchAvailability(db, now = Date.now()) {
     for (const rule of rules) {
       const worker = users.get(rule.workerId); const business = businesses.get(rule.businessId);
       if (rule.businessId !== request.businessId || !business || business.timezone !== rule.timezone || !worker || worker.role !== 'worker' || worker.deactivation || worker.passwordHash === null || worker.businessId !== rule.businessId || worker.id === request.originalWorkerId) continue;
-      if ((counts.get(rule.id)||0) >= rule.maxClaims || attempted.has(`${worker.id}:${shift.id}`) || shift.startsAt < rule.startsAt || shift.endsAt > rule.endsAt || !shift.title.toLocaleLowerCase().includes(rule.title.toLocaleLowerCase())) continue;
+      const limits = ruleShiftLimits(rule, shift, counts.get(rule.id) || 0);
+      if (limits.capacity || limits.window || limits.title || attempted.has(`${worker.id}:${shift.id}`)) continue;
       if (findClaimConflicts(shift,claimCommitments(db,worker,now)).length) continue;
       claimInDatabase(db,worker.id,request.id,{revision:claimRevision(request,shift)},Math.max(now,Date.parse(rule.confirmedAt)));
       const at = request.updatedAt;

@@ -3,7 +3,11 @@ import { coverageAccount } from './coverage.js';
 
 export async function openShiftBoard(store, userId, now = Date.now()) {
   // Authenticate and scope from the same saved snapshot as the board data.
-  const db = await store.read(); const { user, business } = coverageAccount(db, userId);
+  return openShiftSnapshot(await store.read(), userId, now);
+}
+
+export function openShiftSnapshot(db, userId, now) {
+  const { user, business } = coverageAccount(db, userId);
   const shifts = new Map(db.shifts.filter(s => s.businessId === business.id).map(s => [s.id, s]));
   const workers = new Map(db.users.filter(u => u.businessId === business.id && u.role === 'worker').map(u => [u.id, u]));
   const requests = [];

@@ -9,6 +9,8 @@ export function routeChat(text, manager, current) {
   const message = text.toLowerCase().replace(/[’‘]/g, "'");
   if (manager && /\b(?:draft|create|add|assign|make)\b.*\bshift\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
   if (!manager) {
+    if (/^(?:why|explain|what (?:blocked|prevented))\b/.test(message) &&
+        /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/.test(message)) return 'explanation';
     if (availabilityRuleCommand(text) ||
         /^(?:(?:show|view|list|open|check) (?:me )?)?(?:my )?(?:saved (?:availability|rules)|availability rules)[.?!]*$/.test(message)) return 'rules';
     if (/\b(?:open shifts?|openings?|coverage shifts?)\b|\b(?:find|look for|search for|pick up)\b.*\bshifts?\b/.test(message)) return 'search';
