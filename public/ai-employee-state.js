@@ -7,6 +7,7 @@ export function createEmployeeChatState(storage, owner, now = Date.now) {
     const saved = JSON.parse(storage.getItem(EMPLOYEE_CHAT_KEY));
     if (saved?.owner === owner && now() >= saved.updatedAt && now() - saved.updatedAt < 8 * 3600000 && Array.isArray(saved.messages) && saved.messages.length <= 10 && saved.messages.length % 2 === 0 && JSON.stringify(saved.messages).length < 10000 && saved.messages.every((m, i) => m && m.role === (i % 2 ? 'assistant' : 'user') && typeof m.text === 'string' && m.text.length <= 1500)) {
       state.messages = saved.messages;
+      if (saved.ruleChangePending === true) state.ruleChangePending = true;
       if (saved.draftCancelled === true) state.draftCancelled = true;
       if (saved.refinementPending === true) state.refinementPending = true;
       if (['availability','questions'].includes(saved.mode)) state.mode=saved.mode;

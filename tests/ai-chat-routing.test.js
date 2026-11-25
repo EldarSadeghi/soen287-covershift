@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { routeChat } from '../public/ai-chat-routing.js';
+import { routeChat, availabilityRuleCommand, matchingAvailabilityRules } from '../public/ai-chat-routing.js';
 
 test('employees can switch topics, refine the last topic, and disambiguate availability', () => {
   assert.equal(routeChat('When’s my next shift?', false, null), 'questions');
@@ -17,4 +17,25 @@ test('manager routes scheduling questions and draft refinements without exposing
   assert.equal(routeChat('2 PM', true, 'draft'), 'draft');
   assert.equal(routeChat('Show the team schedule for its remaining shifts', true, 'draft'), 'questions');
   assert.equal(routeChat('Find an opening', true, null), 'clarification');
+});
+
+test('saved availability commands use a distinct employee route and require explicit rule wording', () => {
+  assert.equal(routeChat('Pause my Thursday rule', false, 'search'), 'rules');
+  assert.equal(routeChat('Show my availability rules', false, null), 'rules');
+  assert.notEqual(routeChat('Cancel my coverage request', false, null), 'rules');
+  assert.notEqual(routeChat('Pause my Thursday rule', true, null), 'rules');
+  assert.deepEqual(availabilityRuleCommand('Please resume my rule on 2026-11-28.'), { action: 'resume', selector: '2026-11-28' });
+  assert.deepEqual(availabilityRuleCommand('Cancel the "Weekend service" rule'), { action: 'cancel', selector: 'Weekend service' });
+});
+
+test('rule selection uses the business-local start date and preserves ambiguity', () => {
+  const base = { timezone: 'America/Toronto', startsAt: '2026-11-29T02:00:00Z', status: 'active' };
+  const first = { ...base, title: 'Weekend service' };
+  const second = { ...base, title: 'Saturday backup', status: 'paused' };
+  const ended = { ...base, title: 'Old rule', status: 'cancelled' };
+  const rules = [first, second, ended];
+  assert.deepEqual(matchingAvailabilityRules(rules, 'Saturday'), [first, second]);
+  assert.deepEqual(matchingAvailabilityRules(rules, '2026-11-28'), [first, second]);
+  assert.deepEqual(matchingAvailabilityRules(rules, '2026-11-29'), []);
+  assert.deepEqual(matchingAvailabilityRules(rules, 'weekend service'), [first]);
 });
