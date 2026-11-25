@@ -31,7 +31,15 @@ export function mountAiChat(account, csrfToken) {
   let mode = chat.value.mode || (manager ? 'draft' : 'search');
   const samples=element('div','ai-chat-samples');samples.setAttribute('aria-label','Suggested messages');intro.after(samples);
   function working(value) { busy=value;send.disabled=value;find('.ai-chat-controls .ai-chat-new').disabled=value; }
-  function outcomeText(text) { if(chat.value.messages.at(-1)?.role==='assistant')chat.value.messages.at(-1).text=text;chat.save();messages.replaceChildren();for(const message of chat.value.messages)say(message.role,message.text); }
+  function outcomeText(text) {
+    const last = chat.value.messages.at(-1);
+    if (last?.role === 'assistant') {
+      last.text = text;
+      const bubble = messages.lastElementChild;
+      if (bubble?.classList.contains('ai-chat-assistant')) bubble.lastElementChild.replaceWith(assistantReply(text));
+    }
+    chat.save();
+  }
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
 
   const explanations = !manager ? createAvailabilityExplanations({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText,
@@ -62,10 +70,13 @@ export function mountAiChat(account, csrfToken) {
     samples.append(button);
   }
 
+  function assistantReply(text) {
+    return text.length > 180 ? responseDetails('View earlier reply', text) : element('p', '', text);
+  }
   function say(role, text) {
     const bubble = element('div', `ai-chat-bubble ai-chat-${role}`);
     bubble.append(element('strong', 'ai-chat-speaker', role === 'user' ? 'You' : 'CoverShift'));
-    if(role==='assistant' && text.length>180)bubble.append(responseDetails('View earlier reply',text));else bubble.append(element('p','',text));
+    bubble.append(role === 'assistant' ? assistantReply(text) : element('p', '', text));
     messages.append(bubble);samples.hidden=true; return bubble;
   }
   for (const message of chat.value.messages) say(message.role, message.text);
@@ -376,7 +387,8 @@ export function mountAiChat(account, csrfToken) {
         else employeeRequests.show(data);
       }
       chat.save();
-      if(data.kind==='clarification')notice('Reply below to continue.');else notice(card.querySelector('h3')?.textContent||'Your response is ready.',true);
+      if (data.kind === 'clarification') notice('Reply below to continue.');
+      else notice(data.kind === 'matches' ? reply : card.querySelector('h3')?.textContent || 'Your response is ready.', true);
       syncResponse();if(!card.hidden)revealResponse(card);
       if (dialog.open) composer.focus({preventScroll:true});
     } catch (error) {

@@ -36,10 +36,14 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
         if (response.status === 404) {
           chat.value.selectedOpeningId = null;
           chat.save();
-          card.replaceChildren(responseNote(response.data.message), action('Choose a current request', () => {
+          const message = 'That request is no longer visible. Choose a current request to check.';
+          card.replaceChildren();
+          responseHeader(card, 'Opening changed', 'Choose a current request');
+          card.append(responseNote(message, 'neutral'), action('Choose a current request', () => {
             if (version === generation) void load({ description: 'Show my coverage requests and openings' });
           }));
-          onOutcome(response.data.message); notice(response.data.message);
+          onOutcome(message); notice(message, true);
+          if (card.closest('dialog')?.open) card.querySelector('button')?.focus();
           return;
         }
         throw new Error(response.data.message);
