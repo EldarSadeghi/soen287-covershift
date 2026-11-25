@@ -29,16 +29,26 @@ export function validateSearchCriteria(input, timezone) {
   if (input.startLocal && input.startLocal.slice(0, 10) !== input.date || input.endLocal && (input.endLocal.slice(0, 10) < input.date || Date.parse(input.endLocal.slice(0, 10)) - Date.parse(input.date) > 86400000) || start && end && Date.parse(end) <= Date.parse(start)) throw new HttpError(422, 'Check the date and availability hours. Overnight hours must end on the next day.');
   return { start, end };
 }
-export async function searchExistingShifts(store, userId, input, clock = Date.now) {
+export async function searchExistingShifts(store, userId, input, clock = Date.now, { excludeShiftId, limit = 10 } = {}) {
   workerAccount(await store.read(), userId);
   const board = await openShiftBoard(store, userId, clock());
   const { start, end } = validateSearchCriteria(input, board.timezone);
   const dateParts = new Intl.DateTimeFormat('en-CA', { timeZone: board.timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
   const localDate = instant => { const parts = dateParts.formatToParts(new Date(instant)); return ['year', 'month', 'day'].map(key => parts.find(p => p.type === key).value).join('-'); };
-  const requests = board.requests.filter(request => localDate(request.shift.startsAt) === input.date && (!start || Date.parse(request.shift.startsAt) >= Date.parse(start)) && (!end || Date.parse(request.shift.endsAt) <= Date.parse(end)) && request.shift.title.toLocaleLowerCase().includes(input.title.trim().toLocaleLowerCase()) && !findClaimConflicts(request.shift, board.commitments).length);
+  const requests = board.requests.filter(request => request.shift.id !== excludeShiftId && localDate(request.shift.startsAt) === input.date && (!start || Date.parse(request.shift.startsAt) >= Date.parse(start)) && (!end || Date.parse(request.shift.endsAt) <= Date.parse(end)) && request.shift.title.toLocaleLowerCase().includes(input.title.trim().toLocaleLowerCase()) && !findClaimConflicts(request.shift, board.commitments).length);
   // Bound rendered results only after filtering the entire scoped board; no false no-match from truncation.
-  return { kind: 'matches', criteria: input, requests: requests.slice(0, 10), total: requests.length, timezone: board.timezone, asOf: board.asOf };
+  return { kind: 'matches', criteria: input, requests: requests.slice(0, limit), total: requests.length, timezone: board.timezone, asOf: board.asOf };
 }
+export async function searchAlternativeShifts(store, userId, input, clock = Date.now) {
+  if (!input || Array.isArray(input) || Object.keys(input).length !== 2 ||
+      !Object.hasOwn(input, 'criteria') || typeof input.excludeShiftId !== 'string' ||
+      !/^[a-zA-Z0-9_-]{1,80}$/.test(input.excludeShiftId)) {
+    throw new HttpError(422, 'Choose a shift and review the dates and hours to search.');
+  }
+  const result = await searchExistingShifts(store, userId, input.criteria, clock, { excludeShiftId: input.excludeShiftId, limit: 5 });
+  return { ...result, alternateTo: input.excludeShiftId };
+}
+
 export function createAiShiftSearcher({ apiKey, model = 'gpt-6-luna', allowance, fetchImpl = fetch, timeoutMs = 11000 } = {}) {
   const active = new Set();
   return async (store, userId, input, clock = Date.now) => {

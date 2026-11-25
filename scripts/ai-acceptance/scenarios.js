@@ -243,4 +243,46 @@ export const scenarios=[
  c.check('eligible-again','Fresh search becomes eligible after confirmed leave cancellation.',again.data.requests.map(r=>r.id),[c.ids.manualRequest]);
 }},
 
+{
+ id:'CS029-C20', title:'CS-037 alternatives retain approved limits and require fresh review and explicit claim',
+ async run(c) {
+  const make = async (title, startLocal, endLocal, assignedWorkerId='worker_sam') => {
+   const created = await c.http(manager, '/api/manager/shifts', { title, startLocal, endLocal, assignedWorkerId });
+   c.check(title+'-created', 'Fictional shift is created by authorized manager.', created.status, 201);
+   const db = await c.store.read();
+   const { coverageShiftRevision } = await import('../../src/requests/coverage.js');
+   const original = db.shifts.find(row => row.id === created.data.shift.id);
+   const opened = await c.http(assignedWorkerId, '/api/worker/shifts/'+original.id+'/coverage', { revision: coverageShiftRevision(db, original) });
+   c.check(title+'-opened', 'Fictional shift is opened for coverage.', opened.status, 201);
+   return opened.data.request.id;
+  };
+  const later = await make('Afternoon backup', '2030-01-10T17:00', '2030-01-10T18:00');
+  await make('Evening backup', '2030-01-10T18:00', '2030-01-10T20:00');
+  const criteria = {date:c.dates.thursday,startLocal:c.dates.thursday+'T14:00',endLocal:c.dates.thursday+'T18:00',title:'Afternoon'};
+  const input = {criteria,excludeShiftId:c.ids.manualShift};
+  const endpoint = '/api/worker/shift-alternatives';
+  const before = await c.bytes();
+  const result = await c.http(employee, endpoint, input);
+  c.check('scoped', 'Source and out-of-window shifts are excluded and filters are retained.',
+    [result.status,result.data.criteria,result.data.requests.map(row=>row.id)], [200,criteria,[later]]);
+  c.check('read-only','Suggestions write no data.',await c.bytes(),before);
+  const narrowed = await c.http(employee,endpoint,{...input,criteria:{...criteria,endLocal:c.dates.thursday+'T17:00'}});
+  c.check('empty','An empty search keeps its approved limits.',[narrowed.data.total,narrowed.data.criteria.endLocal],[0,c.dates.thursday+'T17:00']);
+  c.check('role','Manager cannot access the employee alternative route.',(await c.http(manager,endpoint,input)).status,403);
+  const opening = result.data.requests[0];
+  const path = '/api/worker/requests/'+opening.id;
+  c.check('review','A separate fresh review establishes current eligibility.',(await c.http(employee,path+'/claim-check',{revision:opening.revision})).data.canClaim,true);
+  c.check('review-only','Review still makes no mutation.',await c.bytes(),before);
+  c.check('confirm','The explicit claim is pending manager approval.',(await c.http(employee,path+'/claim',{revision:opening.revision})).data.request.status,'pending');
+  c.check('stale','A repeated stale claim is rejected.',(await c.http(employee,path+'/claim',{revision:opening.revision})).status,409);
+  const wider = await c.http(employee,endpoint,{...input,criteria:{...criteria,endLocal:'',title:''}});
+  const evening = wider.data.requests.find(row => row.shift.title === 'Evening backup');
+  c.check('explicit-widen','A separate search with explicitly changed limits can show later shifts.',Boolean(evening));
+  const race = '/api/worker/requests/'+evening.id;
+  c.check('race-review','An alternative is available before a competing request.',(await c.http(employee,race+'/claim-check',{revision:evening.revision})).status,200);
+  c.check('competing-claim','Another eligible worker can claim before the original worker confirms.',(await c.http('worker_taylor',race+'/claim',{revision:evening.revision})).status,200);
+  c.check('race-confirm','Fresh submission rejects the now-unavailable alternative.',(await c.http(employee,race+'/claim',{revision:evening.revision})).status,409);
+ }
+},
+
 ];

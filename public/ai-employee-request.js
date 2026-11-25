@@ -1,7 +1,6 @@
 import {responseHeader,responseFields,responseNote,responseMeta,savedShiftFields,localDate} from './ai-response-card.js';
 import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
-import { formatShiftTime } from './shift-time.js';
 
 export function employeeSearchMessage(data) {
   const hours = [data.criteria.startLocal && `from ${data.criteria.startLocal}`, data.criteria.endLocal && `until ${data.criteria.endLocal}`].filter(Boolean).join(' ');
@@ -27,8 +26,10 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
   }
   function setWorking(value) { busy = value; setBusy(value); card.querySelectorAll('button').forEach(node => { node.disabled = value; }); }
   function show(data) {
-    reset(); chat.value.criteria = data.criteria; chat.value.outcome = null; chat.save(); card.hidden = false;
-    responseHeader(card,'Openings · Not requested',data.total===1?'Here’s one matching opening.':data.total?`${data.total} matching openings.`:'No matching openings.');
+    reset(); chat.value.criteria = data.criteria; chat.value.alternateTo = data.alternateTo || null; chat.value.outcome = null; chat.save(); card.hidden = false;
+    responseHeader(card, data.alternateTo ? 'Alternatives · Not requested' : 'Openings · Not requested',
+      data.total === 1 ? 'Here’s one matching opening.' : data.total ? `${data.total} matching openings.` :
+        data.alternateTo ? 'No eligible alternatives within these limits.' : 'No matching openings.');
     card.append(responseFields([
       ['Date', localDate(data.criteria.date)],
       ['From', data.criteria.startLocal.replace('T', ' ') || 'Any time'],
@@ -37,22 +38,41 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
       ['Timezone', data.timezone],
     ]));
     if(data.total>data.requests.length)card.append(responseMeta(`Showing ${data.requests.length} of ${data.total}. Browse Open shifts for all results.`));
-    if (!data.requests.length) card.append(element('p', '', 'No matching openings you can request right now. Try another date or check Open shifts.'));
+    if (!data.requests.length) {
+      if (data.alternateTo) {
+        card.append(responseNote('Your search date and filters stayed in place. You can change the date in chat if you want to look elsewhere.'));
+        if (data.criteria.startLocal || data.criteria.endLocal) card.append(button('Search any hours on this date', () =>
+          alternatives(data.alternateTo, { ...data.criteria, startLocal: '', endLocal: '' })));
+        if (data.criteria.title) card.append(button('Search all shift titles', () =>
+          alternatives(data.alternateTo, { ...data.criteria, title: '' })));
+      } else card.append(element('p', '', 'No matching openings you can request right now. Try another date or check Open shifts.'));
+    }
     const version = generation;
     for (const opening of data.requests) {
       const section = element('section', 'ai-chat-opening'); section.setAttribute('aria-label', opening.shift.title);
-      const time = formatShiftTime(opening.shift, data.timezone);
       section.append(element('h4','',opening.shift.title),savedShiftFields(opening.shift,data.timezone),responseFields([['Current worker',opening.originalWorkerName]]));
       const feedback = element('p', ''); feedback.setAttribute('role', 'status');
+      const offerAlternatives = () => {
+        if (!section.querySelector('.ai-alternatives-action')) {
+          const offer = button('Find eligible alternatives', () => {
+            if (version === generation) void alternatives(opening.shift.id, data.criteria);
+          });
+          offer.classList.add('ai-alternatives-action');
+          feedback.after(offer);
+        }
+      };
       const review = button('Review request', async () => {
         if (busy || version !== generation) return;
         setWorking(true); confirm.hidden = true; feedback.textContent = 'Checking current availability…';
         try {
           const checked = await post(`/api/worker/requests/${encodeURIComponent(opening.id)}/claim-check`, { revision: opening.revision });
           if (version !== generation) return;
-          if (!checked.canClaim || checked.timezone !== data.timezone) { feedback.textContent = 'Your schedule or timezone changed. Refresh matches before requesting.'; return; }
+          if (!checked.canClaim || checked.timezone !== data.timezone) { feedback.textContent = 'This opening is unavailable for your current schedule.'; offerAlternatives(); return; }
           feedback.textContent = 'Available now. Eligibility will be checked again when you confirm.'; confirm.hidden = false;
-        } catch (error) { if (version === generation) feedback.textContent = error.message || 'Could not check availability. Refresh matches.'; }
+        } catch (error) { if (version === generation) {
+          feedback.textContent = error.message || 'Could not check availability. Refresh matches.';
+          if (error.definite) offerAlternatives();
+        } }
         finally { setWorking(false); if (!confirm.hidden && version === generation) cancel.focus(); }
       });
       review.setAttribute('aria-label', `Review request for ${opening.shift.title}`);
@@ -74,7 +94,7 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
           onOutcome('Request submitted for manager approval. The original worker remains assigned until approval.'); outcome(); notice('Request submitted.');
         } catch (error) {
           if (version !== generation) return;
-          if (error.definite) { chat.value.outcome = null; onOutcome('Request was not submitted. Refresh matches to review current availability.'); chat.save(); confirm.hidden = true; review.hidden = true; feedback.textContent = error.message; notice('Request was not submitted. Refresh matches to check current openings.'); }
+          if (error.definite) { chat.value.outcome = null; onOutcome('Request was not submitted. Refresh matches to review current availability.'); chat.save(); confirm.hidden = true; review.hidden = true; feedback.textContent = error.message; offerAlternatives(); notice('Request was not submitted. You can look for alternatives.'); }
           else { onOutcome('Request not confirmed. Check My requests before retrying.'); outcome(); notice('Request not confirmed. Check My requests before trying again.'); }
         } finally { setWorking(false); }
       });
@@ -82,8 +102,24 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
     }
     const browse=link('Browse Open shifts','/workspace/worker/open');browse.classList.add('ai-response-secondary');card.append(button('Refresh matches',refresh),browse);
   }
+  async function alternatives(shiftId, criteria) {
+    if (busy) return;
+    const version = generation;
+    setWorking(true); notice('Checking eligible alternatives…');
+    try {
+      const result = await post('/api/worker/shift-alternatives', { criteria, excludeShiftId: shiftId });
+      if (version !== generation) return;
+      chat.value.refinementPending = false;
+      show(result);
+      onOutcome(result.total ? 'Eligible alternatives are ready for review.' : 'No eligible alternatives within the selected limits.');
+      notice('Alternatives checked. Nothing requested.', true);
+    } catch (error) {
+      if (version === generation) notice(error.message || 'Could not check alternatives. Try again.');
+    } finally { setWorking(false); }
+  }
   async function refresh() {
     if (busy || !chat.value.criteria) return;
+    if (chat.value.alternateTo) return alternatives(chat.value.alternateTo, chat.value.criteria);
     const version = generation; setWorking(true); notice('Refreshing saved openings…');
     try { const result = await post('/api/worker/shift-search', chat.value.criteria); if (version === generation) { show(result); notice('Matches refreshed. Nothing requested.'); } }
     catch (error) { if (version === generation) notice(error.message || 'Could not refresh. Use Open shifts or try again.'); }
@@ -94,5 +130,5 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
     if (!chat.value.criteria) return;
     reset(); card.hidden = false; card.append(element('p', '', 'Your last search is saved. Refresh to see current openings; nothing is reserved.'), button('Refresh matches', refresh), link('Browse Open shifts', '/workspace/worker/open'));
   }
-  return { show, restore, reset };
+  return { show, restore, reset, alternatives };
 }

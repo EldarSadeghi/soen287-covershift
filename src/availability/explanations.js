@@ -94,7 +94,7 @@ export async function explainAvailability(store, userId, input, clock = Date.now
     if (!current.length && rules.some(rule => !rule.reasons.length)) current.push('At least one of your rules passes the checks shown here. This check does not submit or reserve a request.');
   }
   return {
-    kind: 'availability_explanation', ...meta, requestId: request.id, shift: shiftFields(shift), status, recorded: recorded.filter(Boolean), current,
+    kind: 'availability_explanation', ...meta, requestId: request.id, shiftId: shift.id, shift: shiftFields(shift), status, recorded: recorded.filter(Boolean), current,
     rules: rules.slice(0, 20), ruleCount: rules.length,
     ...(status === 'open' && { priority: 'For an open shift, automatic matching checks eligible rules in confirmation order, starting with the earliest.' }),
     next: status === 'open' ? 'open' : 'requests',

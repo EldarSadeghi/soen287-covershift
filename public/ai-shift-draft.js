@@ -34,7 +34,9 @@ export function mountAiChat(account, csrfToken) {
   function outcomeText(text) { if(chat.value.messages.at(-1)?.role==='assistant')chat.value.messages.at(-1).text=text;chat.save();messages.replaceChildren();for(const message of chat.value.messages)say(message.role,message.text); }
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
 
-  const explanations = !manager ? createAvailabilityExplanations({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText }) : null;
+  const explanations = !manager ? createAvailabilityExplanations({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText,
+    onAlternatives: (shiftId, criteria) => employeeRequests.alternatives(shiftId, criteria),
+  }) : null;
   const employeeRequests = !manager ? createEmployeeRequests({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText }) : null;
 
   composer.value = chat.value.composer;
@@ -192,7 +194,7 @@ export function mountAiChat(account, csrfToken) {
     if (!sameTopic) {
       Object.assign(chat.value, {
         suggestion: null, pending: null, completion: null, uncertainDraftId: null,
-        criteria: null, availabilityDraft: null, outcome: null, draftCancelled: false,
+        criteria: null, alternateTo: null, availabilityDraft: null, outcome: null, draftCancelled: false,
       });
       mode = target; chat.value.mode = target;
     }

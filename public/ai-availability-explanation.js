@@ -3,7 +3,7 @@ import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
 
-export function createAvailabilityExplanations({ card, chat, csrfToken, notice, setBusy, onOutcome }) {
+export function createAvailabilityExplanations({ card, chat, csrfToken, notice, setBusy, onOutcome, onAlternatives }) {
   let generation = 0;
   let busy = false;
   function reset() { generation++; }
@@ -72,6 +72,19 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
       next.href = data.next === 'open' ? '/workspace/worker/open' : '/workspace/worker/requests';
       card.append(checkedMeta(data.asOf, data.timezone), next,
         action('Check again', () => { if (version === generation) void load({ requestId: data.requestId }); }));
+      if (['open', 'expired', 'rejected', 'cancelled'].includes(data.status) && !chat.value.outcome) {
+        const parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: data.timezone, year: 'numeric', month: '2-digit', day: '2-digit',
+        }).formatToParts(new Date(data.shift.startsAt));
+        const date = ['year', 'month', 'day'].map(key => parts.find(part => part.type === key).value).join('-');
+        const saved = chat.value.criteria;
+        if (!saved || saved.date === date) {
+          const criteria = saved || { date, startLocal: '', endLocal: '', title: '' };
+          card.append(action(saved ? 'Find alternatives within my search limits' : 'Find alternatives on this date (any hours)', () => {
+            if (version === generation && !busy) void onAlternatives(data.shiftId, criteria);
+          }));
+        }
+      }
       onOutcome(`${data.shift.title}. ${data.recorded[0] || data.current[0] || 'Current eligibility checked.'}`);
       notice('Explanation ready.', true);
     } catch (error) {
