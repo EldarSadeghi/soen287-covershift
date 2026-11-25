@@ -25,7 +25,9 @@ function explicitRoute(text, manager) {
         /\b(?:available|availability|free|can work|could work)\b/.test(message) ||
         /^who(?:'s| is) (?:free|available)\b|^who (?:can|could) (?:cover|fill in)\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/.test(message)) return 'coworkers';
     if (/^(?:what else(?: is available)?|(?:any|what) other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/.test(message)) return 'alternatives';
-    if (/^(?:why|explain|what (?:blocked|prevented))\b/.test(message) &&
+    if (/^(?:why|how come|explain)\b/.test(message) &&
+        openingReference(message, [], null) === null) return 'explanation';
+    if (/^(?:why|how come|explain|what (?:blocked|prevented))\b/.test(message) &&
         /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/.test(message)) return 'explanation';
     if (availabilityRuleCommand(text) ||
         /^(?:(?:show|view|list|open|check) (?:me )?)?(?:my )?(?:saved (?:availability|rules)|availability rules)[.?!]*$/.test(message)) return 'rules';
@@ -95,10 +97,16 @@ export function availabilityNeedsHours(text) {
     !/\b(?:all day|midnight|noon|\d{1,2}:\d{2}|\d{1,2}\s*[ap]\.?m\.?)\b/i.test(text);
 }
 
+export const OPENING_CLARIFICATION = 'Which opening do you mean?';
+
 export function openingReference(text, visibleIds, selectedId) {
   if (/["“][^"”]+["”]/.test(text)) return undefined;
-  const ordinal = /\b(?:the )?(first|second|third|fourth|fifth) (?:shift|opening|one|result)\b/i.exec(text);
-  if (ordinal) return visibleIds[['first', 'second', 'third', 'fourth', 'fifth'].indexOf(ordinal[1].toLowerCase())] || null;
+  const positions = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
+  const positionPattern = positions.join('|');
+  const ordinals = [...text.matchAll(new RegExp(`\\b(${positionPattern})(?=\\s+(?:shift|opening|one|result|or|and)\\b|[.!?]*$)`, 'gi'))];
+  const indices = new Set(ordinals.map(match => positions.indexOf(match[1].toLowerCase())));
+  if (indices.size > 1) return null;
+  if (indices.size === 1) return visibleIds[[...indices][0]] || null;
   if (/\b(?:this|that) (?:shift|opening|one|result|request)\b/i.test(text)) return selectedId || (visibleIds.length === 1 ? visibleIds[0] : null);
   return undefined;
 }

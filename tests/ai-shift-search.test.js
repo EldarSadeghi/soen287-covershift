@@ -151,10 +151,16 @@ test('HTTP worker AI and free-refresh routes enforce role, Origin, CSRF, JSON an
 test('employee tab state isolates owners, expires, clears, and restores criteria/outcome without cached claim buttons', () => {
  const map = new Map(); const storage = { getItem: k => map.get(k), setItem: (k,v) => map.set(k,v), removeItem: k => map.delete(k) };
  const chat = createEmployeeChatState(storage, 'b:w', clock);
+ chat.value.selectedOpeningId = 'request-1';
+ chat.value.explainedShiftId = 'shift-1';
  chat.value.messages = [{ role: 'user', text: 'Thursday' }, { role: 'assistant', text: 'Choose a shift.' }]; chat.value.criteria = criteria; chat.value.composer = 'after 3 PM'; chat.value.outcome = { kind: 'uncertain', title: 'Service' }; chat.value.requests = [{ id: 'stale' }]; chat.save();
  const restored = createEmployeeChatState(storage, 'b:w', () => now + 1);
  assert.deepEqual(restored.value.criteria, criteria); assert.equal(restored.value.composer, 'after 3 PM'); assert.equal(restored.value.outcome.kind, 'uncertain'); assert.equal(restored.value.requests, undefined);
- assert.equal(createEmployeeChatState(storage, 'other:w', clock).value.messages.length, 0);
+ assert.equal(restored.value.selectedOpeningId, 'request-1');
+ assert.equal(restored.value.explainedShiftId, 'shift-1');
+ const other = createEmployeeChatState(storage, 'other:w', clock);
+ assert.equal(other.value.messages.length, 0);
+ assert.equal(other.value.selectedOpeningId, undefined);
  chat.save(); assert.equal(createEmployeeChatState(storage, 'b:w', () => now + 9 * 3600000).value.criteria, null);
  chat.reset(); assert.equal(chat.value.outcome, null); chat.clear(); assert.equal(storage.getItem(EMPLOYEE_CHAT_KEY), undefined);
 });

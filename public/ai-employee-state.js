@@ -12,6 +12,8 @@ export function createEmployeeChatState(storage, owner, now = Date.now) {
       if (saved.refinementPending === true) state.refinementPending = true;
       if (['availability','questions'].includes(saved.mode)) state.mode=saved.mode;
       if (typeof saved.composer === 'string' && saved.composer.length <= 1500) state.composer = saved.composer;
+      if (typeof saved.explainedShiftId === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(saved.explainedShiftId)) state.explainedShiftId = saved.explainedShiftId;
+      if (typeof saved.selectedOpeningId === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(saved.selectedOpeningId)) state.selectedOpeningId = saved.selectedOpeningId;
       if (typeof saved.alternateTo === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(saved.alternateTo)) state.alternateTo = saved.alternateTo;
       if (saved.criteria && Object.keys(saved.criteria).length === 4 && ['date', 'startLocal', 'endLocal', 'title'].every(k => typeof saved.criteria[k] === 'string' && saved.criteria[k].length <= 100)) state.criteria = saved.criteria;
       const draft = saved.availabilityDraft;
