@@ -1,4 +1,4 @@
-import { CHAT_ENDPOINTS, routeChat } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, availabilityRuleCommand, routeChat } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -106,7 +106,7 @@ export function mountAiChat(account, csrfToken) {
   }
   function syncResponse(){const bubbles=[...messages.children];for(const bubble of bubbles)bubble.hidden=false;const last=bubbles.at(-1);if(!card.hidden && last?.classList.contains('ai-chat-assistant'))last.hidden=true;}
   const observer=new MutationObserver(()=>{syncResponse();if(dialog.open&&!card.hidden)requestAnimationFrame(()=>revealResponse(card));});observer.observe(card,{childList:true,attributes:true,attributeFilter:['hidden']});
-  if (manager) showSuggestion(chat.value.refinementPending ? null : chat.value.suggestion); else if (!chat.value.refinementPending && !availability.restore()) employeeRequests.restore();
+  if (manager) showSuggestion(chat.value.refinementPending ? null : chat.value.suggestion); else if (!availability.restore() && !chat.value.refinementPending) employeeRequests.restore();
   if (!manager && chat.value.availabilityDraft && !chat.value.outcome) notice('Continue describing your availability to review a fresh draft.');
   if (chat.value.completion) notice('Shift saved successfully.');
   else if (chat.value.uncertainDraftId) notice('Save not confirmed. Check the saved schedule before trying again.');
@@ -124,7 +124,9 @@ export function mountAiChat(account, csrfToken) {
     showSuggestion(chat.value.suggestion); notice('Save not confirmed. Check the saved schedule before trying again.');
   });
   find('.ai-chat-controls .ai-chat-new').addEventListener('click', () => {
-    revision++; employeeRequests?.reset(); availability?.reset(); chat.reset(); mode = manager ? 'draft' : 'search'; chat.save(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';samples.hidden = false;
+    revision++; employeeRequests?.reset(); availability?.reset(); const ruleChangePending = chat.value.ruleChangePending; chat.reset();
+    if (ruleChangePending) chat.value.ruleChangePending = true;
+    mode = manager ? 'draft' : 'search'; chat.save(); document.dispatchEvent(new Event('ai:cancel-review')); messages.replaceChildren(); showSuggestion(null); composer.value = '';samples.hidden = false;
     notice(busy ? 'New chat started. The earlier request may still count toward your allowance; wait for it to finish before sending.' : (mode==='questions'?'Ask about your next assigned shift or a dated schedule/hours window.':manager ? 'New chat started. What shift would you like to create?' : (mode==='availability'?'New chat started. Describe one dated availability window.':'New chat started. Which day would you like to find a shift for?'))); composer.focus();
   });
   form.addEventListener('submit', async event => {
@@ -171,8 +173,9 @@ export function mountAiChat(account, csrfToken) {
     }
     if (target === 'rules') {
       employeeRequests.reset(); say('user', text);
-      appendTurn('Here is your saved availability.');
-      await availability.list();
+      const command = availabilityRuleCommand(text);
+      appendTurn(command ? 'I’ll check your saved rules for that change.' : 'I’ll load your saved availability.');
+      await availability.list(command);
       return;
     }
     if (!sameTopic) {

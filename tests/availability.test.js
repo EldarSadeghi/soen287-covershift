@@ -125,3 +125,17 @@ test('availability follow-up changes the request limit without saving or losing 
  assert.deepEqual(result.draft,{...base,maxClaims:1});
  assert.equal((await listAvailability(store,'worker_jamie',clock)).rules.length,0);
 });
+
+test('interrupted rule updates persist only an account-scoped refresh marker', async () => {
+ const {createEmployeeChatState}=await import('../public/ai-employee-state.js');
+ const map=new Map();
+ const storage={getItem:key=>map.get(key),setItem:(key,value)=>map.set(key,value),removeItem:key=>map.delete(key)};
+ const chat=createEmployeeChatState(storage,'business:jamie',clock);
+ chat.value.ruleChangePending=true;
+ chat.value.ruleReview={id:'old-rule',revision:'stale-review'};
+ chat.save();
+ const reloaded=createEmployeeChatState(storage,'business:jamie',clock);
+ assert.equal(reloaded.value.ruleChangePending,true);
+ assert.equal(reloaded.value.ruleReview,undefined);
+ assert.equal(createEmployeeChatState(storage,'business:alex',clock).value.ruleChangePending,undefined);
+});
