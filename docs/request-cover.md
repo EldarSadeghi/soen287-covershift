@@ -1,6 +1,6 @@
 # CS-040: Request cover
 
-Issue [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75). Local increment awaiting user review; no push or merge authorized.
+Issue [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75). Completed in [PR #76](https://github.com/EldarSadeghi/soen287-covershift/pull/76), approved by the user on 2026-11-24.
 
 ## Employee workflow
 

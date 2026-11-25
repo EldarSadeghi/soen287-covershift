@@ -2,14 +2,14 @@
 
 ## Authoritative current identities — 2026-11-24
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is in Your review; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-041 Deployment and final submission is always last** (formerly CS-040 / CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
 
-CS-040 (#75) is in Your review, not pushed or merged. Remaining Todo sequence: CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-041 final deployment (#70). Completed tasks are CS-001–031; original PR/evidence names remain historical.
+CS-040 (#75) is completed: merged PR #76, issue closed and board Done verified. Remaining Todo sequence: CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-041 final deployment (#70). Completed tasks are CS-001–031; original PR/evidence names remain historical.
 
 
-Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. Local implementation is now in Your review: 314 tests pass, isolated preview3041/3042, evidence docs/acceptance/cs040. No push/merge authorization. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
+Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. User approved merging CS-040 on 2026-11-24 after 316 passing tests and a clean browser walkthrough. Merged PR #76 (`0e60396fa96479f8ee16d2dc984f04a900f2d490`); issue #75 closed and project Done verified. Evidence: docs/acceptance/cs040. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
 
 ## Workflow rules and historical log
 
@@ -101,3 +101,6 @@ CS-040 (#75) selected 2026-11-24 on `codex/CS-040-request-cover`. User confirmed
 CS-040 review correction: user cancelled Monday’s accepted coverage, exposing overbroad anti-repeat guard. Cancelled invitations/linked cancelled coverage now allow a fresh eligible invitation; pending uniqueness, declined/expired restrictions and quotas remain. 315 tests pass; browser Monday Nov30 2–5 selectable again, left unsent. Evidence docs/acceptance/cs040/monday-cancelled-retry.jpg. Still Your review, no push/merge.
 
 CS-040 December1 review: previous QA invitation declined, not a time-fit failure. Composer now gives specific declined-shift reason and participant-scoped invitation link. Decline restriction unchanged; 316 tests pass including scoped reason regression and browser proof docs/acceptance/cs040/declined-explanation.jpg. No push/merge authorization.
+
+
+User explicitly approved CS-040 push/merge on 2026-11-24. Completed PR #76, merge SHA `0e60396fa96479f8ee16d2dc984f04a900f2d490`; issue #75 closed/completed and board Done verified. 316 tests pass; clean Dec3 browser send→accept→approve→persisted transfer passed. This approval/completion supersedes earlier local-review snapshots. CS-032–039 remain Todo; next planned task CS-032 Daily shift duties (#68), not started. CS-041 deployment/submission remains last.

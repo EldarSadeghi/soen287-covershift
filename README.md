@@ -96,6 +96,6 @@ Employee time off (CS-030): both roles have **Time off**, with full-day/partial-
 
 Employee availability (CS-031): employees confirm dated windows in **Availability**; managers check Available / Unavailable / Unknown against saved windows and current conflicts. General windows are separate from automatic chat rules. See [policy and recovery](docs/employee-availability.md).
 
-### Request cover (CS-040, local review)
+### Request cover (CS-040)
 
-Employees can invite an available coworker to cover a whole assigned shift; acceptance still requires manager approval. See [workflow and review accounts](docs/request-cover.md) and [acceptance evidence](docs/acceptance/cs040/USER-STORIES.md). This increment is awaiting review and has not been pushed or merged.
+Employees can invite an available coworker to cover a whole assigned shift; acceptance still requires manager approval. See [workflow and review accounts](docs/request-cover.md) and [acceptance evidence](docs/acceptance/cs040/USER-STORIES.md). Completed in [PR #76](https://github.com/EldarSadeghi/soen287-covershift/pull/76).

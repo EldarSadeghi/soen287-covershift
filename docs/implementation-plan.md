@@ -1,9 +1,9 @@
 # CoverShift implementation plan
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is in Your review; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
 
-Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. Local implementation is now in Your review: 314 tests pass, isolated preview3041/3042, evidence docs/acceptance/cs040. No push/merge authorization. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
+Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. User approved merging CS-040 on 2026-11-24 after 316 passing tests and a clean browser walkthrough. Merged PR #76 (`0e60396fa96479f8ee16d2dc984f04a900f2d490`); issue #75 closed and project Done verified. Evidence: docs/acceptance/cs040. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
 
 ## Current consecutive task register
 
@@ -48,10 +48,10 @@ Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e
 | CS-037 | Suggest eligible alternative shifts | Todo | [#56](https://github.com/EldarSadeghi/soen287-covershift/issues/56) | CS-053 | — |
 | CS-038 | Manager batch shift creation through chat | Todo | [#58](https://github.com/EldarSadeghi/soen287-covershift/issues/58) | CS-054 | — |
 | CS-039 | AI working-week and attention summaries | Todo | [#59](https://github.com/EldarSadeghi/soen287-covershift/issues/59) | CS-055 | — |
-| CS-040 | Request cover from a coworker | Your review | [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75) | New | — |
+| CS-040 | Request cover from a coworker | Done | [#75](https://github.com/EldarSadeghi/soen287-covershift/issues/75) | New | #76 |
 | CS-041 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
-CS-001–031 are complete. Remaining work is CS-032 duties, CS-033 publication, CS-034 refinement, CS-035 chat rule management, CS-036 explanations, CS-037 alternatives, CS-038 batch creation, CS-039 summaries and CS-040 directed cover requests, followed by CS-041 final deployment. Request cover was selected ahead of CS-032 by the user and is now in local review. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
+CS-001–031 are complete. Remaining work is CS-032 duties, CS-033 publication, CS-034 refinement, CS-035 chat rule management, CS-036 explanations, CS-037 alternatives, CS-038 batch creation, CS-039 summaries and CS-040 directed cover requests, followed by CS-041 final deployment. Request cover was selected ahead of CS-032 by the user and is complete in PR #76. Every feature requires relevant checks and local user review; renumbering starts no new feature. Original evidence filenames and branch/PR titles remain historical. GitHub issue URLs are stable. Issues #15/#16 are superseded duplicates of #17, not extra completed increments.
 
 Time off and publication must update existing manual and AI paths within those increments. Approved leave participates in current assignment/claim/approval/matching checks. Unpublished schedules must not leak through employee views, chat answers, search, rules, notifications or matching. Clarify the Monday window/legacy-shift handling before CS-033. Chat confirmations and uncertain-save protections remain required; atomic batch saves do not implicitly publish.
 
@@ -304,3 +304,6 @@ User explicitly approved all current CS-031 changes for push/merge on 2026-11-24
 
 
 CS-040 (#75) selected 2026-11-24 on `codex/CS-040-request-cover`. User confirmed one pending invitation per shift, open-board competition and manager approval after coworker acceptance. Local implementation includes full-window eligibility, review/confirmation, private note/inbox/notifications, accept/decline/cancel, stale expiry and lost-ack reconciliation. 314 tests pass; real browser send/accept/approve/decline/cancel, dropped-response recovery, read retry, 320px and Escape return-focus checks documented in docs/acceptance/cs040/USER-STORIES.md. Isolated fictional previews3041/3042; normal data preserved. Board Your review, issue open. No push or merge authorized; CS-041 remains last.
+
+
+User explicitly approved CS-040 push/merge on 2026-11-24. Completed PR #76, merge SHA `0e60396fa96479f8ee16d2dc984f04a900f2d490`; issue #75 closed/completed and board Done verified. 316 tests pass; clean Dec3 browser send→accept→approve→persisted transfer passed. This approval/completion supersedes earlier local-review snapshots. CS-032–039 remain Todo; next planned task CS-032 Daily shift duties (#68), not started. CS-041 deployment/submission remains last.

@@ -1,6 +1,6 @@
 # CS-040 acceptance report — 2026-11-24
 
-Issue #75; branch `codex/CS-040-request-cover`; status **Your review**. User selected one pending invitation per shift, open-board competition, and acceptance requiring manager approval. No feature push or merge authorized.
+Issue #75; branch `codex/CS-040-request-cover`; status **Done** (merged PR #76 after user approval). User selected one pending invitation per shift, open-board competition, and acceptance requiring manager approval. No feature push or merge authorized.
 
 ## Results
 
@@ -40,3 +40,7 @@ December1 fits Jamie’s availability but the earlier demo invitation was declin
 ## Clean final walkthrough — 2026-11-24, 7:27–7:29 PM Toronto
 
 Fresh untouched December3 Thursday service,2–5 PM: Alex selected Jamie’s12–6 free window, entered a message, reviewed and confirmed send. Jamie saw Pending response, explicitly accepted, and saw Awaiting manager approval with Alex still assigned. Morgan Chen reviewed Alex→Jamie and explicitly confirmed approval. The result said the shift was assigned to the claimant. Jamie’s My shifts then showed Thursday service2–5 and retained it after reload; Alex’s My shifts no longer listed it. Alex’s invitation showed Approved with original message intact. No error encountered. Existing unrelated Monday pending invitation was left untouched. Fictional review storage only. [Approved receipt](clean-approved-receipt.jpg), [Jamie assignment](clean-jamie-assignment.jpg). No code changes or feature push/merge; awaiting user approval.
+
+## Completion
+
+User approved push/merge on 2026-11-24 after the clean walkthrough. PR #76 merged as0e60396fa96479f8ee16d2dc984f04a900f2d490. Issue #75 closed/completed and project Done verified. Earlier review-only/no-approval notes are historical snapshots superseded by this approval.
