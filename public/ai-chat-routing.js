@@ -12,6 +12,8 @@ export function routeChat(text, manager, current) {
   const message = normalizedMessage(text);
   if (manager && /\b(?:draft|create|add|assign|make)\b.*\bshift\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
   if (!manager) {
+    if (/\b(?:co[ -]?workers?|colleagues?|teammates?)\b/.test(message) &&
+        /\b(?:available|availability|free|cover|can work|could work)\b/.test(message)) return 'coworkers';
     if (/^(?:what else(?: is available)?|any other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/.test(message)) return 'alternatives';
     if (/^(?:why|explain|what (?:blocked|prevented))\b/.test(message) &&
         /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/.test(message)) return 'explanation';
@@ -87,4 +89,35 @@ export function matchingAvailabilityRules(rules, selector) {
     }).format(new Date(rule.startsAt)).toLowerCase();
     return requested === isoDate || requested === weekday || requested === rule.title.toLocaleLowerCase();
   });
+}
+
+export function coworkerLookupDate(text, today) {
+  const iso = /\b(20\d{2}-\d{2}-\d{2})\b/.exec(text);
+  const named = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,?\s+(20\d{2}))?\b/i.exec(text);
+  let date = iso?.[1];
+  if (!date && named) {
+    const month = new Date(`${named[1]} 1, 2000 UTC`).getUTCMonth() + 1;
+    const day = { first: 1, second: 2, third: 3 }[named[2].toLowerCase()] || Number.parseInt(named[2], 10);
+    const suffix = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const year = Number(today.slice(0, 4));
+    date = named[3] ? `${named[3]}-${suffix}` : `${year + Number(suffix < today.slice(5))}-${suffix}`;
+  }
+  if (!date && /\btoday\b/i.test(text)) date = today;
+  const instant = new Date(`${date}T00:00:00Z`);
+  return Number.isFinite(instant.getTime()) && instant.toISOString().slice(0, 10) === date ? date : null;
+}
+
+export function coworkersFreeOnDate(data, date) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: data.timezone, year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const dayAt = instant => {
+    const parts = formatter.formatToParts(instant);
+    return ['year', 'month', 'day'].map(key => parts.find(part => part.type === key).value).join('-');
+  };
+  return data.workers.map(({ name, windows }) => ({
+    name,
+    windows: windows.filter(window => dayAt(Date.parse(window.startsAt)) <= date &&
+      dayAt(Date.parse(window.endsAt) - 1) >= date),
+  })).filter(worker => worker.windows.length > 0);
 }
