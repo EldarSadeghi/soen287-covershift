@@ -1,5 +1,4 @@
-// Offline acceptance infrastructure. Only the HTTP client below can contact the
-// network, and its destination is the ephemeral loopback application server.
+// Acceptance infrastructure defaults to recorded replies and an ephemeral loopback server.
 import assert from 'node:assert/strict';
 import {mkdtemp, readFile, rm} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -19,7 +18,14 @@ export const MODE = 'offline-recorded-provider-replies';
 export const LIMITATION = 'Recorded provider replies test workflow handling, not real-model language understanding or browser interaction. No live provider calls were made.';
 const envelope = value => new Response(JSON.stringify({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(value)}]}]}));
 
-async function context(checks, options) {
+async function previewReply(_url, init) {
+  const { text } = JSON.parse(init.body);
+  await new Promise(resolve => setTimeout(resolve, 600));
+  if (text.format.name !== 'schedule_question') return new Response(null, { status: 503 });
+  return envelope({ kind: 'next', question: '', startDate: '', endDate: '', workerName: '' });
+}
+
+export async function createAcceptanceContext(checks, options = {}) {
   const dir = await mkdtemp(join(tmpdir(),'covershift-ai-acceptance-'));
   let server;
   const cleanup = async () => {
@@ -55,10 +61,15 @@ async function context(checks, options) {
       if(turn.failure==='http') return new Response('FICTIONAL_PRIVATE_PROVIDER_CANARY',{status:500});
       return envelope(turn.reply);
     };
-    const aiOptions={apiKey:'fictional-offline-key-never-sent',allowance:new AiAllowance(join(dir,'usage')),fetchImpl,timeoutMs:200};
+    const aiOptions = {
+      apiKey: options.liveKey || 'fictional-offline-key-never-sent',
+      allowance: new AiAllowance(join(dir, 'usage')),
+      fetchImpl: options.liveKey ? fetch : options.preview ? previewReply : fetchImpl,
+      timeoutMs: options.liveKey ? 11000 : options.preview ? 3000 : 200,
+    };
     const sessions=new SessionStore();
     server=createAppServer({store,sessions,shiftClock:()=>FIXED_NOW,...(options.disabled?{}:{aiDraft:createAiShiftDrafter(aiOptions),aiSearch:createAiShiftSearcher(aiOptions),aiAvailability:createAiAvailabilityDrafter(aiOptions),aiSchedule:createAiScheduleAnswerer(aiOptions)})});
-    await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+    await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(options.port ?? 0,'127.0.0.1',resolve);});
     const base=`http://127.0.0.1:${server.address().port}`,identities=new Map();
     async function identity(user) {
       if(!identities.has(user)){
@@ -73,12 +84,13 @@ async function context(checks, options) {
       const account=user?await identity(user):null;
       const headers={...(account?{Cookie:account.cookie}:{}),...(input!==undefined?{Origin:base,'Content-Type':'application/json','X-CSRF-Token':account?.csrf||''}:{}),...options.headers};
       requests.push({user,path,method:input===undefined?'GET':'POST'});
-      const response=await fetch(base+path,{method:input===undefined?'GET':'POST',headers,...(input!==undefined?{body:JSON.stringify(input)}:{}),signal:AbortSignal.timeout(5000)});
+      const started = performance.now();
+      const response=await fetch(base+path,{method:input===undefined?'GET':'POST',headers,...(input!==undefined?{body:JSON.stringify(input)}:{}),signal:AbortSignal.timeout(options.liveKey ? 15000 : 5000)});
       const data=await response.json();
       if(options.discardAcknowledgement) return {uncertain:true}; // Client-side lost-ack simulation, never an automatic retry.
-      return {status:response.status,data,headers:response.headers};
+      return {status:response.status,data,headers:response.headers,elapsedMs:Math.round(performance.now()-started)};
     }
-    return {check,store,manifest,dates:manifest.dates,ids:manifest.scenarios,calls,requests,queue,
+    return {base,check,store,manifest,dates:manifest.dates,ids:manifest.scenarios,calls,requests,queue,
       expect:turn=>queue.push(turn),providerContractValid:()=>!contractFailed,http,bytes:()=>readFile(store.filename,'utf8'),cleanup,
       async revision(requestId){const {claimRevision}=await import('../../src/requests/claim.js');const db=await store.read(),r=db.coverageRequests.find(x=>x.id===requestId);return claimRevision(r,db.shifts.find(s=>s.id===r.shiftId));},
       async rule(){const r=await http('worker_jamie','/api/worker/availability-rules');return r.data.rules.find(x=>x.id===manifest.scenarios.availabilityRule);},
@@ -89,7 +101,7 @@ async function context(checks, options) {
 export async function runScenario(scenario) {
   const checks=[];let ctx,error=null;
   try {
-    ctx=await context(checks,scenario);
+    ctx=await createAcceptanceContext(checks,scenario);
     await scenario.run(ctx);
     assert.equal(ctx.queue.length,0,'Every recorded provider turn must be exercised');
     assert.ok(checks.length>0,'A scenario must contain assertions');
