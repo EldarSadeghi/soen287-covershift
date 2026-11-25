@@ -5,6 +5,20 @@
 
 Current update (2026-11-24): CS-031 issue #67 is closed/Done, merged PR #74 (`0e3455d778ac92c5a909a4954277474805588a11`). User selected CS-040 Request cover (#75); Todo was verified before In Progress. User approved merging CS-040 on 2026-11-24 after 316 passing tests and a clean browser walkthrough. Merged PR #76 (`0e60396fa96479f8ee16d2dc984f04a900f2d490`); issue #75 closed and project Done verified. Evidence: docs/acceptance/cs040. Deployment issue #70 is renamed CS-041 and remains last. Earlier CS-040 deployment references in historical logs resolve to #70 / current CS-041.
 
+## Assistant conversation reliability
+
+Implement one increment at a time. CS-043 deployment remains last.
+
+| Task | Acceptance criteria | Tracking |
+| --- | --- | --- |
+| CS-048 Conversation regression baseline | Run real demo prompts through repeatable checks. Cover both roles, follow-ups, missing details and coworker calendar boundaries. Fix the deterministic routing failures found by these cases and provide a preview. | [#95](https://github.com/EldarSadeghi/soen287-covershift/issues/95), implemented locally |
+| CS-049 Intent routing | Handle unfamiliar paraphrases and mixed requests through a fixed set of role-allowed workflows. Ask a focused question when intent is unclear. Preserve explicit confirmation. | Approved backlog |
+| CS-050 Follow-up context | Keep selected shifts and reviewed dates, hours and filters across search, explanation and alternatives. Verify ambiguous and stale references. | Approved backlog |
+| CS-051 Clearer answers and recovery | Show grounded facts and one useful next action. Cover empty, stale, pending and uncertain outcomes with keyboard, mobile and screen-reader checks. | Approved backlog |
+| CS-052 Live-model checks and speed | Evaluate natural phrasing, date handling and follow-ups with fictional data and an opt-in live provider. Measure time to progress and answer, and report failures separately from offline results. | Approved backlog |
+
+CS-048 adds 19 deterministic tests. Browser review on port 3056 confirmed “Who’s free Friday?” returns November 27, and “Who’s free December first?” shows Alex Morgan’s confirmed window. Existing offline provider fixtures remain scripted.
+
 ## Current consecutive task register
 
 | Current ID | Task | Status | GitHub issue | Previous ID | Merged PR |

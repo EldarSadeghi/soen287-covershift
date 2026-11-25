@@ -13,8 +13,9 @@ export function routeChat(text, manager, current) {
   if (manager && /\b(?:draft|create|add|assign|make)\b.*\bshift\b|^(?:draft|create|assign|schedule)\b/.test(message)) return 'draft';
   if (!manager) {
     if (/\b(?:co[ -]?workers?|colleagues?|teammates?)\b/.test(message) &&
-        /\b(?:available|availability|free|cover|can work|could work)\b/.test(message)) return 'coworkers';
-    if (/^(?:what else(?: is available)?|any other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/.test(message)) return 'alternatives';
+        /\b(?:available|availability|free|can work|could work)\b/.test(message) ||
+        /^who(?:'s| is) (?:free|available)\b|^who (?:can|could) cover\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/.test(message)) return 'coworkers';
+    if (/^(?:what else(?: is available)?|(?:any|what) other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/.test(message)) return 'alternatives';
     if (/^(?:why|explain|what (?:blocked|prevented))\b/.test(message) &&
         /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/.test(message)) return 'explanation';
     if (availabilityRuleCommand(text) ||
@@ -23,7 +24,7 @@ export function routeChat(text, manager, current) {
     if (/\b(?:put|mark|set) me down as available\b|\b(?:save|draft|set|record|confirm)\b.*\bavailability\b|\bavailability (?:rule|draft)\b|\b(?:i can take|i can pick up|limit|maximum)\b.*\bshifts?\b/.test(message)) return 'availability';
     if (/^\s*(?:i (?:can work|am available|'m available)|available on)\b/.test(message) && current !== 'availability') return 'clarification';
   }
-  if (/\bwhen i (?:work|am working) next\b|^(?:when|what|which|how many|how long|who|show|list|tell me|am i|do i)\b|\b(?:my|team'?s?) (?:schedule|hours|next shift)\b/.test(message)) return 'questions';
+  if (/\bwhen i (?:work|am working) next|^when'?s my next (?:shift|day at work)|^when do i (?:work|come in) next\b|^(?:when|what|which|how many|how long|who|show|list|tell me|am i|do i)\b|\b(?:my|team'?s?) (?:schedule|hours|next shift)\b/.test(message)) return 'questions';
   return current && current !== 'clarification' && current !== 'rules' ? current : 'clarification';
 }
 
@@ -103,6 +104,20 @@ export function coworkerLookupDate(text, today) {
     date = named[3] ? `${named[3]}-${suffix}` : `${year + Number(suffix < today.slice(5))}-${suffix}`;
   }
   if (!date && /\btoday\b/i.test(text)) date = today;
+  if (!date && /\btomorrow\b/i.test(text)) {
+    const following = new Date(`${today}T12:00:00Z`);
+    following.setUTCDate(following.getUTCDate() + 1);
+    date = following.toISOString().slice(0, 10);
+  }
+  if (!date) {
+    const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const tokens = text.toLowerCase().match(/\b(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/g) || [];
+    if (tokens.length !== 1 || /\b(?:this|next) week\b/i.test(text)) return null;
+    const following = new Date(`${today}T12:00:00Z`);
+    const offset = (weekdays.indexOf(tokens[0]) - following.getUTCDay() + 7) % 7 || 7;
+    following.setUTCDate(following.getUTCDate() + offset);
+    date = following.toISOString().slice(0, 10);
+  }
   const instant = new Date(`${date}T00:00:00Z`);
   return Number.isFinite(instant.getTime()) && instant.toISOString().slice(0, 10) === date ? date : null;
 }
