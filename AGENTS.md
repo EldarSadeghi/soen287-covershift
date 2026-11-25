@@ -2,9 +2,9 @@
 
 ## Authoritative current identities — 2026-11-24
 
-**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
+**Current numbering/status (2026-11-24): CS-001–031 are completed; CS-032–039 are Todo; CS-040 is completed; CS-041 Quiet Workspace is in Your review; CS-042 deployment/submission is last.** This continuous sequence replaces every earlier task-ID scheme. Resolve older references by issue number and the mapping below. Renumbering changes no issue state, implementation, merge history or approval.
 
-User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-041 Deployment and final submission is always last** (formerly CS-040 / CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
+User explicitly requested renumbering completed and future work into one consecutive sequence. **CS-042 Deployment and final submission is always last** (formerly CS-040 / CS-018). The existing local demo branch/evidence use historical CS-021 names; its current identity is **CS-028, issue #65, merged PR #71 / Done**. The user approved its push/merge on 2026-11-24. For all new work use the current register in docs/implementation-plan.md. Earlier CS-045–055 and old optional-proposal IDs are retired aliases.
 
 CS-040 (#75) is completed: merged PR #76, issue closed and board Done verified. Remaining Todo sequence: CS-032 duties (#68), CS-033 Monday publication (#69), CS-034 refinement (#57), CS-035 chat rules (#60), CS-036 explanations (#55), CS-037 alternatives (#56), CS-038 batch creation (#58), CS-039 summaries (#59), CS-041 final deployment (#70). Completed tasks are CS-001–031; original PR/evidence names remain historical.
 
@@ -104,3 +104,6 @@ CS-040 December1 review: previous QA invitation declined, not a time-fit failure
 
 
 User explicitly approved CS-040 push/merge on 2026-11-24. Completed PR #76, merge SHA `0e60396fa96479f8ee16d2dc984f04a900f2d490`; issue #75 closed/completed and board Done verified. 316 tests pass; clean Dec3 browser send→accept→approve→persisted transfer passed. This approval/completion supersedes earlier local-review snapshots. CS-032–039 remain Todo; next planned task CS-032 Daily shift duties (#68), not started. CS-041 deployment/submission remains last.
+
+
+Authoritative update 2026-11-24: User selected Quiet Workspace implementation. New CS-041 issue #77; deployment issue #70 is now CS-042 and remains last, superseding earlier deployment041 aliases. Branch `codex/CS-041-quiet-workspace`, Todo verified then In Progress. Shared responsive shell/icons/typography and compact cover cards/Active-History/progress implemented locally. 316 tests pass; desktop/mobile320px/keyboard/confirmation and manager shell checks documented in docs/acceptance/cs041/USER-STORIES.md. Preview3041 employee/localhost3041 manager. Your review; no push/merge authorized.
