@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { claimOutcomeMessage, employeeSearchMessage } from '../public/ai-employee-request.js';
 import {
   availabilityNeedsHours, chatClarification, clarificationReplyRoute, coworkerLookupDate,
   openingReference, routeChat,
@@ -84,4 +85,18 @@ test('opening follow-ups distinguish explicit positions, a selection, and ambigu
   assert.equal(openingReference('Why not that one?', results, null), null);
   assert.equal(openingReference('Why not the first or second one?', results, null), null);
   assert.equal(openingReference('Second.', [], 'open-one'), null);
+});
+
+test('empty and uncertain chat outcomes describe facts without prompting a duplicate claim', () => {
+  const message = employeeSearchMessage({
+    criteria: { date: '2026-11-27', startLocal: '', endLocal: '', title: 'coverage' },
+    timezone: 'America/Toronto',
+    total: 0,
+    requests: [],
+  });
+  assert.match(message, /^No eligible openings matched/);
+  assert.match(message, /coverage.*America\/Toronto/);
+  assert.doesNotMatch(message, /choose an opening|confirm/i);
+  assert.match(claimOutcomeMessage(true), /manager must approve/);
+  assert.match(claimOutcomeMessage(false), /couldn’t confirm submission.*Check My requests before trying again/);
 });
