@@ -6,7 +6,8 @@ import { formatShiftTime } from './shift-time.js';
 export function createAvailabilityExplanations({ card, chat, csrfToken, notice, setBusy, onOutcome, onAlternatives }) {
   let generation = 0;
   let busy = false;
-  function reset() { generation++; }
+  let alternativeContext = null;
+  function reset() { generation++; alternativeContext = null; }
   function action(label, handler) {
     const button = element('button', 'ai-chat-review', label);
     button.type = 'button'; button.addEventListener('click', handler);
@@ -14,7 +15,8 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
   }
   async function load(input) {
     if (busy) return;
-    const version = ++generation;
+    reset();
+    const version = generation;
     busy = true; setBusy(true); card.hidden = false;
     card.replaceChildren(element('p', '', 'Checking the saved request and your current schedule…'));
     notice('Checking availability.');
@@ -80,6 +82,7 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
         const saved = chat.value.criteria;
         if (!saved || saved.date === date) {
           const criteria = saved || { date, startLocal: '', endLocal: '', title: '' };
+          alternativeContext = { shiftId: data.shiftId, criteria, bounded: Boolean(saved) };
           card.append(action(saved ? 'Find alternatives within my search limits' : 'Find alternatives on this date (any hours)', () => {
             if (version === generation && !busy) void onAlternatives(data.shiftId, criteria);
           }));
@@ -95,5 +98,5 @@ export function createAvailabilityExplanations({ card, chat, csrfToken, notice, 
       notice('Could not load the explanation. You can retry.');
     } finally { busy = false; setBusy(false); }
   }
-  return { load, reset };
+  return { load, reset, alternativeContext: () => alternativeContext };
 }

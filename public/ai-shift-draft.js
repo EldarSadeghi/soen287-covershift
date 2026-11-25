@@ -1,5 +1,5 @@
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, availabilityRuleCommand, routeChat } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, routeChat } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -35,9 +35,17 @@ export function mountAiChat(account, csrfToken) {
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
 
   const explanations = !manager ? createAvailabilityExplanations({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText,
-    onAlternatives: (shiftId, criteria) => employeeRequests.alternatives(shiftId, criteria),
+    onAlternatives: showAlternatives,
   }) : null;
   const employeeRequests = !manager ? createEmployeeRequests({ chat, card, notice, csrfToken, setBusy: working, onOutcome: outcomeText }) : null;
+
+  async function showAlternatives(shiftId, criteria) {
+    if (await employeeRequests.alternatives(shiftId, criteria)) {
+      mode = 'search';
+      chat.value.mode = mode;
+      chat.save();
+    }
+  }
 
   composer.value = chat.value.composer;
   composer.placeholder = 'Ask or describe what you need…';
@@ -138,7 +146,8 @@ export function mountAiChat(account, csrfToken) {
     const text = composer.value.trim();
     if (!text) { notice('Write a message first.'); composer.focus(); return; }
     const previous = chat.value.messages.at(-1);
-    const target = routeChat(text, manager, previous && previous.topic !== 'clarification' ? mode : null);
+    const target = (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
+      routeChat(text, manager, previous && previous.topic !== 'clarification' ? mode : null);
     const sameTopic = mode === target;
     const inScope = chat.value.messages.slice(-8);
     let history = [];
@@ -163,13 +172,35 @@ export function mountAiChat(account, csrfToken) {
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
     }
+    const alternative = explanations?.alternativeContext();
+    if (target === 'alternatives') {
+      say('user', text);
+      if (!alternative?.bounded) {
+        appendTurn(alternative ? 'Use “Find alternatives on this date (any hours)” to approve that search, or tell me the date and hours you prefer.' :
+          'Which shift should I use? Ask why a specific opening did not match, or specify the date and hours for a new search.');
+        notice('Choose a search scope to continue.');
+        return;
+      }
+      explanations.reset();
+      appendTurn('I’ll check alternatives within your current search limits.');
+      await showAlternatives(alternative.shiftId, alternative.criteria);
+      return;
+    }
     explanations?.reset();
     if (target === 'explanation') {
+      const { visibleIds, selectedId } = employeeRequests.openingContext();
+      const reference = openingReference(text, visibleIds, selectedId);
+      if (reference === null) {
+        say('user', text);
+        appendTurn('Which opening do you mean? Use its shift title or a position in the displayed results.');
+        notice('Choose an opening to continue.');
+        return;
+      }
       employeeRequests.reset(); availability.reset();
       chat.value.refinementPending = true;
       say('user', text);
       appendTurn('I’ll check the saved request and your current eligibility.');
-      await explanations.load({ description: text });
+      await explanations.load(reference ? { requestId: reference } : { description: text });
       return;
     }
     if (target === 'clarification') {
@@ -178,8 +209,7 @@ export function mountAiChat(account, csrfToken) {
       document.dispatchEvent(new Event('ai:cancel-review'));
       employeeRequests?.reset(); availability?.reset(); showSuggestion(null);
       say('user', text);
-      const reply = manager ? 'Would you like to draft a shift or ask about the schedule?' :
-        'Would you like to find an open shift, draft availability, or ask about your schedule?';
+      const reply = chatClarification(text, manager);
       appendTurn(reply);
       notice('Reply below to continue.');
       return;
@@ -197,6 +227,15 @@ export function mountAiChat(account, csrfToken) {
         criteria: null, alternateTo: null, availabilityDraft: null, outcome: null, draftCancelled: false,
       });
       mode = target; chat.value.mode = target;
+    }
+    if (target === 'availability' && availabilityNeedsHours(text)) {
+      employeeRequests.reset(); availability.reset();
+      chat.value.availabilityDraft = null;
+      chat.value.refinementPending = false;
+      say('user', text);
+      appendTurn('What hours should I use for that availability? You can give a start and end time or say “all day.”');
+      notice('Reply with the hours to continue.');
+      return;
     }
     const base = previous?.topic === 'clarification' ? null : mode === 'draft' ? chat.value.suggestion?.draft : mode === 'availability' ? chat.value.availabilityDraft : mode === 'search' ? chat.value.criteria : null;
     const body = JSON.stringify({ description: text, history, ...(base && { base }) });
@@ -224,7 +263,17 @@ export function mountAiChat(account, csrfToken) {
       }
       if (response.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
       if (!response.ok) { const failure = new Error(); failure.userMessage = response.data.message || 'AI could not prepare a reply.'; throw failure; }
-      const data = response.data;
+      let data = response.data;
+      if (mode === 'search' && data.kind === 'matches' && base && chat.value.alternateTo) {
+        const refreshed = await requestJSON('/api/worker/shift-alternatives', {
+          method: 'POST', readOnly: true, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+          body: JSON.stringify({ criteria: data.criteria, excludeShiftId: chat.value.alternateTo }),
+        });
+        if (version !== revision) { pendingBubble.remove(); return; }
+        if (refreshed.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
+        if (!refreshed.ok) { const failure = new Error(); failure.userMessage = refreshed.data.message; throw failure; }
+        data = refreshed.data;
+      }
       if (!(mode==='questions' ? ['schedule_answer','clarification'] : manager ? ['draft', 'clarification'] : ['matches', 'availability', 'clarification']).includes(data.kind)) throw new Error('AI could not prepare a reply.');
       const reply = data.kind === 'clarification' ? data.question : data.kind==='schedule_answer' ? scheduleAnswerMessage(data) : data.kind==='availability' ? availabilitySummary(data) : !manager ? employeeSearchMessage(data) : `Proposed shift: ${data.draft.title} for ${data.workerName}, ${data.draft.startLocal} to ${data.draft.endLocal}, ${data.timezone}. Nothing has been saved. You can ask me to change it or select Review shift.`;
       chat.value.draftCancelled = false;

@@ -8,9 +8,10 @@ export function employeeSearchMessage(data) {
 }
 export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy, onOutcome, request = requestJSON }) {
   let generation = 0; let busy = false;
+  let visibleIds = []; let selectedId = null;
   const link = (text, href) => { const node = element('a', 'ai-chat-review', text); node.href = href; return node; };
   const button = (text, fn) => { const node = element('button', 'ai-chat-review', text); node.type = 'button'; if(/^(Cancel|Keep|Refresh)/.test(text))node.classList.add('ai-response-secondary'); node.addEventListener('click', fn); return node; };
-  function reset() { generation++; card.replaceChildren(); card.hidden = true; }
+  function reset() { generation++; visibleIds = []; selectedId = null; card.replaceChildren(); card.hidden = true; }
   function outcome() {
     reset(); card.hidden = false;
     const value = chat.value.outcome;
@@ -27,6 +28,7 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
   function setWorking(value) { busy = value; setBusy(value); card.querySelectorAll('button').forEach(node => { node.disabled = value; }); }
   function show(data) {
     reset(); chat.value.criteria = data.criteria; chat.value.alternateTo = data.alternateTo || null; chat.value.outcome = null; chat.save(); card.hidden = false;
+    visibleIds = data.requests.map(opening => opening.id);
     responseHeader(card, data.alternateTo ? 'Alternatives · Not requested' : 'Openings · Not requested',
       data.total === 1 ? 'Here’s one matching opening.' : data.total ? `${data.total} matching openings.` :
         data.alternateTo ? 'No eligible alternatives within these limits.' : 'No matching openings.');
@@ -63,6 +65,7 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
       };
       const review = button('Review request', async () => {
         if (busy || version !== generation) return;
+        selectedId = opening.id;
         setWorking(true); confirm.hidden = true; feedback.textContent = 'Checking current availability…';
         try {
           const checked = await post(`/api/worker/requests/${encodeURIComponent(opening.id)}/claim-check`, { revision: opening.revision });
@@ -113,6 +116,7 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
       show(result);
       onOutcome(result.total ? 'Eligible alternatives are ready for review.' : 'No eligible alternatives within the selected limits.');
       notice('Alternatives checked. Nothing requested.', true);
+      return true;
     } catch (error) {
       if (version === generation) notice(error.message || 'Could not check alternatives. Try again.');
     } finally { setWorking(false); }
@@ -130,5 +134,5 @@ export function createEmployeeRequests({ chat, card, notice, csrfToken, setBusy,
     if (!chat.value.criteria) return;
     reset(); card.hidden = false; card.append(element('p', '', 'Your last search is saved. Refresh to see current openings; nothing is reserved.'), button('Refresh matches', refresh), link('Browse Open shifts', '/workspace/worker/open'));
   }
-  return { show, restore, reset, alternatives };
+  return { show, restore, reset, alternatives, openingContext: () => ({ visibleIds, selectedId }) };
 }
