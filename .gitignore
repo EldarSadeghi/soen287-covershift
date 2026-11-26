@@ -153,3 +153,6 @@ data/*
 
 # CS-029 local acceptance reports (fictional, generated)
 .covershift-ai-acceptance/
+
+# CS-054 local AI routing evaluation reports and usage ledger (generated)
+.covershift-ai-eval/

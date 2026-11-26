@@ -127,6 +127,17 @@ export function chatClarification(text, manager) {
     'What would you like me to check: your schedule, an open shift, or a saved availability rule?';
 }
 
+export const GENERIC_CLARIFICATION_PREFIX = 'What would you like me to check';
+
+// True when the local rules would answer with the generic "What would you like
+// me to check" question, so the server-side intent classifier should be asked.
+// Specific clarifications, negated requests and text without words stay local.
+// Shared by the chat and `npm run ai:eval` so the evaluation measures real routing.
+export function needsIntentFallback(text, manager) {
+  return chatClarification(text, manager).startsWith(GENERIC_CLARIFICATION_PREFIX) &&
+    !/^(?:do not|don't|never)\b/i.test(text.trim()) && /[a-z]{2}/i.test(text);
+}
+
 export function clarificationReplyRoute(text, question) {
   const answer = normalizedMessage(text).replace(/[.?!]+$/, '');
   if (question?.startsWith('Should I find an open shift')) {
