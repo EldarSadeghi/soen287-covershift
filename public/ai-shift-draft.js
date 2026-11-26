@@ -138,7 +138,10 @@ export function mountAiChat(account, csrfToken) {
       return { intent, pass: typeof result.data.pass === 'string' ? result.data.pass : null };
     } catch {
       return {}; // The local clarification remains available when inference fails.
-    } finally { working(false); }
+    } finally {
+      working(false);
+      void refreshUsage();
+    }
   }
   // Private routing log: only the route and how it was decided, never the text.
   function recordRoute(text, routed, target, askedClassifier) {
@@ -158,18 +161,25 @@ export function mountAiChat(account, csrfToken) {
   usageLine.setAttribute('aria-live', 'polite');
   usageLine.hidden = true;
   find('.ai-chat-controls').after(usageLine); // visible, not inside the collapsed privacy details
+  let usageRead = 0;
   async function refreshUsage() {
+    const read = ++usageRead;
     try {
       const result = await requestJSON('/api/ai-usage');
+      if (read !== usageRead) return;
       const left = result.data?.remainingToday;
       if (!result.ok || !Number.isInteger(left)) { usageLine.hidden = true; return; }
-      usageLine.textContent = left === 0
-        ? 'No AI requests left today. They reset at midnight in your business timezone.'
-        : `${left} AI request${left === 1 ? '' : 's'} left today.`;
+      if (result.data.exhausted === 'lifetime') {
+        usageLine.textContent = 'This project’s AI request allowance is used up. You can still use the workspace directly.';
+      } else if (left === 0) {
+        usageLine.textContent = 'No AI requests left today. They reset at midnight in your business timezone.';
+      } else {
+        usageLine.textContent = `${left} AI request${left === 1 ? '' : 's'} left today.`;
+      }
       usageLine.classList.toggle('ai-chat-usage-low', left <= 3);
       usageLine.hidden = false;
     } catch {
-      usageLine.hidden = true; // Usage is informational; the chat keeps working.
+      if (read === usageRead) usageLine.hidden = true; // Usage is informational.
     }
   }
 
@@ -493,7 +503,6 @@ export function mountAiChat(account, csrfToken) {
       const reply = chatClarification(text, manager);
       appendTurn(reply);
       if (reply.startsWith(GENERIC_CLARIFICATION_PREFIX)) showQuickReplies();
-      if (needsIntentFallback(text, manager)) void refreshUsage(); // the classifier may have used a request
       notice('Reply below to continue.');
       return;
     }

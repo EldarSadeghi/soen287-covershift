@@ -32,15 +32,15 @@ test('clarification suggestions route locally to the intended task, without the 
 test('allowance status reports turns left today without reserving', async t => {
   const dir = join(await temp(t, 'usage'), 'ai-usage');
   const allowance = new AiAllowance(dir, { total: 5, daily: 3 });
-  assert.deepEqual(await allowance.status('u', now, 'America/Toronto'), { daily: 3, remainingToday: 3 });
+  assert.deepEqual(await allowance.status('u', now, 'America/Toronto'), { daily: 3, remainingToday: 3, exhausted: null });
   assert.equal((await allowance.reserve('u', now, 'America/Toronto')).remainingToday, 2);
   assert.equal((await allowance.reserve('u', now, 'America/Toronto', { newTurn: false })).remainingToday, 2);
-  assert.deepEqual(await allowance.status('u', now, 'America/Toronto'), { daily: 3, remainingToday: 2 });
-  assert.deepEqual(await allowance.status('other', now, 'America/Toronto'), { daily: 3, remainingToday: 3 });
+  assert.deepEqual(await allowance.status('u', now, 'America/Toronto'), { daily: 3, remainingToday: 2, exhausted: null });
+  assert.deepEqual(await allowance.status('other', now, 'America/Toronto'), { daily: 3, remainingToday: 3, exhausted: null });
   await allowance.reserve('other', now, 'America/Toronto');
   await allowance.reserve('other', now, 'America/Toronto');
   // Only 5 calls in total: one left, so nobody can have more than one turn left.
-  assert.deepEqual(await allowance.status('u', now, 'America/Toronto'), { daily: 3, remainingToday: 1 });
+  assert.deepEqual(await allowance.status('u', now, 'America/Toronto'), { daily: 3, remainingToday: 1, exhausted: null });
   assert.equal((await readdir(dir)).length, 4, 'status never writes');
   await writeFile(join(dir, 'oops.txt'), 'x');
   await assert.rejects(allowance.status('u', now, 'America/Toronto'), { status: 503 });
@@ -115,7 +115,7 @@ test('usage and routing-log endpoints enforce sign-in, CSRF and scope', async t 
   assert.equal((await fetch(`${base}/api/ai-usage`)).status, 401);
   assert.equal((await fetch(`${base}/api/ai-usage?userId=worker_alex`, { headers: { Cookie: cookie } })).status, 400);
   const usage = await fetch(`${base}/api/ai-usage`, { headers: { Cookie: cookie } });
-  assert.deepEqual([usage.status, await usage.json()], [200, { daily: 20, remainingToday: 20 }]);
+  assert.deepEqual([usage.status, await usage.json()], [200, { daily: 20, remainingToday: 20, exhausted: null }]);
 
   const post = (extra = {}, body = record) => fetch(`${base}/api/ai-routing-log`, { method: 'POST', headers: { ...headers, ...extra }, body });
   assert.equal((await fetch(`${base}/api/ai-routing-log`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: base }, body: record })).status, 401);
@@ -131,4 +131,19 @@ test('usage and routing-log endpoints enforce sign-in, CSRF and scope', async t 
   await new Promise(resolve => unconfigured.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => unconfigured.close(resolve)));
   assert.equal((await fetch(`http://127.0.0.1:${unconfigured.address().port}/api/ai-usage`, { headers: { Cookie: cookie } })).status, 503);
+});
+
+
+test('usage distinguishes a daily reset from a lifetime cap, including after midnight', async t => {
+  const dir = await temp(t, 'usage-exhaustion');
+  const allowance = new AiAllowance(dir, { daily: 1, total: 2 });
+  const timezone = 'America/Toronto';
+  const tomorrow = now + 24 * 60 * 60 * 1000;
+  await allowance.reserve('u', now, timezone);
+  assert.deepEqual(await allowance.status('u', now, timezone), { daily: 1, remainingToday: 0, exhausted: 'daily' });
+  assert.deepEqual(await allowance.status('u', tomorrow, timezone), { daily: 1, remainingToday: 1, exhausted: null });
+  await allowance.reserve('other', now, timezone);
+  for (const instant of [now, tomorrow]) {
+    assert.deepEqual(await allowance.status('u', instant, timezone), { daily: 1, remainingToday: 0, exhausted: 'lifetime' });
+  }
 });

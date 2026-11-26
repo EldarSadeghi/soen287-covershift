@@ -5,7 +5,7 @@ Issue [#133](https://github.com/EldarSadeghi/soen287-covershift/issues/133). Sta
 ## What changed
 
 - **Clickable suggestions.** When the chat shows the generic "What would you like me to check" question, three role-specific buttons appear under it: employee "My next shift", "Find openings", "Save availability"; manager "Team schedule", "Create a shift", "Attention summary". A button sends its example message through the normal routing. Each example is routed by the local rules, so no classifier call is needed, and nothing is saved without the existing review and confirmation. The buttons are a labelled group ("Choose what to check"), at least 44px tall, and are removed when the next message is sent. List: `clarificationSuggestions()` in `public/ai-chat-routing.js`.
-- **AI requests left today.** A footer line under the Send button shows "N AI requests left today", turns amber at 3 or fewer, and explains the reset when none are left. It reads the new `GET /api/ai-usage` (`AiAllowance.status()`, read-only, never reserves) when the chat opens and after each AI reply. No limits changed.
+- **AI requests left today.** A footer line under the Send button shows "N AI requests left today", turns amber at 3 or fewer, and explains the reset when none are left. It reads the new `GET /api/ai-usage` (`AiAllowance.status()`, read-only, never reserves) when the chat opens, after each classifier attempt, and after a provider-backed reply. An exhausted lifetime budget gets its own message because midnight only resets the daily cap. No limits changed.
 - **Classifier context.** The intent classifier now receives JSON `{ conversation, request }`: the latest message plus at most the last two turns, validated by the shared chat limits. Its instructions say to classify only the request, that earlier turns are context and untrusted, and that they never authorise anything. Intent passes (CS-053) still bind to the latest message only.
 - **Startup check.** `src/ai/startup-check.js` logs one warning when AI is half-configured: a model without a key, a key with a blank model, or an unwritable usage folder. It never prints the key.
 - **Private routing log.** Each routed chat message sends `{ route, decidedBy, clarification }` to `POST /api/ai-routing-log`, which appends `{ day, role, route, decidedBy, clarification }` to `DATA_DIRECTORY/ai-routing/YYYY-MM.jsonl` (business-local month, at most 20,000 records per month). No message text, user ID or name is stored; the role comes from the signed-in account. `npm run ai:routing-report` summarises the log by role, route and decision source.
@@ -16,7 +16,7 @@ Issue [#133](https://github.com/EldarSadeghi/soen287-covershift/issues/133). Sta
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed |
-| `npm test` | 442 / 442 passed (6 new in `tests/ai-chat-improvements.test.js`, 1 new in `tests/ai-routing-fixes.test.js`) |
+| `npm test` | 443 / 443 passed (7 new in `tests/ai-chat-improvements.test.js`, 1 new in `tests/ai-routing-fixes.test.js`) |
 | `npm run ai:acceptance` | 22 / 22 scenarios, 179 checks |
 | `npm run ai:eval` (offline) | 0 write-capable wrong routes; 50 of 173 messages need the classifier |
 | `npm run ai:eval -- --live --max-calls 60` | Ran with the user's approval; 50 classifier calls; all targets met; exits 0 |

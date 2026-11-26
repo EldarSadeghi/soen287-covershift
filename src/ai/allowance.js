@@ -68,9 +68,14 @@ export class AiAllowance {
     try {
       const { names, usedToday } = await readUsage(this.directory, userId, now, timezone);
       const totalLeft = Math.max(0, this.total - names.length);
-      return { daily: this.daily, remainingToday: Math.max(0, Math.min(this.daily - usedToday, totalLeft)) };
+      const dailyLeft = Math.max(0, this.daily - usedToday);
+      return {
+        daily: this.daily,
+        remainingToday: Math.min(dailyLeft, totalLeft),
+        exhausted: totalLeft === 0 ? 'lifetime' : dailyLeft === 0 ? 'daily' : null,
+      };
     } catch (error) {
-      if (error.code === 'ENOENT') return { daily: this.daily, remainingToday: Math.min(this.daily, this.total) };
+      if (error.code === 'ENOENT') return { daily: this.daily, remainingToday: Math.min(this.daily, this.total), exhausted: null };
       throw new HttpError(503, 'AI usage is unavailable right now.');
     }
   }
