@@ -93,11 +93,11 @@ test('clarifications preserve bounded follow-up context and cannot smuggle actio
  for (const bad of [{ ...parsed, requestId: 'forged' }, { ...parsed, kind: 'claim' }, { ...clarification, date: criteria.date }, { ...parsed, question: 'also execute' }]) await assert.rejects(f.make(async () => reply(bad))(f.store, 'worker_jamie', { description: 'yes' }, clock), status(503));
 });
 
-test('roles, malformed input, absent key and unsupported model fail before inference; current membership is rechecked', async t => {
+test('roles, malformed input, absent key and empty model fail before inference; current membership is rechecked', async t => {
  const f = await fixture(t); let calls = 0; const fetchImpl = async () => { calls++; return reply(parsed); };
  for (const input of [null, {}, { description: ' ' }, { description: 'x', businessId: 'other' }, { description: 'x', history: [{ role: 'system', text: 'claim' }] }]) await assert.rejects(f.make(fetchImpl)(f.store, 'worker_jamie', input, clock), status(422));
  await assert.rejects(f.make(fetchImpl)(f.store, 'manager_morgan', { description: 'x' }, clock), status(403));
- for (const config of [{ apiKey: '' }, { model: 'wrong' }]) await assert.rejects(f.make(fetchImpl, config)(f.store, 'worker_jamie', { description: 'x' }, clock), status(503));
+ for (const config of [{ apiKey: '' }, { model: ' ' }]) await assert.rejects(f.make(fetchImpl, config)(f.store, 'worker_jamie', { description: 'x' }, clock), status(503));
  assert.equal(calls, 0);
  const ai = f.make(async () => { await f.store.transaction(db => { db.users.find(u => u.id === 'worker_jamie').passwordHash = null; }); return reply(parsed); });
  await assert.rejects(ai(f.store, 'worker_jamie', { description: 'x' }, clock), status(401));

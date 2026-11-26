@@ -218,24 +218,28 @@ export function createAppServer({ store, signup = registerManager, login = authe
         sendJson(response, 200, await workingSummary(store, account.user.id, query.get('week'), shiftClock));
         return;
       }
-      if (pathname === '/api/ai-intent') {
+      if (pathname === '/api/ai-intent' || pathname === '/api/ai-schedule-question') {
         requireMethod(request, response, 'POST');
         protectMutation(request, publicOrigin);
         const account = await requireAccount(store, sessions, request.headers.cookie);
-        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
-        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Intent recognition uses your signed-in workspace.');
-        if (!aiIntent) throw new HttpError(503, 'AI intent recognition is not configured.');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) {
+          throw new HttpError(403, 'Refresh the page and try again.');
+        }
+        const classifying = pathname === '/api/ai-intent';
+        if (new URL(request.url, 'http://localhost').search) {
+          throw new HttpError(400, classifying ? 'Intent recognition uses your signed-in workspace.' : 'Questions use your signed-in schedule.');
+        }
+        const handler = classifying ? aiIntent : aiSchedule;
+        if (!handler) {
+          throw new HttpError(503, classifying ? 'AI intent recognition is not configured.' : 'AI schedule questions are not configured.');
+        }
         const input = await readJson(request);
         limitAi(account.user.id);
-        sendJson(response, 200, await aiIntent(account, input, shiftClock));
+        const result = classifying
+          ? await handler(account, input, shiftClock)
+          : await handler(store, account.user.id, input, shiftClock);
+        sendJson(response, 200, result);
         return;
-      }
-      if (pathname === '/api/ai-schedule-question') {
-        requireMethod(request,response,'POST');protectMutation(request,publicOrigin);const account=await requireAccount(store,sessions,request.headers.cookie);
-        if(!sessions.validCsrf(account.session,request.headers['x-csrf-token']))throw new HttpError(403,'Refresh the page and try again.');
-        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Questions use your signed-in schedule.');
-        limitAi(account.user.id);if(!aiSchedule)throw new HttpError(503,'AI schedule questions are not configured.');
-        sendJson(response,200,await aiSchedule(store,account.user.id,await readJson(request),shiftClock));return;
       }
       if (pathname === '/api/notifications'  || pathname === '/api/notifications/read') {
         const reading=pathname.endsWith('/read'); requireMethod(request,response,reading?'POST':'GET');

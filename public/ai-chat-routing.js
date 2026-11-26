@@ -77,7 +77,13 @@ export function requestsShiftBatch(text) {
 }
 
 const requestStatusTopics = new Set(['claimStatus', 'coverStatus', 'timeOffStatus']);
-const statusFollowUpDate = /^(?:(?:what|how) about |and )?(?:on |for )?(?:today|tomorrow|(?:this )?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|20\d{2}-\d{2}-\d{2}|(?:january|february|march|april|may|june|july|august|september|october|november|december) (?:\d{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,? 20\d{2})?)[.!?]*$/;
+const followUpPrefix = '(?:(?:what|how) about |and )?(?:on |for )?';
+const followUpWeekday = '(?:this )?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)';
+const followUpMonth = '(?:january|february|march|april|may|june|july|august|september|october|november|december)';
+const followUpMonthDay = '(?:[0-9]{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,? 20[0-9]{2})?';
+const statusFollowUpDate = new RegExp(
+  `^${followUpPrefix}(?:today|tomorrow|${followUpWeekday}|20[0-9]{2}-[0-9]{2}-[0-9]{2}|${followUpMonth} ${followUpMonthDay})[.!?]*$`,
+);
 
 export function isStatusDateFollowUp(text) {
   return statusFollowUpDate.test(normalizedMessage(text));

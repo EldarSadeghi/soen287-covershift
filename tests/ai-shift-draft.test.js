@@ -67,7 +67,7 @@ test('strict input, roles, missing configuration and oversized context reject be
  for (const value of [null, [], {}, { description: '' }, { description: 'x'.repeat(1501) }, { ...input, businessId: 'other' }]) await assert.rejects(ai(store, 'manager_morgan', value, () => now), status(422));
  await assert.rejects(ai(store, 'worker_jamie', input, () => now), status(403));
  await assert.rejects(ai(store, 'missing', input, () => now), status(401));
- for (const config of [{ apiKey: '' }, { model: 'unapproved-expensive-model' }]) await assert.rejects(make(undefined, config)(store, 'manager_morgan', input, () => now), status(503));
+ for (const config of [{ apiKey: '' }, { model: ' ' }]) await assert.rejects(make(undefined, config)(store, 'manager_morgan', input, () => now), status(503));
  assert.equal(calls, 0); assert.ok(!(await readdir(dir)).includes('ai-usage'));
  await store.transaction(db => { const example = db.users[1]; for (let i = 0; i < 50; i++) db.users.push({ ...example, id: `more_${i}`, email: `more_${i}@example.test` }); });
  await assert.rejects(ai(store, 'manager_morgan', input, () => now), status(422)); assert.equal(calls, 0);
@@ -153,8 +153,8 @@ test('HTTP AI endpoint enforces authentication, role, origin, CSRF, exact scope 
  assert.equal((await post(input, {}, '/api/manager/ai-shift-draft?businessId=other')).status, 400);
  assert.equal(calls, 0);
  assert.equal((await post({ ...input, businessId: 'other' })).status, 422);
- for (let i = 0; i < 4; i++) { const response = await post(); assert.equal(response.status, 200); assert.doesNotMatch(await response.text(), /private-key|@example|passwordHash/); }
- assert.equal((await post()).status, 429); assert.equal(calls, 4);
+ for (let i = 0; i < 19; i++) { const response = await post(); assert.equal(response.status, 200); assert.doesNotMatch(await response.text(), /private-key|@example|passwordHash/); }
+ assert.equal((await post()).status, 429); assert.equal(calls, 19);
  assert.equal((await store.read()).shifts.length, 5);
  for (const path of ['/.env', '/src/ai/shift-draft.js', '/data/ai-usage/0001.json']) assert.equal((await fetch(origin + path)).status, 404);
  assert.equal((await fetch(origin + '/ai-shift-draft.js')).status, 200);

@@ -477,7 +477,7 @@ export function mountAiChat(account, csrfToken) {
       }
     }));
     try {
-      const response = await requestJSON(CHAT_ENDPOINTS[mode], { method: 'POST', readOnly: true, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body });
+      const response = await requestJSON(CHAT_ENDPOINTS[mode], { method: 'POST', readOnly: true, acceptServerErrors: true, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body });
       if (version !== revision || chat.value.completion || chat.value.uncertainDraftId) {
         pendingBubble.remove();
         return;
