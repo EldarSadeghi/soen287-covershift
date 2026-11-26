@@ -19,6 +19,7 @@
     "demo:prepare": "node --env-file-if-exists=.env scripts/demo.js prepare",
     "demo:start": "node --env-file-if-exists=.env scripts/demo.js start",
     "ai:acceptance": "node scripts/ai-acceptance.js",
-    "ai:live-check": "node scripts/ai-live-check.js"
+    "ai:live-check": "node scripts/ai-live-check.js",
+    "ai:eval": "node --env-file-if-exists=.env scripts/ai-eval.js"
   }
 }

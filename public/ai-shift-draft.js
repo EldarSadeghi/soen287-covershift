@@ -2,7 +2,7 @@ import { createClaimStatus, createCoverStatus, createTimeOffStatus } from './ai-
 import { showWorkingSummary, workingSummaryMessage } from './ai-working-summary.js';
 import { createBatchReview } from './ai-shift-batch.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, openingReference, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate, workingSummaryWeek } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, needsIntentFallback, openingReference, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate, workingSummaryWeek } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -262,8 +262,7 @@ export function mountAiChat(account, csrfToken) {
     // Only the generic "What would you like me to check" fallback asks the
     // server-side classifier; specific clarifications stay local.
     let intentPass = null;
-    if (target === 'clarification' && /^What would you like me to check/.test(chatClarification(text, manager)) &&
-        !/^(?:do not|don't|never)\b/i.test(text) && /[a-z]{2}/i.test(text)) {
+    if (target === 'clarification' && needsIntentFallback(text, manager)) {
       const classified = await classifyUnmatched(text);
       if (classified === null) return;
       if (classified.intent) {
