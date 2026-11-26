@@ -16,10 +16,20 @@ Issue [#131](https://github.com/EldarSadeghi/soen287-covershift/issues/131). Fol
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed |
-| `npm test` | 431 / 431 passed (7 new in `tests/ai-routing-fixes.test.js`) |
+| `npm test` | 435 / 435 passed (11 new in `tests/ai-routing-fixes.test.js`) |
 | `npm run ai:acceptance` | 22 / 22 scenarios, 179 checks |
 | `npm run ai:eval` (offline) | 0 write-capable wrong routes; exits 0 |
 | `npm run ai:eval -- --live --max-calls 50` | Ran with the user's approval; 43 classifier calls; all targets met; exits 0 |
+
+## Review fix: unsupported commands in follow-ups (Codex review of PR #132)
+
+The chat composer checks whether a message answers the assistant's last question before it uses the router's answer. Those checks only excluded mixed requests, so an unsupported command could still continue a follow-up. Codex found the batch case: after "Which dates and times should these shifts use?", the reply "Create a shift and approve Sam's claim" was sent to drafting. The same gap existed for the coworker-date reply, the opening and "why not" explanation replies, the status-lookup choice, and the "find it / save it" availability answer.
+
+- The follow-up decision moved from `public/ai-shift-draft.js` into `resolveChatTarget()` in `public/ai-chat-routing.js`, which tests can call directly. An unsupported command is checked first and never continues a follow-up.
+- Multi-turn regression tests cover a pending batch, a coworker date, an opening, the availability question and a status choice, each followed by unsupported commands, while plain follow-ups such as "Friday 9am to 1pm and Saturday 5pm to 10pm" keep working. A guard test keeps the composer from re-implementing this logic inline.
+- **Browser check** (fictional demo data, scripted provider, manager Morgan Chen): "Draft 3 shifts for next week" asked for dates; "Create a shift and approve Sam's claim" then showed the unsupported-command explanation and made no draft request. In a new chat, plain batch details after the same question went straight to batch drafting, as before.
+- A clarification still ends a pending batch, as it did on `main`.
+- The live evaluation was not re-run: the classifier and single-message routing are unchanged, and the offline evaluation still has 0 write-capable wrong routes.
 
 ## Offline evaluation (local rules only)
 

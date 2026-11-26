@@ -147,6 +147,42 @@ export function chatClarification(text, manager) {
     'What would you like me to check: your schedule, an open shift, or a saved availability rule?';
 }
 
+/**
+ * Decides where a chat message goes, given the router's answer and what the
+ * assistant asked last (a pending batch, a coworker date, an opening, a status
+ * choice or the availability question). An unsupported command is checked
+ * first: it never continues a follow-up, so it can never reach a task.
+ * Returns { target, statusLookup, choice } for the chat composer.
+ */
+export function resolveChatTarget({
+  text, manager, routed, previous = null, batchClarifying = false,
+  hasSelectedOpening = () => false, statusTopics = [], choiceReply = null,
+}) {
+  const previousTopic = previous?.topic;
+  const blocked = requestsUnsupportedAction(text);
+  // A plain reply is neither an unsupported command nor a mixed request.
+  const plainReply = isManager => !blocked && !chatClarification(text, isManager).startsWith(MIXED_INTENT_QUESTION);
+  const unroutedForEmployee = routeChat(text, false, null) === 'clarification';
+
+  const choice = choiceReply && unroutedForEmployee && plainReply(false) ? choiceReply(text) : undefined;
+  if (choice !== undefined) return { target: previousTopic, statusLookup: true, choice };
+  if (statusTopics.includes(routed)) return { target: routed, statusLookup: true, choice };
+  if (blocked) return { target: 'clarification', statusLookup: false, choice };
+
+  const unrouted = routed === 'clarification';
+  const batchReply = manager && batchClarifying && unrouted && plainReply(true);
+  const explanationReply = !manager && previousTopic === 'explanation' && unrouted && (
+    (previous.text.startsWith(OPENING_CLARIFICATION) && plainReply(false)) ||
+    (/^why not[.!?]*$/i.test(text) && hasSelectedOpening()));
+  const coworkerDateReply = !manager && previousTopic === 'coworkers' && /^Which date/.test(previous.text) &&
+    unroutedForEmployee && plainReply(false);
+  const answerRoute = !manager && previousTopic === 'clarification' && clarificationReplyRoute(text, previous.text);
+
+  const target = (batchReply && 'draft') || (explanationReply && 'explanation') ||
+    (coworkerDateReply && 'coworkers') || answerRoute || routed;
+  return { target, statusLookup: false, choice };
+}
+
 export const GENERIC_CLARIFICATION_PREFIX = 'What would you like me to check';
 
 // True when the local rules would answer with the generic "What would you like
