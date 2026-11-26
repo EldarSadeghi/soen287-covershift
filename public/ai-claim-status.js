@@ -2,6 +2,7 @@ import { coworkerLookupDate } from './ai-chat-routing.js';
 import { checkedMeta, responseHeader } from './ai-response-card.js';
 import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
+import { timeOffRange } from './time-off.js';
 import { formatShiftTime } from './shift-time.js';
 
 const labels = {
@@ -23,25 +24,65 @@ export function matchingClaims({ claims, timezone, asOf }, text) {
   const quoted = [...text.matchAll(/["“]([^"”]+)["”]/g)];
   if (quoted.length > 1) return null;
   const phrase = text.replace(/["“][^"”]+["”]/g, '');
-  const days = [...phrase.matchAll(weekday)];
-  const qualifiedDay = /\b(?:this|next|last) (?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(phrase);
-  if (days.length > 1) return null;
-  const hasDate = qualifiedDay || explicitDate.test(phrase);
-  const date = hasDate ? coworkerLookupDate(phrase, localDay(asOf, timezone)) : null;
-  if (hasDate && !date) return null;
-  const weekdayFormat = new Intl.DateTimeFormat('en-US', { timeZone: timezone, weekday: 'long' });
+  const filter = statusDateFilter(phrase, asOf, timezone);
+  if (!filter) return null;
 
   const hasKnownTitle = claims.some(({ shift }) => normalize(phrase).includes(normalize(shift.title)));
   return claims.filter(({ shift }) =>
     (!quoted.length || normalize(quoted[0][1]) === normalize(shift.title)) &&
     (!hasKnownTitle || normalize(phrase).includes(normalize(shift.title))) &&
-    (!date || localDay(shift.startsAt, timezone) === date) &&
-    (hasDate || !days.length || normalize(weekdayFormat.format(new Date(shift.startsAt))) === normalize(days[0][1])));
+    filter(localDay(shift.startsAt, timezone)));
+}
+
+function statusDateFilter(text, asOf, timezone) {
+  const days = [...text.matchAll(weekday)];
+  if (days.length > 1) return null;
+  const qualified = /\b(?:this|next|last) (?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(text);
+  if (qualified || explicitDate.test(text)) {
+    const date = coworkerLookupDate(text, localDay(asOf, timezone));
+    return date ? (start, end = start) => start <= date && date <= end : null;
+  }
+  if (!days.length) return () => true;
+  const dayIndex = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(normalize(days[0][1]));
+  return (start, end = start) => {
+    const first = new Date(start + 'T00:00:00Z');
+    first.setUTCDate(first.getUTCDate() + (dayIndex - first.getUTCDay() + 7) % 7);
+    return first.toISOString().slice(0, 10) <= end;
+  };
+}
+
+export function matchingTimeOff({ requests, timezone, asOf }, text) {
+  const filter = statusDateFilter(text, asOf, timezone);
+  return filter && requests.filter(request => filter(
+    localDay(request.startsAt, request.timezone || timezone),
+    localDay(Date.parse(request.endsAt) - 1, request.timezone || timezone),
+  ));
+}
+
+export function createTimeOffStatus(view) {
+  return createStatusLookup(view, {
+    endpoint: '/api/worker/time-off', list: data => data.requests,
+    match: (data, text) => matchingTimeOff(data, text),
+    singular: 'time-off request', plural: 'time-off requests', heading: 'Your time-off requests',
+    format: request => ({ title: 'Time-off request', range: timeOffRange(request) }),
+    status: request => labels[request.status],
+    detail: request => request.status === 'pending' ? 'Your schedule stays the same until a manager approves the request.' : null,
+    link: request => '/workspace/worker/time-off' + (request ? '?request=' + encodeURIComponent(request.id) : ''),
+    linkLabel: 'Open Time off',
+  });
+}
+
+function formatStatusShift(record, timezone) {
+  const time = formatShiftTime(record.shift, timezone);
+  return {
+    title: record.shift.title,
+    range: `${time.date} · ${time.startTime} – ${time.endDate ? time.endDate + ' ' : ''}${time.endTime}`,
+  };
 }
 
 export function createClaimStatus(view) {
   return createStatusLookup(view, {
-    endpoint: '/api/worker/requests', list: data => data.claims,
+    endpoint: '/api/worker/requests', list: data => data.claims, format: formatStatusShift,
     singular: 'claim', plural: 'claims', heading: 'Saved claims',
     status: claim => labels[claim.displayStatus],
     detail: claim => claim.displayStatus === 'pending' ? 'Your manager must approve the claim before you’re assigned.' : null,
@@ -61,7 +102,7 @@ const coverLabels = {
 
 export function createCoverStatus(view, userId) {
   return createStatusLookup(view, {
-    endpoint: '/api/worker/cover-invitations', list: data => outgoingCoverInvitations(data, userId),
+    endpoint: '/api/worker/cover-invitations', format: formatStatusShift, list: data => outgoingCoverInvitations(data, userId),
     singular: 'cover invitation', plural: 'cover invitations', heading: 'Sent cover invitations',
     status: invitation => coverLabels[invitation.status],
     recipient: invitation => invitation.recipientName,
@@ -85,17 +126,17 @@ function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) 
       if (!response.ok) throw new Error();
       const data = response.data;
       const claims = config.list(data);
-      const matches = id ? claims.filter(claim => claim.id === id) : matchingClaims({ ...data, claims }, text);
+      const matches = id ? claims.filter(claim => claim.id === id) : (config.match || matchingClaims)({ ...data, claims }, text);
       const claim = matches?.length === 1 ? matches[0] : null;
       card.hidden = false;
       let message;
       if (claim) {
         const recipient = config.recipient?.(claim);
         const status = config.status(claim) || 'Status unavailable';
-        const time = formatShiftTime(claim.shift, data.timezone);
-        message = `${claim.shift.title} · ${time.date} · ${status}.`;
-        responseHeader(card, status, claim.shift.title);
-        card.append(element('p', '', `${time.date} · ${time.startTime} – ${time.endDate ? time.endDate + ' ' : ''}${time.endTime}`));
+        const { title, range } = config.format(claim, data.timezone);
+        message = `${title} · ${range} · ${status}.`;
+        responseHeader(card, status, title);
+        card.append(element('p', '', range));
         if (recipient) card.append(element('p', '', `Sent to ${recipient}`));
         const detail = config.detail(claim);
         if (detail) card.append(element('p', '', detail));
@@ -104,9 +145,9 @@ function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) 
         responseHeader(card, config.heading, message);
         const choices = matches ?? claims;
         for (const choice of choices.slice(0, 5)) {
-          const time = formatShiftTime(choice.shift, data.timezone);
+          const { title, range } = config.format(choice, data.timezone);
           const recipient = config.recipient?.(choice);
-          const label = [choice.shift.title, time.date, time.startTime, recipient].filter(Boolean).join(' · ');
+          const label = [title, range, recipient].filter(Boolean).join(' · ');
           const button = element('button', 'ai-chat-review', label);
           button.type = 'button';
           button.addEventListener('click', () => { if (button.isConnected) void load(text, choice.id); });

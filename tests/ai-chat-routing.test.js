@@ -106,3 +106,11 @@ test('employees can check outgoing cover invitations without getting routed to c
   }
   assert.notEqual(routeChat('Cancel my pending cover request', false, null), 'coverStatus');
 });
+
+test('time-off status uses a read-only employee route regardless of the previous topic', () => {
+  for (const prompt of ['Was my Friday time off approved?', 'What is the status of my time-off request?', 'Did my leave request get declined?']) {
+    assert.equal(routeChat(prompt, false, 'search'), 'timeOffStatus');
+    assert.notEqual(routeChat(prompt, true, null), 'timeOffStatus');
+  }
+  assert.notEqual(routeChat('Cancel my pending time-off request', false, null), 'timeOffStatus');
+});

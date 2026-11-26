@@ -31,7 +31,7 @@ export async function mountTimeOff(main,account,csrf){
     find('leave-count').textContent=`${visible.length} shown · ${requests.filter(r=>r.status==='pending').length} pending`;
     if(!visible.length){const empty=element('section','panel empty');empty.append(element('h3','','No requests in this view.'),element('p','',manager?'Choose another filter or refresh to check for new employee requests.':'Submit a request above, or choose another status.'));list.append(empty);}
     for(const r of visible){
-      const card=element('article','panel time-off-card');const head=element('div','panel-head');head.append(element('h3','',manager?r.workerName:'Time-off request'),element('span','badge',labels[r.status]));card.append(head,element('p','time-off-range',timeOffRange(r)),element('p','section-note',r.timezone+(r.periodState==='past'?' · Past period':r.periodState==='in_progress'?' · Period has started':'')));
+      const card=element('article','panel time-off-card');card.id='time-off-'+r.id;card.tabIndex=-1;const head=element('div','panel-head');head.append(element('h3','',manager?r.workerName:'Time-off request'),element('span','badge',labels[r.status]));card.append(head,element('p','time-off-range',timeOffRange(r)),element('p','section-note',r.timezone+(r.periodState==='past'?' · Past period':r.periodState==='in_progress'?' · Period has started':'')));
       if(r.note){card.append(element('strong','','Private note'),element('p','time-off-note',r.note));}
       if(r.status==='pending'&&r.blockers.length){
         card.append(element('p','time-off-blocked','Approval blocked: resolve these commitments first.'));const list=element('ul','time-off-blockers');
@@ -69,7 +69,9 @@ export async function mountTimeOff(main,account,csrf){
         }else {const saved=requests.find(r=>r.id===uncertain.id);say(saved?`Latest saved status: ${labels[saved.status]}. Review the current request before another action.`:'The request is not in the latest list. Check your account and refresh again.');}
         uncertain=null;find('leave-error').hidden=true;
       }
-      render();if(event?.currentTarget)find('leave-refresh').focus();
+      render();
+      if(event?.currentTarget)find('leave-refresh').focus();
+      else if(!manager){const selected=new URLSearchParams(location.search).get('request');if(selected)find('time-off-'+selected)?.focus();}
     }catch(e){reconciling=true;const retry=element('button','logout-button','Try again');retry.type='button';retry.addEventListener('click',load);find('leave-list').replaceChildren(element('p','','Requests could not be loaded.'),retry);error(e.message);}finally{loading=false;main.setAttribute('aria-busy','false');find('leave-list').setAttribute('aria-busy','false');controls();}
   }
   find('leave-refresh').addEventListener('click',event=>{if(!uncertain)clear();load(event);});
