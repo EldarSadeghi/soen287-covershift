@@ -49,6 +49,6 @@ node --env-file=/absolute/path/to/your/.env scripts/demo.js start
 
 No key is printed, added to fixtures, or included in the walkthrough. The real provider is used when configured; an API key, provider access, credit and network connection are required for live AI. Without configuration, schedules, manual claims, approvals, rules, notifications and history still work. There is no fabricated AI fallback.
 
-Existing AI limits apply: five attempts per account per ten minutes, twenty per UTC day, within the project allowance. Persisted demo usage is stored outside individual runs, so preparing again does not reset it. Rehearse only a few messages and use manual controls for repeated practice. Before the presentation, save a short screen recording of one successful walkthrough as a backup; recording is not generated automatically by this task.
+Existing AI limits apply: twenty AI endpoint attempts per account per two minutes, twenty provider calls per business-local day, within the project allowance. Persisted demo usage is stored outside individual runs, so preparing again does not reset it. Rehearse only a few messages and use manual controls for repeated practice. Before the presentation, save a short screen recording of one successful walkthrough as a backup; recording is not generated automatically by this task.
 
 Verification and browser evidence: [acceptance report](acceptance/cs021/USER-STORIES.md).

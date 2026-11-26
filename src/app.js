@@ -86,7 +86,7 @@ export function createSignupLimiter({ limit = 5, windowMs = 10 * 60 * 1000, mess
       if (attempts.size >= 1000) throw new HttpError(503, 'Please try again later.');
       entry = { count: 0, reset: now + windowMs }; attempts.set(address, entry);
     }
-    if (entry.count >= limit) throw new HttpError(429, message);
+    if (entry.count >= limit) throw new HttpError(429, typeof message === 'function' ? message(Math.ceil((entry.reset - now) / 1000)) : message);
     entry.count++;
   };
 }
@@ -118,7 +118,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability', 'cover'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability', 'cover'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null }) {
   const availabilityWindowStore=store; // General windows do not participate in automatic claims.
   store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
@@ -127,7 +127,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitShifts = createSignupLimiter({ limit: 60, message: 'Too many shift changes. Please wait 10 minutes and try again.' });
   const limitCoverage = createSignupLimiter({ limit: 30, message: 'Too many coverage changes. Please wait 10 minutes and try again.' });
   const limitNotificationReads = createSignupLimiter({ limit: 120, message: 'Too many notification updates. Please wait and refresh.' });
-  const limitAi = createSignupLimiter({ limit: 5, message: 'Too many AI drafting attempts. Wait 10 minutes or use the manual form.' });
+  const limitAi = createSignupLimiter({ limit: 20, windowMs: 120000, message: seconds => `Too many AI requests. Try again in ${seconds} seconds.` });
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'same-origin');
@@ -218,12 +218,28 @@ export function createAppServer({ store, signup = registerManager, login = authe
         sendJson(response, 200, await workingSummary(store, account.user.id, query.get('week'), shiftClock));
         return;
       }
-      if (pathname === '/api/ai-schedule-question') {
-        requireMethod(request,response,'POST');protectMutation(request,publicOrigin);const account=await requireAccount(store,sessions,request.headers.cookie);
-        if(!sessions.validCsrf(account.session,request.headers['x-csrf-token']))throw new HttpError(403,'Refresh the page and try again.');
-        if(new URL(request.url,'http://localhost').search)throw new HttpError(400,'Questions use your signed-in schedule.');
-        limitAi(account.user.id);if(!aiSchedule)throw new HttpError(503,'AI schedule questions are not configured.');
-        sendJson(response,200,await aiSchedule(store,account.user.id,await readJson(request),shiftClock));return;
+      if (pathname === '/api/ai-intent' || pathname === '/api/ai-schedule-question') {
+        requireMethod(request, response, 'POST');
+        protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie);
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) {
+          throw new HttpError(403, 'Refresh the page and try again.');
+        }
+        const classifying = pathname === '/api/ai-intent';
+        if (new URL(request.url, 'http://localhost').search) {
+          throw new HttpError(400, classifying ? 'Intent recognition uses your signed-in workspace.' : 'Questions use your signed-in schedule.');
+        }
+        const handler = classifying ? aiIntent : aiSchedule;
+        if (!handler) {
+          throw new HttpError(503, classifying ? 'AI intent recognition is not configured.' : 'AI schedule questions are not configured.');
+        }
+        const input = await readJson(request);
+        limitAi(account.user.id);
+        const result = classifying
+          ? await handler(account, input, shiftClock)
+          : await handler(store, account.user.id, input, shiftClock);
+        sendJson(response, 200, result);
+        return;
       }
       if (pathname === '/api/notifications'  || pathname === '/api/notifications/read') {
         const reading=pathname.endsWith('/read'); requireMethod(request,response,reading?'POST':'GET');

@@ -13,7 +13,7 @@ export function createAiAvailabilityDrafter({apiKey,model='gpt-6-luna',allowance
  const active=new Set();
  return async(store,userId,input,clock=Date.now)=>{
   input=validateChatInput(input, true);const {business}=availabilityAccount(await store.read(),userId);
-  if(!apiKey || model!=='gpt-6-luna' || !allowance)throw unavailable();
+  if(!apiKey || !model?.trim() || !allowance)throw unavailable();
   if(active.has(userId)||active.size>=2)throw new HttpError(429,'AI is busy. Wait for the current request.');
   const now=clock();
   let base;
@@ -23,11 +23,11 @@ export function createAiAvailabilityDrafter({apiKey,model='gpt-6-luna',allowance
    base={startLocal,endLocal,title,maxClaims};
   }
   const context={currentInstant:new Date(now).toISOString(),currentBusinessTime:new Intl.DateTimeFormat('en-CA',{timeZone:business.timezone,dateStyle:'full',timeStyle:'long',hourCycle:'h23'}).format(now),timezone:business.timezone,conversation:input.history,request:input.description,...(base && {pendingDraft:base})};
-  const body=JSON.stringify({model,store:false,reasoning:{effort:'none'},max_output_tokens:1200,instructions:instructions+(base?refinementInstructions:''),input:JSON.stringify(context),text:{format:{type:'json_schema',name:'availability_draft',strict:true,schema:refinementFormat(schema,base)}}});
+  const body=JSON.stringify({model,store:false,...(model === 'gpt-6-luna' && { reasoning: { effort: 'none' } }),max_output_tokens:1200,instructions:instructions+(base?refinementInstructions:''),input:JSON.stringify(context),text:{format:{type:'json_schema',name:'availability_draft',strict:true,schema:refinementFormat(schema,base)}}});
   if(Buffer.byteLength(body)>16000)throw new HttpError(422,'This chat is too long. Start a new chat.');
   active.add(userId);
   try{
-   await allowance.reserve(userId,now);
+   await allowance.reserve(userId, now, business.timezone);
    const result=applyRefinement(await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable}),base,unavailable);
    if(!result || Array.isArray(result) || Object.keys(result).length!==keys.length || !keys.slice(0,-1).every(k=>typeof result[k]==='string') || !Number.isInteger(result.maxClaims))throw unavailable();
    const current=availabilityAccount(await store.read(),userId);

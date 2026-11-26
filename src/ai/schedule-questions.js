@@ -52,13 +52,13 @@ export function createAiScheduleAnswerer({apiKey,model='gpt-6-luna',allowance,fe
  const active=new Set();
  return async(store,userId,input,clock=Date.now)=>{
   input=validateChatInput(input);const {user,business}=account(await store.read(),userId);
-  if(!apiKey||model!=='gpt-6-luna'||!allowance)throw unavailable();
+  if(!apiKey||!model?.trim()||!allowance)throw unavailable();
   if(active.has(userId)||active.size>=2)throw new HttpError(429,'Schedule questions are busy. Wait for the current reply or use your saved schedule.');
-  const now=clock(),body=JSON.stringify({model,store:false,reasoning:{effort:'none'},max_output_tokens:1000,instructions,input:JSON.stringify({role:user.role,timezone:business.timezone,calendar:businessCalendar(now,business.timezone),currentInstant:new Date(now).toISOString(),currentBusinessTime:new Intl.DateTimeFormat('en-CA',{timeZone:business.timezone,dateStyle:'full',timeStyle:'long',hourCycle:'h23'}).format(now),conversation:input.history,request:input.description}),text:{format:{type:'json_schema',name:'schedule_question',strict:true,schema}}});
+  const now=clock(),body=JSON.stringify({model,store:false,...(model === 'gpt-6-luna' && { reasoning: { effort: 'none' } }),max_output_tokens:1000,instructions,input:JSON.stringify({role:user.role,timezone:business.timezone,calendar:businessCalendar(now,business.timezone),currentInstant:new Date(now).toISOString(),currentBusinessTime:new Intl.DateTimeFormat('en-CA',{timeZone:business.timezone,dateStyle:'full',timeStyle:'long',hourCycle:'h23'}).format(now),conversation:input.history,request:input.description}),text:{format:{type:'json_schema',name:'schedule_question',strict:true,schema}}});
   if(Buffer.byteLength(body)>16000)throw new HttpError(422,'Start a new chat with a shorter question.');
   active.add(userId);
   try{
-   await allowance.reserve(userId,now);const result=await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable});
+   await allowance.reserve(userId, now, business.timezone);const result=await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable});
    if(!result||Array.isArray(result)||Object.keys(result).length!==keys.length||!keys.every(k=>typeof result[k]==='string'))throw unavailable();
    const current=account(await store.read(),userId);if(current.user.role!==user.role||current.business.id!==business.id||current.business.timezone!==business.timezone)throw new HttpError(409,'Your workspace changed. Ask again.');
    if(result.kind==='clarification'){if(!result.question.trim()||result.question.length>500||keys.slice(2).some(k=>result[k]))throw unavailable();return {kind:'clarification',question:result.question,timezone:business.timezone};}

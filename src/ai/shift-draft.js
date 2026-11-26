@@ -74,7 +74,7 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
     }
     input = validateChatInput(input, !batch);
     let db = await store.read(); let business = managerBusiness(db, managerId);
-    if (!apiKey || model !== 'gpt-6-luna' || !allowance) throw unavailable();
+    if (!apiKey || !model?.trim() || !allowance) throw unavailable();
     if (active.has(managerId) || active.size >= 2) throw new HttpError(429, 'AI drafting is already busy. Wait for the current request or use the manual form.');
     const workers = db.users.filter(user => user.role === 'worker' && !user.deactivation && user.businessId === business.id).map((user, index) => ({ ref: `w${index + 1}`, name: user.name, id: user.id }));
     if (!workers.length) throw new HttpError(422, 'Add an active worker before drafting a shift.');
@@ -101,7 +101,7 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
       ...(base && { pendingDraft: base }),
       request: input.description,
     };
-    const body = JSON.stringify({ model, store: false, reasoning: { effort: 'none' }, max_output_tokens: 1200,
+    const body = JSON.stringify({ model, store: false, ...(model === 'gpt-6-luna' && { reasoning: { effort: 'none' } }), max_output_tokens: 1200,
       instructions: batch ? batchInstructions : instructions + (base ? refinementInstructions : ''), input: JSON.stringify(context), text: { format: {
         type: 'json_schema', name: batch ? 'shift_batch' : 'shift_draft', strict: true,
         schema: batch ? batchSchema(workers) : refinementFormat(schema(workers), base),
@@ -109,7 +109,7 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
     if (Buffer.byteLength(body) > 16000) throw new HttpError(422, 'This description and team are too large for AI drafting. Use a shorter description or the manual form.');
     active.add(managerId);
     try {
-      await allowance.reserve(managerId, now);
+      await allowance.reserve(managerId, now, business.timezone);
       const response = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
       // Recheck current membership after inference; model output never authorizes access.
       db = await store.read(); business = managerBusiness(db, managerId);
