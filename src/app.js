@@ -118,7 +118,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability', 'cover'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability', 'cover'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null }) {
   const availabilityWindowStore=store; // General windows do not participate in automatic claims.
   store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
@@ -216,6 +216,18 @@ export function createAppServer({ store, signup = registerManager, login = authe
         const query = new URL(request.url, 'http://localhost').searchParams;
         if (query.size !== 1 || !query.has('week')) throw new HttpError(422, 'Choose this week or next week.');
         sendJson(response, 200, await workingSummary(store, account.user.id, query.get('week'), shiftClock));
+        return;
+      }
+      if (pathname === '/api/ai-intent') {
+        requireMethod(request, response, 'POST');
+        protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie);
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Intent recognition uses your signed-in workspace.');
+        if (!aiIntent) throw new HttpError(503, 'AI intent recognition is not configured.');
+        const input = await readJson(request);
+        limitAi(account.user.id);
+        sendJson(response, 200, await aiIntent(account, input, shiftClock));
         return;
       }
       if (pathname === '/api/ai-schedule-question') {

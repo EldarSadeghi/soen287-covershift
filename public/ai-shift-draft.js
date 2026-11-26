@@ -235,9 +235,29 @@ export function mountAiChat(account, csrfToken) {
     const choice = previousLookup && routeChat(text, false, null) === 'clarification' &&
       !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION)
       ? previousLookup.choiceReply(text) : undefined;
-    const statusLookup = choice !== undefined || Object.hasOwn(statusLookups, routed);
-    const target = statusLookup ? (choice !== undefined ? previousTopic : routed) : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
+    let statusLookup = choice !== undefined || Object.hasOwn(statusLookups, routed);
+    let target = statusLookup ? (choice !== undefined ? previousTopic : routed) : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routed;
+    if (target === 'clarification' && /^What would you like me to check/.test(chatClarification(text, manager)) &&
+        !/^(?:do not|don't|never)\b/i.test(text) && /[a-z]{2}/i.test(text)) {
+      working(true);
+      try {
+        const result = await requestJSON('/api/ai-intent', {
+          method: 'POST', readOnly: true,
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+          body: JSON.stringify({ description: text }),
+        });
+        if (result.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
+        const intent = result.data?.intent;
+        if (result.ok && ['questions', 'summary', ...(manager ? ['draft'] :
+          ['search', 'availability', 'coworkers', 'claimStatus', 'coverStatus', 'timeOffStatus'])].includes(intent)) {
+          target = intent;
+          statusLookup = Object.hasOwn(statusLookups, target);
+        }
+      } catch {
+        // The local clarification remains available when inference fails.
+      } finally { working(false); }
+    }
     const wasClarifyingBatch = manager && chat.value.batchClarifying;
     const batch = manager && target === 'draft' && (requestsShiftBatch(text) || wasClarifyingBatch);
     const sameTopic = mode === target;
