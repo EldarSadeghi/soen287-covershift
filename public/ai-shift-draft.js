@@ -220,7 +220,10 @@ export function mountAiChat(account, csrfToken) {
     const coworkerDateReply = !manager && previous?.topic === 'coworkers' &&
       /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification' &&
       !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
-    const routed = routeChat(text, manager, previous?.topic === 'summary' ? 'summary' : previous && previous.topic !== 'clarification' ? mode : null);
+    const previousTopic = previous?.topic;
+    const currentTopic = previousTopic === 'summary' || Object.hasOwn(statusLookups, previousTopic)
+      ? previousTopic : previous && previousTopic !== 'clarification' ? mode : null;
+    const routed = routeChat(text, manager, currentTopic);
     const openingReply = !manager && previous?.topic === 'explanation' &&
       previous.text.startsWith(OPENING_CLARIFICATION) && routed === 'clarification' &&
       !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
