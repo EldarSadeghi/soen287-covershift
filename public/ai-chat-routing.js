@@ -79,6 +79,10 @@ export function requestsShiftBatch(text) {
 const requestStatusTopics = new Set(['claimStatus', 'coverStatus', 'timeOffStatus']);
 const statusFollowUpDate = /^(?:(?:what|how) about |and )?(?:on |for )?(?:today|tomorrow|(?:this )?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|20\d{2}-\d{2}-\d{2}|(?:january|february|march|april|may|june|july|august|september|october|november|december) (?:\d{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,? 20\d{2})?)[.!?]*$/;
 
+export function isStatusDateFollowUp(text) {
+  return statusFollowUpDate.test(normalizedMessage(text));
+}
+
 export function routeChat(text, manager, current) {
   if (mixedRoutes(text, manager).length > 1) return 'clarification';
   const route = explicitRoute(text, manager);
@@ -87,7 +91,7 @@ export function routeChat(text, manager, current) {
   if (!manager && /^(?:i (?:can work|am available|'m available)|available on)\b/.test(message)) {
     return current === 'availability' ? current : 'clarification';
   }
-  if (!manager && requestStatusTopics.has(current) && statusFollowUpDate.test(message)) return current;
+  if (!manager && requestStatusTopics.has(current) && isStatusDateFollowUp(message)) return current;
   if (current === 'summary' && /^(?:(?:what|how) about )?(?:this|next) week[.!?]*$/.test(message)) return 'summary';
   const editable = manager ? current === 'draft' : ['search', 'availability'].includes(current);
   if (editable && /^(?:only|just|instead|actually|move|change|make it|rename|remove|leave it|extend|shorten|start|end|from|until|after|before|all day|noon|midnight|today|tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|\d+)/i.test(message)) return current;
