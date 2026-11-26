@@ -32,7 +32,8 @@ function dto(db,r,user,now){
 }
 export async function listCoverInvitations(store,userId,clock=Date.now){
   const db=await store.read(),user=db.users.find(u=>u.id===userId&&!u.deactivation&&u.passwordHash);if(!user)throw new HttpError(401,'Please sign in to continue.');
-  return {invitations:(db.coverInvitations||[]).filter(r=>r.businessId===user.businessId&&(user.role==='manager'||r.senderId===user.id||r.recipientId===user.id)).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id)).map(r=>dto(db,r,user,clock())),timezone:db.businesses.find(b=>b.id===user.businessId).timezone};
+  const now=clock();
+  return {asOf:new Date(now).toISOString(),invitations:(db.coverInvitations||[]).filter(r=>r.businessId===user.businessId&&(user.role==='manager'||r.senderId===user.id||r.recipientId===user.id)).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id)).map(r=>dto(db,r,user,now)),timezone:db.businesses.find(b=>b.id===user.businessId).timezone};
 }
 export async function sendCoverInvitation(store,userId,input,clock=Date.now){
   if(!exact(input,['recipientId','shiftId','revision','submissionId','note'])||!uuid(input.submissionId)||!revision(input.revision)||typeof input.recipientId!=='string'||typeof input.shiftId!=='string'||typeof input.note!=='string'||input.note.length>500||/[\x00-\x1f]/.test(input.note))throw new HttpError(422,'Confirm a current shift and an optional message up to 500 characters.');

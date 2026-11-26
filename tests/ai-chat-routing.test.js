@@ -98,3 +98,11 @@ test('employee claim-status requests route directly with or without active searc
   }
   assert.equal(routeChat('Show my pending claims', false, null), 'summary');
 });
+
+test('employees can check outgoing cover invitations without getting routed to claim status', () => {
+  for (const prompt of ['Did anyone accept my request to cover Friday?', 'What is the status of my cover invitation?', 'Was my cover request approved?']) {
+    assert.equal(routeChat(prompt, false, 'search'), 'coverStatus');
+    assert.notEqual(routeChat(prompt, true, null), 'coverStatus');
+  }
+  assert.notEqual(routeChat('Cancel my pending cover request', false, null), 'coverStatus');
+});

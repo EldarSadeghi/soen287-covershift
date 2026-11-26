@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { matchingClaims } from '../public/ai-claim-status.js';
+import { matchingClaims, outgoingCoverInvitations } from '../public/ai-claim-status.js';
 
 test('claim lookup narrows by business-local weekday, exact date or quoted title', () => {
   const friday = { id: 'friday', shift: { title: 'Closing', startsAt: '2026-11-28T01:00:00Z' } };
@@ -12,4 +12,10 @@ test('claim lookup narrows by business-local weekday, exact date or quoted title
   assert.deepEqual(matchingClaims(data, 'Did my "Closing" claim get approved?'), [friday]);
   assert.deepEqual(matchingClaims(data, 'Did my "Unknown" claim get approved?'), []);
   assert.equal(matchingClaims(data, 'Did my Friday or Saturday claim get approved?'), null);
+});
+
+test('cover lookup lists outgoing invitations only', () => {
+  const sent = { id: 'outgoing', senderId: 'employee', recipientId: 'coworker' };
+  const received = { id: 'incoming', senderId: 'coworker', recipientId: 'employee' };
+  assert.deepEqual(outgoingCoverInvitations({ invitations: [received, sent] }, 'employee'), [sent]);
 });
