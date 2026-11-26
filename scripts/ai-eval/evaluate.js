@@ -8,7 +8,9 @@ import { allowedIntents } from '../../src/ai/intent.js';
 const LOCAL_ONLY = { employee: ['explanation', 'rules', 'alternatives'], manager: [] };
 // A wrong route into one of these can lead to a saved change after confirmation.
 export const WRITE_CAPABLE = new Set(['draft', 'availability', 'search']);
-export const TARGETS = { accuracy: 0.95, genericRate: 0.05, writeCapableWrong: 0 };
+// CS-055: the generic target counts only unhelpful generic replies (the label
+// was a real route). A generic question is the right answer to "hello".
+export const TARGETS = { accuracy: 0.95, unhelpfulGenericRate: 0.05, writeCapableWrong: 0 };
 export const MIN_MESSAGES = 150;
 export const MIN_PER_LABEL = 3;
 
@@ -117,7 +119,7 @@ export function summarize(results, providerCalls) {
     byLabel: breakdown(row => `${row.role}:${row.expected}`),
     targets: {
       accuracy: { target: TARGETS.accuracy, met: accuracy >= TARGETS.accuracy },
-      genericRate: { target: TARGETS.genericRate, met: genericRate <= TARGETS.genericRate },
+      unhelpfulGenericRate: { target: TARGETS.unhelpfulGenericRate, met: (total ? unhelpfulGeneric / total : 0) <= TARGETS.unhelpfulGenericRate },
       writeCapableWrong: { target: TARGETS.writeCapableWrong, met: writeCapableWrong <= TARGETS.writeCapableWrong },
     },
     // Accuracy and generic-rate targets only mean something once every
@@ -134,14 +136,14 @@ export function formatReport({ results, summary }, { mode }) {
     '',
     `- Messages: ${summary.total} (${summary.fallbackMessages} needed the classifier)`,
     `- Routed correctly: ${summary.correct} / ${summary.total} (${percent(summary.accuracy)}), target at least ${percent(TARGETS.accuracy)}`,
-    `- Generic clarification: ${summary.generic} (${percent(summary.genericRate)}), target at most ${percent(TARGETS.genericRate)}`,
-    `  - of which the label was a real route (unhelpful): ${summary.unhelpfulGeneric} (${percent(summary.unhelpfulGenericRate)})`,
+    `- Unhelpful generic clarification: ${summary.unhelpfulGeneric} (${percent(summary.unhelpfulGenericRate)}), target at most ${percent(TARGETS.unhelpfulGenericRate)}`,
+    `  - all generic clarifications, including correct ones: ${summary.generic} (${percent(summary.genericRate)})`,
     `- Write-capable wrong routes: ${summary.writeCapableWrong}, target ${TARGETS.writeCapableWrong}`,
     `- Provider calls: ${summary.providerCalls}; classifier errors: ${summary.classifierErrors}; not classified: ${summary.notRun}`,
     '',
   ];
   if (!summary.complete) {
-    lines.push(`Not every fallback message was classified, so accuracy and the generic rate describe the local rules only. Run with --live for complete results.`, '');
+    lines.push(`Not every fallback message was classified, so accuracy and the unhelpful generic rate describe the local rules only. Run with --live for complete results.`, '');
   }
   lines.push('## By label', '', '| Role:label | Correct | Total |', '| --- | --- | --- |');
   for (const [name, group] of Object.entries(summary.byLabel)) lines.push(`| ${name} | ${group.correct} | ${group.total} |`);
@@ -163,5 +165,5 @@ export function formatReport({ results, summary }, { mode }) {
 export function exitCode(summary, { live }) {
   if (!summary.targets.writeCapableWrong.met) return 1;
   if (!live) return 0;
-  return summary.complete && summary.targets.accuracy.met && summary.targets.genericRate.met ? 0 : 1;
+  return summary.complete && summary.targets.accuracy.met && summary.targets.unhelpfulGenericRate.met ? 0 : 1;
 }

@@ -46,7 +46,10 @@ function explicitRoute(text, manager) {
     if (/^(?:why|how come|explain|what (?:blocked|prevented))\b/.test(message) &&
         /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/.test(message)) return 'explanation';
     if (availabilityRuleCommand(text) ||
-        /^(?:(?:show|view|list|open|check) (?:me )?)?(?:my )?(?:saved (?:availability|rules)|availability rules)[.?!]*$/.test(message)) return 'rules';
+        /^(?:(?:show|view|list|open|check) (?:me )?)?(?:my )?(?:saved (?:availability(?: rules?)?|rules)|availability rules)[.?!]*$/.test(message)) return 'rules';
+    // "I can pick up up to 2 shifts on Saturday" states availability, even though
+    // it also contains the search phrase "pick up ... shifts".
+    if (/^i can (?:take|pick up)\b.*\bshifts?\b/.test(message)) return 'availability';
     if (/^anything (?:i can|to) pick up\b|\b(?:open shifts?|openings?|unfilled shifts?|unclaimed shifts?|coverage shifts?)\b|\b(?:find|look for|search for|pick up)\b.*\bshifts?\b/.test(message)) return 'search';
     if (/\b(?:put|mark|set) me down as available\b|\b(?:save|draft|set|record|confirm)\b.*\bavailability\b|\bavailability (?:rule|draft)\b|\b(?:i can take|i can pick up|limit|maximum)\b.*\bshifts?\b/.test(message)) return 'availability';
   }
@@ -57,7 +60,8 @@ function explicitRoute(text, manager) {
   return null;
 }
 
-function mixedRoutes(text, manager) {
+// Splits a message into the separate requests it contains.
+function chatRequests(text) {
   // Keep quoted shift or rule names intact, even if they contain a conjunction.
   const clauses = text.split(/("[^"]*"|“[^”]*”|[!?;]+|\n+|\.(?=\s+[a-z])(?<![ap]\.m\.)|\band(?: then| also)?\b|\bthen\b)/i);
   const requests = [''];
@@ -65,7 +69,22 @@ function mixedRoutes(text, manager) {
     if (/^(?:[.!?;]+|\n+|and(?: then| also)?|then)$/i.test(part)) requests.push('');
     else requests[requests.length - 1] += part;
   }
-  return [...new Set(requests.map(request => explicitRoute(request.trim().replace(/^also\s+/i, ''), manager)).filter(Boolean))];
+  return requests.map(request => request.trim().replace(/^also\s+/i, '')).filter(Boolean);
+}
+
+function mixedRoutes(text, manager) {
+  return [...new Set(chatRequests(text).map(request => explicitRoute(request, manager)).filter(Boolean))];
+}
+
+// Commands the chat cannot carry out: approvals, deletions, account changes,
+// instruction overrides. A message containing one is never routed to a task,
+// even if another part of it would be ("create a shift and approve Sam's claim").
+const UNSUPPORTED_ACTION = /^(?:ignore\b.*\b(?:instructions?|rules|prompt)\b|(?:approve|reject|decline|delete|fire|publish|send|swap)\b|assign me\b|clock me (?:in|out)\b|cancel my shift\b|request (?:time[ -]off|leave)\b|make \w+ (?:a |an )?(?:manager|admin)\b|give me admin\b)/;
+
+export const UNSUPPORTED_ACTION_MESSAGE = 'I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.';
+
+export function requestsUnsupportedAction(text) {
+  return chatRequests(text).some(request => UNSUPPORTED_ACTION.test(normalizedMessage(request)));
 }
 
 export function requestsShiftBatch(text) {
@@ -90,7 +109,7 @@ export function isStatusDateFollowUp(text) {
 }
 
 export function routeChat(text, manager, current) {
-  if (mixedRoutes(text, manager).length > 1) return 'clarification';
+  if (requestsUnsupportedAction(text) || mixedRoutes(text, manager).length > 1) return 'clarification';
   const route = explicitRoute(text, manager);
   if (route) return route;
   const message = normalizedMessage(text);
@@ -112,6 +131,7 @@ export function workingSummaryWeek(text) {
 }
 
 export function chatClarification(text, manager) {
+  if (requestsUnsupportedAction(text)) return UNSUPPORTED_ACTION_MESSAGE;
   const routes = mixedRoutes(text, manager);
   if (routes.length > 1) {
     const choices = routes.map(route => taskLabels[route]).join(' or ');
