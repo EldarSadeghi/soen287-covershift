@@ -1,3 +1,4 @@
+import { createClaimStatus } from './ai-claim-status.js';
 import { showWorkingSummary, workingSummaryMessage } from './ai-working-summary.js';
 import { createBatchReview } from './ai-shift-batch.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
@@ -42,6 +43,7 @@ export function mountAiChat(account, csrfToken) {
     }
     chat.save();
   }
+  const claimStatus = !manager ? createClaimStatus({ card, chat, notice, setBusy: working, onOutcome: outcomeText }) : null;
   const batchReview = manager ? createBatchReview({ card, chat, csrfToken, notice, setBusy: working,
     onOutcome: outcomeText, canAct: () => !busy }) : null;
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
@@ -219,7 +221,7 @@ export function mountAiChat(account, csrfToken) {
       routed === 'clarification' && /^why not[.!?]*$/i.test(text) && employeeRequests.openingContext().selectedId;
     const batchReply = manager && chat.value.batchClarifying && routed === 'clarification' &&
       !chatClarification(text, true).startsWith(MIXED_INTENT_QUESTION);
-    const target = (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
+    const target = routed === 'claimStatus' ? routed : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routed;
     const wasClarifyingBatch = manager && chat.value.batchClarifying;
     const batch = manager && target === 'draft' && (requestsShiftBatch(text) || wasClarifyingBatch);
@@ -236,7 +238,7 @@ export function mountAiChat(account, csrfToken) {
     history = history.map(({ role, text }) => ({ role, text }));
     const encoder = new TextEncoder();
     while (history.length && encoder.encode(JSON.stringify(history)).length > 4500) history.splice(0, 2);
-    if (sameTopic && (chat.value.completion || chat.value.uncertainDraftId || chat.value.outcome)) {
+    if (target !== 'claimStatus' && sameTopic && (chat.value.completion || chat.value.uncertainDraftId || chat.value.outcome)) {
       notice('Use the saved schedule, coverage or availability controls for existing records. Start a new chat for a new draft.');
       return;
     }
@@ -248,6 +250,13 @@ export function mountAiChat(account, csrfToken) {
       say('assistant', reply);
       if (composer.value.trim() === text) composer.value = '';
       chat.value.composer = composer.value; chat.save();
+    }
+    if (target === 'claimStatus') {
+      explanations.reset();
+      say('user', text);
+      appendTurn('I’ll check your saved claims.');
+      await claimStatus.load(text);
+      return;
     }
     if (target === 'summary') {
       const week = workingSummaryWeek(text);

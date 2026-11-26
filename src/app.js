@@ -34,6 +34,7 @@ const assets = new Map([
   ['/availability-view.js',['availability-view.js','text/javascript; charset=utf-8']],
   ['/time-off.js', ['time-off.js', 'text/javascript; charset=utf-8']],
   ['/ai-response-card.js', ['ai-response-card.js', 'text/javascript; charset=utf-8']],
+  ['/ai-claim-status.js', ['ai-claim-status.js', 'text/javascript; charset=utf-8']],
   ['/ai-working-summary.js', ['ai-working-summary.js', 'text/javascript; charset=utf-8']],
   ['/ai-schedule.js', ['ai-schedule.js', 'text/javascript; charset=utf-8']],
   ['/notifications.js', ['notifications.js', 'text/javascript; charset=utf-8']],
