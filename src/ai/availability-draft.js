@@ -2,7 +2,7 @@ import { refinementFormat, applyRefinement, refinementInstructions } from './ref
 import { HttpError } from '../auth/errors.js';
 import { availabilityAccount, availabilityFields } from '../availability/rules.js';
 import { validateChatInput } from './shift-draft.js';
-import { structuredResponse } from './structured-response.js';
+import { aiConfigured, responsesBody, structuredResponse } from './structured-response.js';
 const unavailable=()=>new HttpError(503,'AI availability drafting is unavailable. Your message is preserved; try again later.');
 const keys=['kind','question','startLocal','endLocal','title','maxClaims'];
 const schema={type:'object',additionalProperties:false,properties:{kind:{type:'string',enum:['availability','clarification']},question:{type:'string'},startLocal:{type:'string'},endLocal:{type:'string'},title:{type:'string'},maxClaims:{type:'integer',minimum:0,maximum:5}},required:keys};
@@ -11,9 +11,10 @@ Use supplied current business date/time and timezone. Bare Thursday and next Thu
 For kind=availability return question='', startLocal/endLocal YYYY-MM-DDTHH:mm (no offsets), title literal requested shift title keyword or '' for any title, maxClaims requested maximum 1–5 or conservative default 1 when unspecified (always displayed before confirmation). Do not invent a title, date, hours or other preferences. For kind=clarification give a helpful question/explanation max500 characters, startLocal/endLocal/title='', maxClaims=0. No IDs, tools, HTML, secrets or emails.`;
 export function createAiAvailabilityDrafter({apiKey,model='gpt-6-luna',allowance,fetchImpl=fetch,timeoutMs=11000}={}) {
  const active=new Set();
- return async(store,userId,input,clock=Date.now)=>{
-  input=validateChatInput(input, true);const {business}=availabilityAccount(await store.read(),userId);
-  if(!apiKey || !model?.trim() || !allowance)throw unavailable();
+ return async (store, userId, input, clock = Date.now, { prepaid = false } = {}) => {
+  input = validateChatInput(input, true);
+  const { business } = availabilityAccount(await store.read(), userId);
+  if (!aiConfigured({ apiKey, model, allowance })) throw unavailable();
   if(active.has(userId)||active.size>=2)throw new HttpError(429,'AI is busy. Wait for the current request.');
   const now=clock();
   let base;
@@ -22,12 +23,26 @@ export function createAiAvailabilityDrafter({apiKey,model='gpt-6-luna',allowance
    const {startLocal,endLocal,title,maxClaims}=input.base;
    base={startLocal,endLocal,title,maxClaims};
   }
-  const context={currentInstant:new Date(now).toISOString(),currentBusinessTime:new Intl.DateTimeFormat('en-CA',{timeZone:business.timezone,dateStyle:'full',timeStyle:'long',hourCycle:'h23'}).format(now),timezone:business.timezone,conversation:input.history,request:input.description,...(base && {pendingDraft:base})};
-  const body=JSON.stringify({model,store:false,...(model === 'gpt-6-luna' && { reasoning: { effort: 'none' } }),max_output_tokens:1200,instructions:instructions+(base?refinementInstructions:''),input:JSON.stringify(context),text:{format:{type:'json_schema',name:'availability_draft',strict:true,schema:refinementFormat(schema,base)}}});
+  const context = {
+   currentInstant: new Date(now).toISOString(),
+   currentBusinessTime: new Intl.DateTimeFormat('en-CA', { timeZone: business.timezone, dateStyle: 'full', timeStyle: 'long', hourCycle: 'h23' }).format(now),
+   timezone: business.timezone,
+   conversation: input.history,
+   request: input.description,
+   ...(base && { pendingDraft: base }),
+  };
+  const body = responsesBody({
+   model,
+   name: 'availability_draft',
+   schema: refinementFormat(schema, base),
+   instructions: instructions + (base ? refinementInstructions : ''),
+   input: JSON.stringify(context),
+   maxOutputTokens: 1200,
+  });
   if(Buffer.byteLength(body)>16000)throw new HttpError(422,'This chat is too long. Start a new chat.');
   active.add(userId);
   try{
-   await allowance.reserve(userId, now, business.timezone);
+   if (!prepaid) await allowance.reserve(userId, now, business.timezone);
    const result=applyRefinement(await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable}),base,unavailable);
    if(!result || Array.isArray(result) || Object.keys(result).length!==keys.length || !keys.slice(0,-1).every(k=>typeof result[k]==='string') || !Number.isInteger(result.maxClaims))throw unavailable();
    const current=availabilityAccount(await store.read(),userId);

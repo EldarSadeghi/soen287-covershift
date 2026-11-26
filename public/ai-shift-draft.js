@@ -110,6 +110,27 @@ export function mountAiChat(account, csrfToken) {
     samples.append(button);
   }
 
+  // Asks the server to classify a message the local rules could not route.
+  // Returns { intent, pass } on success, {} to keep the local clarification,
+  // or null when the session expired and the page is navigating away.
+  async function classifyUnmatched(text) {
+    const allowed = ['questions', 'summary', ...(manager ? ['draft'] :
+      ['search', 'availability', 'coworkers', 'claimStatus', 'coverStatus', 'timeOffStatus'])];
+    working(true);
+    try {
+      const result = await requestJSON('/api/ai-intent', {
+        method: 'POST', readOnly: true,
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify({ description: text }),
+      });
+      if (result.status === 401) { chat.clear(); location.replace('/login?expired=1'); return null; }
+      const intent = result.data?.intent;
+      if (!result.ok || !allowed.includes(intent)) return {};
+      return { intent, pass: typeof result.data.pass === 'string' ? result.data.pass : null };
+    } catch {
+      return {}; // The local clarification remains available when inference fails.
+    } finally { working(false); }
+  }
   function assistantReply(text) {
     return text.length > 180 ? responseDetails('View earlier reply', text) : element('p', '', text);
   }
@@ -238,25 +259,18 @@ export function mountAiChat(account, csrfToken) {
     let statusLookup = choice !== undefined || Object.hasOwn(statusLookups, routed);
     let target = statusLookup ? (choice !== undefined ? previousTopic : routed) : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routed;
+    // Only the generic "What would you like me to check" fallback asks the
+    // server-side classifier; specific clarifications stay local.
+    let intentPass = null;
     if (target === 'clarification' && /^What would you like me to check/.test(chatClarification(text, manager)) &&
         !/^(?:do not|don't|never)\b/i.test(text) && /[a-z]{2}/i.test(text)) {
-      working(true);
-      try {
-        const result = await requestJSON('/api/ai-intent', {
-          method: 'POST', readOnly: true,
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-          body: JSON.stringify({ description: text }),
-        });
-        if (result.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
-        const intent = result.data?.intent;
-        if (result.ok && ['questions', 'summary', ...(manager ? ['draft'] :
-          ['search', 'availability', 'coworkers', 'claimStatus', 'coverStatus', 'timeOffStatus'])].includes(intent)) {
-          target = intent;
-          statusLookup = Object.hasOwn(statusLookups, target);
-        }
-      } catch {
-        // The local clarification remains available when inference fails.
-      } finally { working(false); }
+      const classified = await classifyUnmatched(text);
+      if (classified === null) return;
+      if (classified.intent) {
+        target = classified.intent;
+        statusLookup = Object.hasOwn(statusLookups, target);
+        intentPass = classified.pass;
+      }
     }
     const wasClarifyingBatch = manager && chat.value.batchClarifying;
     const batch = manager && target === 'draft' && (requestsShiftBatch(text) || wasClarifyingBatch);
@@ -451,7 +465,7 @@ export function mountAiChat(account, csrfToken) {
       return;
     }
     const base = batch || previous?.topic === 'clarification' ? null : mode === 'draft' ? chat.value.suggestion?.draft : mode === 'availability' ? chat.value.availabilityDraft : mode === 'search' ? chat.value.criteria : null;
-    const body = JSON.stringify({ description: text, history, ...(batch && { batch: true }), ...(base && { base }) });
+    const body = JSON.stringify({ description: text, history, ...(batch && { batch: true }), ...(base && { base }), ...(intentPass && { intentPass }) });
     if (encoder.encode(body).length > 8000) { notice('This chat has reached its context limit. Start a new chat and include the shift details again.'); return; }
     const version = ++revision; busy = true; send.disabled = true; send.textContent = 'Thinking…';
     if (manager) {

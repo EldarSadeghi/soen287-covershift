@@ -4,6 +4,7 @@ import {coverOptions,listCoverInvitations,sendCoverInvitation,decideCoverInvitat
 import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailability,coworkerUpcomingWindows} from './availability/windows.js';
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
 import { workingSummary } from './ai/working-summary.js';
+import { createIntentPasses, takeIntentPass } from './ai/intent-pass.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
 import { withAvailabilityMatching } from './availability/matching.js';
@@ -118,7 +119,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability', 'cover'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability', 'cover'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null, intentPasses = createIntentPasses() }) {
   const availabilityWindowStore=store; // General windows do not participate in automatic claims.
   store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
@@ -128,6 +129,14 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitCoverage = createSignupLimiter({ limit: 30, message: 'Too many coverage changes. Please wait 10 minutes and try again.' });
   const limitNotificationReads = createSignupLimiter({ limit: 120, message: 'Too many notification updates. Please wait and refresh.' });
   const limitAi = createSignupLimiter({ limit: 20, windowMs: 120000, message: seconds => `Too many AI requests. Try again in ${seconds} seconds.` });
+  const chatText = input => (typeof input?.description === 'string' ? input.description.trim() : '');
+  // Reads an AI chat body. A valid intent pass means /api/ai-intent already
+  // reserved allowance for this exact message, so the handler must not reserve again.
+  async function readAiChat(request, userId, intent) {
+    const { input, token } = takeIntentPass(await readJson(request));
+    const prepaid = intentPasses.redeem(token, userId, intent, chatText(input), shiftClock());
+    return { input, options: { prepaid } };
+  }
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'same-origin');
@@ -233,12 +242,17 @@ export function createAppServer({ store, signup = registerManager, login = authe
         if (!handler) {
           throw new HttpError(503, classifying ? 'AI intent recognition is not configured.' : 'AI schedule questions are not configured.');
         }
-        const input = await readJson(request);
+        if (classifying) {
+          const input = await readJson(request);
+          limitAi(account.user.id);
+          const { intent } = await handler(account, input, shiftClock);
+          const pass = intentPasses.issue(account.user.id, intent, chatText(input), shiftClock());
+          sendJson(response, 200, { intent, ...(pass && { pass }) });
+          return;
+        }
+        const { input, options } = await readAiChat(request, account.user.id, 'questions');
         limitAi(account.user.id);
-        const result = classifying
-          ? await handler(account, input, shiftClock)
-          : await handler(store, account.user.id, input, shiftClock);
-        sendJson(response, 200, result);
+        sendJson(response, 200, await handler(store, account.user.id, input, shiftClock, options));
         return;
       }
       if (pathname === '/api/notifications'  || pathname === '/api/notifications/read') {
@@ -329,37 +343,59 @@ export function createAppServer({ store, signup = registerManager, login = authe
         const parts = pathname.split('/');
         sendJson(response, 200, await manageShift(store, account.user.id, parts[4], parts[5], await readJson(request), shiftClock)); return;
       }
-      if (pathname === '/api/worker/availability-rules' || /^\/api\/worker\/availability-rules\/[a-zA-Z0-9_-]{1,80}\/(pause|resume|cancel)$/.test(pathname) || pathname === '/api/worker/ai-availability-draft') {
+      const ruleChange = /^\/api\/worker\/availability-rules\/[a-zA-Z0-9_-]{1,80}\/(pause|resume|cancel)$/.test(pathname);
+      if (pathname === '/api/worker/availability-rules' || ruleChange || pathname === '/api/worker/ai-availability-draft') {
         const list = pathname === '/api/worker/availability-rules' && request.method === 'GET';
         requireMethod(request, response, list ? 'GET' : 'POST');
-        const account = await requireAccount(store,sessions,request.headers.cookie,'worker');
-        if (new URL(request.url,'http://localhost').search) throw new HttpError(400,'Availability uses your signed-in account.');
-        if (list) { sendJson(response,200,await listAvailability(store,account.user.id,shiftClock)); return; }
-        protectMutation(request,publicOrigin);
-        if (!sessions.validCsrf(account.session,request.headers['x-csrf-token'])) throw new HttpError(403,'Refresh the page and try again.');
-        const input=await readJson(request);
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        if (new URL(request.url, 'http://localhost').search) {
+          throw new HttpError(400, 'Availability uses your signed-in account.');
+        }
+        if (list) {
+          sendJson(response, 200, await listAvailability(store, account.user.id, shiftClock));
+          return;
+        }
+        protectMutation(request, publicOrigin);
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) {
+          throw new HttpError(403, 'Refresh the page and try again.');
+        }
         if (pathname === '/api/worker/ai-availability-draft') {
+          const { input, options } = await readAiChat(request, account.user.id, 'availability');
           limitAi(account.user.id);
-          if (!aiAvailability) throw new HttpError(503,'AI availability drafting is not configured.');
-          sendJson(response,200,await aiAvailability(store,account.user.id,input,shiftClock));
+          if (!aiAvailability) throw new HttpError(503, 'AI availability drafting is not configured.');
+          sendJson(response, 200, await aiAvailability(store, account.user.id, input, shiftClock, options));
+          return;
+        }
+        const input = await readJson(request);
+        limitCoverage(account.user.id);
+        if (ruleChange) {
+          // /api/worker/availability-rules/:ruleId/:action
+          const parts = pathname.split('/');
+          const ruleId = parts[4];
+          const action = parts[5];
+          sendJson(response, 200, await changeAvailability(store, account.user.id, ruleId, action, input, shiftClock));
         } else {
-          limitCoverage(account.user.id);
-          if (pathname === '/api/worker/availability-rules') sendJson(response,200,await confirmAvailability(store,account.user.id,input,shiftClock));
-          else { const parts=pathname.split('/'); sendJson(response,200,await changeAvailability(store,account.user.id,parts[4],parts[5],input,shiftClock)); }
+          sendJson(response, 200, await confirmAvailability(store, account.user.id, input, shiftClock));
         }
         return;
       }
       if (['/api/worker/ai-shift-search', '/api/worker/shift-search', '/api/worker/shift-alternatives'].includes(pathname)) {
-        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        requireMethod(request, response, 'POST');
+        protectMutation(request, publicOrigin);
         const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
-        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
-        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Search uses your signed-in business.');
-        const input = await readJson(request);
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) {
+          throw new HttpError(403, 'Refresh the page and try again.');
+        }
+        if (new URL(request.url, 'http://localhost').search) {
+          throw new HttpError(400, 'Search uses your signed-in business.');
+        }
         if (pathname === '/api/worker/ai-shift-search') {
+          const { input, options } = await readAiChat(request, account.user.id, 'search');
           limitAi(account.user.id);
           if (!aiSearch) throw new HttpError(503, 'AI search is not configured. Use Open shifts.');
-          sendJson(response, 200, await aiSearch(store, account.user.id, input, shiftClock));
+          sendJson(response, 200, await aiSearch(store, account.user.id, input, shiftClock, options));
         } else {
+          const input = await readJson(request);
           limitCoverage(account.user.id);
           const search = pathname.endsWith('/shift-alternatives') ? searchAlternativeShifts : searchExistingShifts;
           sendJson(response, 200, await search(store, account.user.id, input, shiftClock));
@@ -367,14 +403,20 @@ export function createAppServer({ store, signup = registerManager, login = authe
         return;
       }
       if (pathname === '/api/manager/ai-shift-draft') {
-        requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);
+        requireMethod(request, response, 'POST');
+        protectMutation(request, publicOrigin);
         const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
-        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) throw new HttpError(403, 'Refresh the page and try again.');
-        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Drafting uses your signed-in business.');
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) {
+          throw new HttpError(403, 'Refresh the page and try again.');
+        }
+        if (new URL(request.url, 'http://localhost').search) {
+          throw new HttpError(400, 'Drafting uses your signed-in business.');
+        }
         limitAi(account.user.id);
-        const input = await readJson(request);
+        const { input, options } = await readAiChat(request, account.user.id, 'draft');
         if (!aiDraft) throw new HttpError(503, 'AI drafting is not configured. Use the manual shift form.');
-        sendJson(response, 200, await aiDraft(store, account.user.id, input, shiftClock)); return;
+        sendJson(response, 200, await aiDraft(store, account.user.id, input, shiftClock, options));
+        return;
       }
       if (pathname === '/api/manager/shift-batches') {
         requireMethod(request, response, 'POST'); protectMutation(request, publicOrigin);

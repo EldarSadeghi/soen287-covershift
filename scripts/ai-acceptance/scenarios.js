@@ -3,6 +3,7 @@
 // remain real. Add a stable scenario/check ID whenever an increment expands AI.
 import {randomUUID} from 'node:crypto';
 import {createEmployeeChatState} from '../../public/ai-employee-state.js';
+import {chatClarification,routeChat} from '../../public/ai-chat-routing.js';
 const manager='manager_morgan',employee='worker_jamie';
 const routes={shift_draft:'/api/manager/ai-shift-draft',existing_shift_search:'/api/worker/ai-shift-search',availability_draft:'/api/worker/ai-availability-draft',schedule_question:'/api/ai-schedule-question'};
 const schedule=(kind='hours',workerName='')=>({kind,question:'',startDate:kind==='next'?'':'2030-01-07',endDate:kind==='next'?'':'2030-01-14',workerName});
@@ -285,4 +286,35 @@ export const scenarios=[
  }
 },
 
+{id:'CS053-C01',title:'Unmatched employee message → AI intent → answered search using one allowance',async run(c){
+  const message='anything going for me on thursday afternoon';
+  c.check('local-unmatched','Local routing cannot place the message, so the generic clarification would be shown.',
+    [routeChat(message,false,null),chatClarification(message,false).startsWith('What would you like me to check')],['clarification',true]);
+  const before=await c.bytes();
+  c.expect({task:'covershift_intent',message,reply:{intent:'search'}});
+  const classified=await c.http(employee,'/api/ai-intent',{description:message});
+  c.check('classified','The classifier returns an employee intent with a single-use pass.',
+    [classified.status,classified.data.intent,typeof classified.data.pass],[200,'search','string']);
+  c.check('one-reservation','Classification reserves exactly one allowance use.',await c.usage(),1);
+  c.expect({task:'existing_shift_search',message,reply:search()});
+  const answered=await c.http(employee,routes.existing_shift_search,{description:message,intentPass:classified.data.pass});
+  c.check('answered','The classified message is answered by the search workflow.',[answered.status,answered.data.kind],[200,'matches']);
+  c.check('still-one','The answer reuses the classification reservation instead of reserving again.',await c.usage(),1);
+  c.expect({task:'existing_shift_search',message,reply:search()});
+  await c.http(employee,routes.existing_shift_search,{description:message,intentPass:classified.data.pass});
+  c.check('no-replay','A replayed pass is charged as a normal request.',await c.usage(),2);
+  c.check('read-only','Classification and search write no business data.',await c.bytes(),before);
+}},
+{id:'CS053-C02',title:'Classifier failure keeps the local clarification without extra allowance use',async run(c){
+  const message='anything going for me on thursday afternoon';
+  const before=await c.bytes();
+  c.expect({task:'covershift_intent',message,failure:'http'});
+  const failed=await c.http(employee,'/api/ai-intent',{description:message});
+  c.check('safe-failure','A provider failure returns a safe 503 without provider details or a pass.',
+    [failed.status,JSON.stringify(failed.data).includes('FICTIONAL_PRIVATE_PROVIDER_CANARY'),Object.hasOwn(failed.data,'pass')],[503,false,false]);
+  c.check('fallback','The chat falls back to the normal local clarification question.',
+    chatClarification(message,false),'What would you like me to check: your schedule, an open shift, or a saved availability rule?');
+  c.check('no-extra-use','Only the attempted classification is counted; the fallback makes no further AI call.',[await c.usage(),c.calls.length],[1,1]);
+  c.check('read-only','The failure writes no business data.',await c.bytes(),before);
+}},
 ];

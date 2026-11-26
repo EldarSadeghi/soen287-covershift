@@ -1,5 +1,5 @@
 import { refinementFormat, applyRefinement, refinementInstructions } from './refinement.js';
-import { structuredResponse } from './structured-response.js';
+import { aiConfigured, responsesBody, structuredResponse } from './structured-response.js';
 import { batchAssignments, MAX_BATCH_SHIFTS } from '../shifts/batch.js';
 import { HttpError } from '../auth/errors.js';
 import { businessInstant, managerBusiness, assignmentFields, validateShiftInput } from '../shifts/create.js';
@@ -66,7 +66,8 @@ export function validateChatInput(input, allowRefinement = false) {
 
 export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, fetchImpl = fetch, timeoutMs = 11000 } = {}) {
   const active = new Set();
-  return async function draftShift(store, managerId, input, clock = Date.now) {
+  // `prepaid` is true only when a redeemed intent pass already reserved allowance.
+  return async function draftShift(store, managerId, input, clock = Date.now, { prepaid = false } = {}) {
     const batch = input?.batch === true;
     if (batch) {
       const { batch: requested, ...chat } = input;
@@ -74,7 +75,7 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
     }
     input = validateChatInput(input, !batch);
     let db = await store.read(); let business = managerBusiness(db, managerId);
-    if (!apiKey || !model?.trim() || !allowance) throw unavailable();
+    if (!aiConfigured({ apiKey, model, allowance })) throw unavailable();
     if (active.has(managerId) || active.size >= 2) throw new HttpError(429, 'AI drafting is already busy. Wait for the current request or use the manual form.');
     const workers = db.users.filter(user => user.role === 'worker' && !user.deactivation && user.businessId === business.id).map((user, index) => ({ ref: `w${index + 1}`, name: user.name, id: user.id }));
     if (!workers.length) throw new HttpError(422, 'Add an active worker before drafting a shift.');
@@ -101,15 +102,18 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
       ...(base && { pendingDraft: base }),
       request: input.description,
     };
-    const body = JSON.stringify({ model, store: false, ...(model === 'gpt-6-luna' && { reasoning: { effort: 'none' } }), max_output_tokens: 1200,
-      instructions: batch ? batchInstructions : instructions + (base ? refinementInstructions : ''), input: JSON.stringify(context), text: { format: {
-        type: 'json_schema', name: batch ? 'shift_batch' : 'shift_draft', strict: true,
-        schema: batch ? batchSchema(workers) : refinementFormat(schema(workers), base),
-      } } });
+    const body = responsesBody({
+      model,
+      name: batch ? 'shift_batch' : 'shift_draft',
+      schema: batch ? batchSchema(workers) : refinementFormat(schema(workers), base),
+      instructions: batch ? batchInstructions : instructions + (base ? refinementInstructions : ''),
+      input: JSON.stringify(context),
+      maxOutputTokens: 1200,
+    });
     if (Buffer.byteLength(body) > 16000) throw new HttpError(422, 'This description and team are too large for AI drafting. Use a shorter description or the manual form.');
     active.add(managerId);
     try {
-      await allowance.reserve(managerId, now, business.timezone);
+      if (!prepaid) await allowance.reserve(managerId, now, business.timezone);
       const response = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
       // Recheck current membership after inference; model output never authorizes access.
       db = await store.read(); business = managerBusiness(db, managerId);
