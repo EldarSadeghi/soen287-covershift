@@ -3,8 +3,11 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { HttpError } from '../auth/errors.js';
 
-// Append-only reservations: reserve BEFORE calling the provider. Failed calls
+// Append-only reservations: reserve BEFORE every provider call. Failed calls
 // count too, since a timeout cannot prove that paid inference did not run.
+// `total` caps provider calls for the whole data directory. `daily` caps user
+// turns: a follow-up call for a message whose intent was already classified
+// passes { newTurn: false }, so it still counts toward `total` but not `daily`.
 // The single-server contract matches the application's JSON storage contract.
 const queues = new Map();
 export class AiAllowance {
@@ -12,7 +15,7 @@ export class AiAllowance {
     if (![total, daily].every(value => Number.isInteger(value) && value >= 1 && value <= 500)) throw new Error('AI allowance must be between 1 and 500 requests.');
     this.directory = directory; this.total = total; this.daily = daily;
   }
-  async reserve(userId, now, timezone = 'UTC') {
+  async reserve(userId, now, timezone = 'UTC', { newTurn = true } = {}) {
     const previous = queues.get(this.directory) || Promise.resolve();
     const work = previous.catch(() => {}).then(async () => {
       await mkdir(this.directory, { recursive: true, mode: 0o700 });
@@ -33,12 +36,14 @@ export class AiAllowance {
           let usedToday = 0;
           for (const name of names) {
             const entry = JSON.parse(await readFile(join(this.directory, name), 'utf8'));
-            if (!/^[a-f0-9]{64}$/.test(entry.actor) || !/^\d{4}-\d{2}-\d{2}$/.test(entry.day)) throw new Error('Invalid allowance entry');
-            if (entry.actor === actor && (Number.isFinite(entry.at) ? calendar.format(entry.at) === day : entry.day === legacyDay || entry.day === day)) usedToday++;
+            if (!/^[a-f0-9]{64}$/.test(entry.actor) || !/^\d{4}-\d{2}-\d{2}$/.test(entry.day) ||
+                (Object.hasOwn(entry, 'turn') && entry.turn !== false)) throw new Error('Invalid allowance entry');
+            if (entry.turn === false || entry.actor !== actor) continue; // Follow-up calls are not new turns.
+            if (Number.isFinite(entry.at) ? calendar.format(entry.at) === day : entry.day === legacyDay || entry.day === day) usedToday++;
           }
-          if (usedToday >= this.daily) throw new HttpError(429, 'You’ve reached today’s AI request limit. Try after midnight in your business timezone.');
+          if (newTurn && usedToday >= this.daily) throw new HttpError(429, 'You’ve reached today’s AI request limit. Try after midnight in your business timezone.');
           const file = await open(join(this.directory, `${String(names.length + 1).padStart(4, '0')}.json`), 'wx', 0o600);
-          try { await file.writeFile(JSON.stringify({ actor, day, at: now })); await file.sync(); }
+          try { await file.writeFile(JSON.stringify({ actor, day, at: now, ...(!newTurn && { turn: false }) })); await file.sync(); }
           finally { await file.close(); }
           return { remaining: this.total - names.length - 1 };
         } finally { await rmdir(lock); }

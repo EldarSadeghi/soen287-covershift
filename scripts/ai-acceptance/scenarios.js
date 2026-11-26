@@ -286,7 +286,7 @@ export const scenarios=[
  }
 },
 
-{id:'CS053-C01',title:'Unmatched employee message → AI intent → answered search using one allowance',async run(c){
+{id:'CS053-C01',title:'Unmatched employee message → AI intent → answered search as one turn with every provider call counted',async run(c){
   const message='anything going for me on thursday afternoon';
   c.check('local-unmatched','Local routing cannot place the message, so the generic clarification would be shown.',
     [routeChat(message,false,null),chatClarification(message,false).startsWith('What would you like me to check')],['clarification',true]);
@@ -295,14 +295,14 @@ export const scenarios=[
   const classified=await c.http(employee,'/api/ai-intent',{description:message});
   c.check('classified','The classifier returns an employee intent with a single-use pass.',
     [classified.status,classified.data.intent,typeof classified.data.pass],[200,'search','string']);
-  c.check('one-reservation','Classification reserves exactly one allowance use.',await c.usage(),1);
+  c.check('one-reservation','Classification reserves one provider call and one user turn.',await c.usage(),{calls:1,turns:1});
   c.expect({task:'existing_shift_search',message,reply:search()});
   const answered=await c.http(employee,routes.existing_shift_search,{description:message,intentPass:classified.data.pass});
   c.check('answered','The classified message is answered by the search workflow.',[answered.status,answered.data.kind],[200,'matches']);
-  c.check('still-one','The answer reuses the classification reservation instead of reserving again.',await c.usage(),1);
+  c.check('still-one-turn','The answer reserves its own provider call but is not a new daily turn.',await c.usage(),{calls:2,turns:1});
   c.expect({task:'existing_shift_search',message,reply:search()});
   await c.http(employee,routes.existing_shift_search,{description:message,intentPass:classified.data.pass});
-  c.check('no-replay','A replayed pass is charged as a normal request.',await c.usage(),2);
+  c.check('no-replay','A replayed pass is charged as a normal new turn.',await c.usage(),{calls:3,turns:2});
   c.check('read-only','Classification and search write no business data.',await c.bytes(),before);
 }},
 {id:'CS053-C02',title:'Classifier failure keeps the local clarification without extra allowance use',async run(c){
@@ -314,7 +314,7 @@ export const scenarios=[
     [failed.status,JSON.stringify(failed.data).includes('FICTIONAL_PRIVATE_PROVIDER_CANARY'),Object.hasOwn(failed.data,'pass')],[503,false,false]);
   c.check('fallback','The chat falls back to the normal local clarification question.',
     chatClarification(message,false),'What would you like me to check: your schedule, an open shift, or a saved availability rule?');
-  c.check('no-extra-use','Only the attempted classification is counted; the fallback makes no further AI call.',[await c.usage(),c.calls.length],[1,1]);
+  c.check('no-extra-use','Only the attempted classification is counted; the fallback makes no further AI call.',[await c.usage(),c.calls.length],[{calls:1,turns:1},1]);
   c.check('read-only','The failure writes no business data.',await c.bytes(),before);
 }},
 ];

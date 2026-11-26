@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { JsonStore } from '../src/storage/json-store.js';
@@ -35,7 +35,7 @@ function provider(intent = 'search') {
   return { fetchImpl, calls };
 }
 
-async function startServer(t, { intent, aiOptions = {}, withIntent = true } = {}) {
+async function startServer(t, { intent, aiOptions = {}, withIntent = true, limits } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'covershift-intent-route-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const store = new JsonStore(join(dir, 'covershift.json'));
@@ -44,7 +44,7 @@ async function startServer(t, { intent, aiOptions = {}, withIntent = true } = {}
   await store.transaction(db => { for (const user of db.users) user.passwordHash = 'fictional hash'; });
   const usageDir = join(dir, 'ai-usage');
   const fake = provider(intent);
-  const options = { apiKey: 'test-secret', allowance: new AiAllowance(usageDir), fetchImpl: fake.fetchImpl, ...aiOptions };
+  const options = { apiKey: 'test-secret', allowance: new AiAllowance(usageDir, limits), fetchImpl: fake.fetchImpl, ...aiOptions };
   const sessions = new SessionStore();
   const server = createAppServer({
     store, sessions, shiftClock: clock,
@@ -61,7 +61,15 @@ async function startServer(t, { intent, aiOptions = {}, withIntent = true } = {}
     return { Cookie: cookie, Origin: base, 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken };
   }
   const post = (path, headers, body) => fetch(base + path, { method: 'POST', headers, body: JSON.stringify(body) });
-  const usage = async () => (await readdir(usageDir).catch(() => [])).filter(name => name.endsWith('.json')).length;
+  const records = async () => {
+    const names = (await readdir(usageDir).catch(() => [])).filter(name => name.endsWith('.json'));
+    return Promise.all(names.map(async name => JSON.parse(await readFile(join(usageDir, name), 'utf8'))));
+  };
+  // calls = provider-call reservations (lifetime cap); turns = user turns (daily limit).
+  const usage = async () => {
+    const rows = await records();
+    return { calls: rows.length, turns: rows.filter(row => row.turn !== false).length };
+  };
   return { base, signIn, post, usage, calls: fake.calls };
 }
 
@@ -120,41 +128,89 @@ test('/api/ai-intent is rate limited per user', async t => {
   assert.equal((await app.post('/api/ai-intent', await app.signIn('worker_alex'), { description: 'hi' })).status, 200);
 });
 
-test('a classified message uses the daily allowance once, and a pass cannot be reused', async t => {
+test('a classified message is one turn, but every provider call is reserved', async t => {
   const app = await startServer(t, { intent: 'search' });
   const jamie = await app.signIn('worker_jamie');
   const description = 'anything going for me on the weekend';
+  const classify = async (headers = jamie) => (await (await app.post('/api/ai-intent', headers, { description })).json()).pass;
 
-  const { pass } = await (await app.post('/api/ai-intent', jamie, { description })).json();
-  assert.equal(await app.usage(), 1);
+  const pass = await classify();
+  assert.deepEqual(await app.usage(), { calls: 1, turns: 1 });
   const answered = await app.post('/api/worker/ai-shift-search', jamie, { description, intentPass: pass });
   assert.equal(answered.status, 200);
   assert.equal((await answered.json()).kind, 'clarification');
-  assert.equal(await app.usage(), 1, 'the follow-up request must not reserve allowance again');
+  assert.deepEqual(await app.usage(), { calls: 2, turns: 1 }, 'the answer is a provider call but not a new turn');
 
-  // Replaying the same pass is charged normally.
+  // Replaying the same pass is a new turn.
   assert.equal((await app.post('/api/worker/ai-shift-search', jamie, { description, intentPass: pass })).status, 200);
-  assert.equal(await app.usage(), 2);
+  assert.deepEqual(await app.usage(), { calls: 3, turns: 2 });
 
   // A pass is bound to the exact message text.
-  const second = (await (await app.post('/api/ai-intent', jamie, { description })).json()).pass;
-  assert.equal(await app.usage(), 3);
+  const second = await classify();
   await app.post('/api/worker/ai-shift-search', jamie, { description: 'a different message', intentPass: second });
-  assert.equal(await app.usage(), 4);
+  assert.deepEqual(await app.usage(), { calls: 5, turns: 4 });
 
   // A pass is bound to the user who classified the message.
-  const third = (await (await app.post('/api/ai-intent', jamie, { description })).json()).pass;
+  const third = await classify();
   await app.post('/api/worker/ai-shift-search', await app.signIn('worker_alex'), { description, intentPass: third });
-  assert.equal(await app.usage(), 6);
+  assert.deepEqual(await app.usage(), { calls: 7, turns: 6 });
 
   // A pass is bound to the classified feature.
-  const fourth = (await (await app.post('/api/ai-intent', jamie, { description })).json()).pass;
+  const fourth = await classify();
   assert.equal((await app.post('/api/ai-schedule-question', jamie, { description, intentPass: fourth })).status, 200);
-  assert.equal(await app.usage(), 8);
+  assert.deepEqual(await app.usage(), { calls: 9, turns: 8 });
 
   // Garbage passes are ignored rather than rejected.
   assert.equal((await app.post('/api/worker/ai-shift-search', jamie, { description, intentPass: 42 })).status, 200);
-  assert.equal(await app.usage(), 9);
+  assert.deepEqual(await app.usage(), { calls: 10, turns: 9 });
+});
+
+test('the lifetime cap counts the answer call even when its turn was already counted', async t => {
+  const app = await startServer(t, { intent: 'search', limits: { total: 1 } });
+  const jamie = await app.signIn('worker_jamie');
+  const description = 'anything going for me on the weekend';
+  const { pass } = await (await app.post('/api/ai-intent', jamie, { description })).json();
+  const capped = await app.post('/api/worker/ai-shift-search', jamie, { description, intentPass: pass });
+  assert.equal(capped.status, 429);
+  assert.match((await capped.json()).message, /allowance is used up/);
+  assert.equal(app.calls.length, 1, 'no provider call is made past the lifetime cap');
+});
+
+test('the daily limit counts turns, so the answer to the last classified turn still runs', async t => {
+  const app = await startServer(t, { intent: 'search', limits: { daily: 1 } });
+  const jamie = await app.signIn('worker_jamie');
+  const description = 'anything going for me on the weekend';
+  const { pass } = await (await app.post('/api/ai-intent', jamie, { description })).json();
+  assert.equal((await app.post('/api/worker/ai-shift-search', jamie, { description, intentPass: pass })).status, 200);
+  const next = await app.post('/api/ai-intent', jamie, { description: 'and next week?' });
+  assert.equal(next.status, 429);
+  assert.match((await next.json()).message, /today’s AI request limit/);
+});
+
+test('a classified turn uses one short-term slot, even when it is the last one', async t => {
+  const app = await startServer(t, { intent: 'search', aiOptions: { allowance: { reserve: async () => ({}) } } });
+  const jamie = await app.signIn('worker_jamie');
+  let pass;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const response = await app.post('/api/ai-intent', jamie, { description: 'weekend shifts?' });
+    assert.equal(response.status, 200);
+    ({ pass } = await response.json());
+  }
+  const answered = await app.post('/api/worker/ai-shift-search', jamie, { description: 'weekend shifts?', intentPass: pass });
+  assert.equal(answered.status, 200, 'the answer to an already-counted turn must not hit the short-term limit');
+  const unpassed = await app.post('/api/worker/ai-shift-search', jamie, { description: 'weekend shifts?' });
+  assert.equal(unpassed.status, 429);
+});
+
+test('allowance records follow-up calls without counting them as daily turns', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'covershift-allowance-turns-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const allowance = new AiAllowance(dir, { total: 3, daily: 1 });
+  await allowance.reserve('u', now, 'America/Toronto');
+  await allowance.reserve('u', now, 'America/Toronto', { newTurn: false });
+  await assert.rejects(allowance.reserve('u', now, 'America/Toronto'), { status: 429 });
+  await allowance.reserve('other', now, 'America/Toronto');
+  await assert.rejects(allowance.reserve('other', now, 'America/Toronto', { newTurn: false }), { status: 429 });
 });
 
 test('intent passes are single-use, expire and only cover paid intents', () => {

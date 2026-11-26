@@ -66,8 +66,9 @@ export function validateChatInput(input, allowRefinement = false) {
 
 export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, fetchImpl = fetch, timeoutMs = 11000 } = {}) {
   const active = new Set();
-  // `prepaid` is true only when a redeemed intent pass already reserved allowance.
-  return async function draftShift(store, managerId, input, clock = Date.now, { prepaid = false } = {}) {
+  // `turnCounted` is true only when a redeemed intent pass already counted this
+  // user turn; the provider call itself is still reserved against the total cap.
+  return async function draftShift(store, managerId, input, clock = Date.now, { turnCounted = false } = {}) {
     const batch = input?.batch === true;
     if (batch) {
       const { batch: requested, ...chat } = input;
@@ -113,7 +114,7 @@ export function createAiShiftDrafter({ apiKey, model = 'gpt-6-luna', allowance, 
     if (Buffer.byteLength(body) > 16000) throw new HttpError(422, 'This description and team are too large for AI drafting. Use a shorter description or the manual form.');
     active.add(managerId);
     try {
-      if (!prepaid) await allowance.reserve(managerId, now, business.timezone);
+      await allowance.reserve(managerId, now, business.timezone, { newTurn: !turnCounted });
       const response = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
       // Recheck current membership after inference; model output never authorizes access.
       db = await store.read(); business = managerBusiness(db, managerId);

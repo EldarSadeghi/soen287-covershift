@@ -130,12 +130,15 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitNotificationReads = createSignupLimiter({ limit: 120, message: 'Too many notification updates. Please wait and refresh.' });
   const limitAi = createSignupLimiter({ limit: 20, windowMs: 120000, message: seconds => `Too many AI requests. Try again in ${seconds} seconds.` });
   const chatText = input => (typeof input?.description === 'string' ? input.description.trim() : '');
-  // Reads an AI chat body. A valid intent pass means /api/ai-intent already
-  // reserved allowance for this exact message, so the handler must not reserve again.
+  // Reads an AI chat body and applies the per-turn chat limits. A valid intent
+  // pass means /api/ai-intent already counted this user turn (short-term limit
+  // and daily allowance). The provider call is still reserved against the total
+  // cap by the handler, so every paid call is counted.
   async function readAiChat(request, userId, intent) {
     const { input, token } = takeIntentPass(await readJson(request));
-    const prepaid = intentPasses.redeem(token, userId, intent, chatText(input), shiftClock());
-    return { input, options: { prepaid } };
+    const turnCounted = intentPasses.redeem(token, userId, intent, chatText(input), shiftClock());
+    if (!turnCounted) limitAi(userId);
+    return { input, options: { turnCounted } };
   }
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -251,7 +254,6 @@ export function createAppServer({ store, signup = registerManager, login = authe
           return;
         }
         const { input, options } = await readAiChat(request, account.user.id, 'questions');
-        limitAi(account.user.id);
         sendJson(response, 200, await handler(store, account.user.id, input, shiftClock, options));
         return;
       }
@@ -361,7 +363,6 @@ export function createAppServer({ store, signup = registerManager, login = authe
         }
         if (pathname === '/api/worker/ai-availability-draft') {
           const { input, options } = await readAiChat(request, account.user.id, 'availability');
-          limitAi(account.user.id);
           if (!aiAvailability) throw new HttpError(503, 'AI availability drafting is not configured.');
           sendJson(response, 200, await aiAvailability(store, account.user.id, input, shiftClock, options));
           return;
@@ -391,7 +392,6 @@ export function createAppServer({ store, signup = registerManager, login = authe
         }
         if (pathname === '/api/worker/ai-shift-search') {
           const { input, options } = await readAiChat(request, account.user.id, 'search');
-          limitAi(account.user.id);
           if (!aiSearch) throw new HttpError(503, 'AI search is not configured. Use Open shifts.');
           sendJson(response, 200, await aiSearch(store, account.user.id, input, shiftClock, options));
         } else {
@@ -412,7 +412,6 @@ export function createAppServer({ store, signup = registerManager, login = authe
         if (new URL(request.url, 'http://localhost').search) {
           throw new HttpError(400, 'Drafting uses your signed-in business.');
         }
-        limitAi(account.user.id);
         const { input, options } = await readAiChat(request, account.user.id, 'draft');
         if (!aiDraft) throw new HttpError(503, 'AI drafting is not configured. Use the manual shift form.');
         sendJson(response, 200, await aiDraft(store, account.user.id, input, shiftClock, options));

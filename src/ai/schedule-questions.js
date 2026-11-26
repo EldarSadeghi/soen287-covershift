@@ -50,7 +50,7 @@ export function businessCalendar(now,timezone){
 }
 export function createAiScheduleAnswerer({apiKey,model='gpt-6-luna',allowance,fetchImpl=fetch,timeoutMs=11000}={}){
  const active=new Set();
- return async (store, userId, input, clock = Date.now, { prepaid = false } = {}) => {
+ return async (store, userId, input, clock = Date.now, { turnCounted = false } = {}) => {
   input = validateChatInput(input);
   const { user, business } = account(await store.read(), userId);
   if (!aiConfigured({ apiKey, model, allowance })) throw unavailable();
@@ -69,7 +69,7 @@ export function createAiScheduleAnswerer({apiKey,model='gpt-6-luna',allowance,fe
   if(Buffer.byteLength(body)>16000)throw new HttpError(422,'Start a new chat with a shorter question.');
   active.add(userId);
   try{
-   if (!prepaid) await allowance.reserve(userId, now, business.timezone);
+   await allowance.reserve(userId, now, business.timezone, { newTurn: !turnCounted });
    const result = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
    if(!result||Array.isArray(result)||Object.keys(result).length!==keys.length||!keys.every(k=>typeof result[k]==='string'))throw unavailable();
    const current=account(await store.read(),userId);if(current.user.role!==user.role||current.business.id!==business.id||current.business.timezone!==business.timezone)throw new HttpError(409,'Your workspace changed. Ask again.');

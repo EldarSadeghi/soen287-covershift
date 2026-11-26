@@ -95,7 +95,10 @@ export async function createAcceptanceContext(checks, options = {}) {
     }
     return {base,check,store,manifest,dates:manifest.dates,ids:manifest.scenarios,calls,requests,queue,
       expect:turn=>queue.push(turn),
-      usage:async()=>(await readdir(join(dir,'usage')).catch(()=>[])).filter(name=>name.endsWith('.json')).length,providerContractValid:()=>!contractFailed,http,bytes:()=>readFile(store.filename,'utf8'),cleanup,
+      // calls = provider-call reservations (lifetime cap); turns = user turns (daily limit).
+      usage:async()=>{const names=(await readdir(join(dir,'usage')).catch(()=>[])).filter(name=>name.endsWith('.json'));
+        const rows=await Promise.all(names.map(async name=>JSON.parse(await readFile(join(dir,'usage',name),'utf8'))));
+        return {calls:rows.length,turns:rows.filter(row=>row.turn!==false).length};},providerContractValid:()=>!contractFailed,http,bytes:()=>readFile(store.filename,'utf8'),cleanup,
       async revision(requestId){const {claimRevision}=await import('../../src/requests/claim.js');const db=await store.read(),r=db.coverageRequests.find(x=>x.id===requestId);return claimRevision(r,db.shifts.find(s=>s.id===r.shiftId));},
       async rule(){const r=await http('worker_jamie','/api/worker/availability-rules');return r.data.rules.find(x=>x.id===manifest.scenarios.availabilityRule);},
     };

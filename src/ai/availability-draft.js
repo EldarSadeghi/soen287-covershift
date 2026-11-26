@@ -11,7 +11,7 @@ Use supplied current business date/time and timezone. Bare Thursday and next Thu
 For kind=availability return question='', startLocal/endLocal YYYY-MM-DDTHH:mm (no offsets), title literal requested shift title keyword or '' for any title, maxClaims requested maximum 1–5 or conservative default 1 when unspecified (always displayed before confirmation). Do not invent a title, date, hours or other preferences. For kind=clarification give a helpful question/explanation max500 characters, startLocal/endLocal/title='', maxClaims=0. No IDs, tools, HTML, secrets or emails.`;
 export function createAiAvailabilityDrafter({apiKey,model='gpt-6-luna',allowance,fetchImpl=fetch,timeoutMs=11000}={}) {
  const active=new Set();
- return async (store, userId, input, clock = Date.now, { prepaid = false } = {}) => {
+ return async (store, userId, input, clock = Date.now, { turnCounted = false } = {}) => {
   input = validateChatInput(input, true);
   const { business } = availabilityAccount(await store.read(), userId);
   if (!aiConfigured({ apiKey, model, allowance })) throw unavailable();
@@ -42,7 +42,7 @@ export function createAiAvailabilityDrafter({apiKey,model='gpt-6-luna',allowance
   if(Buffer.byteLength(body)>16000)throw new HttpError(422,'This chat is too long. Start a new chat.');
   active.add(userId);
   try{
-   if (!prepaid) await allowance.reserve(userId, now, business.timezone);
+   await allowance.reserve(userId, now, business.timezone, { newTurn: !turnCounted });
    const result=applyRefinement(await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable}),base,unavailable);
    if(!result || Array.isArray(result) || Object.keys(result).length!==keys.length || !keys.slice(0,-1).every(k=>typeof result[k]==='string') || !Number.isInteger(result.maxClaims))throw unavailable();
    const current=availabilityAccount(await store.read(),userId);
