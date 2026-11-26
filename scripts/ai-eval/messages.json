@@ -990,6 +990,142 @@
       "role": "manager",
       "expected": "clarification",
       "message": "do not create any shifts"
+    },
+    {
+      "id": "e-followup-01",
+      "role": "employee",
+      "expected": "questions",
+      "message": "what about friday?",
+      "currentTopic": "questions",
+      "history": [
+        {
+          "role": "user",
+          "text": "When is my next shift?"
+        },
+        {
+          "role": "assistant",
+          "text": "Your next shift is Thursday, December 3, 9:00 AM to 12:00 PM."
+        }
+      ]
+    },
+    {
+      "id": "e-followup-02",
+      "role": "employee",
+      "expected": "search",
+      "message": "and saturday?",
+      "currentTopic": "search",
+      "history": [
+        {
+          "role": "user",
+          "text": "Are there any open shifts on Friday?"
+        },
+        {
+          "role": "assistant",
+          "text": "I found 2 open shifts on Friday."
+        }
+      ]
+    },
+    {
+      "id": "e-followup-03",
+      "role": "employee",
+      "expected": "claimStatus",
+      "message": "what about the sunday one",
+      "currentTopic": "claimStatus",
+      "history": [
+        {
+          "role": "user",
+          "text": "Did my claim for Saturday get approved?"
+        },
+        {
+          "role": "assistant",
+          "text": "Your Saturday claim is still pending manager approval."
+        }
+      ]
+    },
+    {
+      "id": "e-followup-04",
+      "role": "employee",
+      "expected": "coworkers",
+      "message": "how about monday",
+      "currentTopic": "coworkers",
+      "history": [
+        {
+          "role": "user",
+          "text": "Who is free on Friday?"
+        },
+        {
+          "role": "assistant",
+          "text": "Alex Morgan is free on Friday from 9 AM to 5 PM."
+        }
+      ]
+    },
+    {
+      "id": "e-followup-05",
+      "role": "employee",
+      "expected": "clarification",
+      "message": "thanks, that helps",
+      "currentTopic": "questions",
+      "history": [
+        {
+          "role": "user",
+          "text": "When is my next shift?"
+        },
+        {
+          "role": "assistant",
+          "text": "Your next shift is Thursday, December 3, 9:00 AM to 12:00 PM."
+        }
+      ]
+    },
+    {
+      "id": "m-followup-06",
+      "role": "manager",
+      "expected": "questions",
+      "message": "and on sunday?",
+      "currentTopic": "questions",
+      "history": [
+        {
+          "role": "user",
+          "text": "Who is working tomorrow?"
+        },
+        {
+          "role": "assistant",
+          "text": "3 people are scheduled tomorrow."
+        }
+      ]
+    },
+    {
+      "id": "m-followup-07",
+      "role": "manager",
+      "expected": "summary",
+      "message": "what about next week",
+      "currentTopic": "summary",
+      "history": [
+        {
+          "role": "user",
+          "text": "What needs my attention?"
+        },
+        {
+          "role": "assistant",
+          "text": "2 claims are waiting for your approval."
+        }
+      ]
+    },
+    {
+      "id": "m-followup-08",
+      "role": "manager",
+      "expected": "clarification",
+      "message": "great, thank you",
+      "currentTopic": "questions",
+      "history": [
+        {
+          "role": "user",
+          "text": "Who is working tomorrow?"
+        },
+        {
+          "role": "assistant",
+          "text": "3 people are scheduled tomorrow."
+        }
+      ]
     }
   ]
 }

@@ -52,8 +52,8 @@ export async function createAcceptanceContext(checks, options = {}) {
         assert.equal(url,'https://api.openai.com/v1/responses');
         turn=queue.shift();assert.ok(turn,'Unexpected provider call');
         payload=JSON.parse(init.body);
-        // The intent classifier sends only the message text, never history or workspace data.
-        input=payload.text.format.name==='covershift_intent'?{request:payload.input,conversation:[]}:JSON.parse(payload.input);
+        // The intent classifier sends only the request and up to two earlier turns.
+        input=JSON.parse(payload.input);
         check('provider-'+(calls.length+1),'Recorded task, latest message, conversation and strict private response contract match.',[payload.text.format.name,input.request,input.conversation,payload.store,payload.text.format.strict],[turn.task,turn.message,turn.history||[],false,true]);
         calls.push({task:turn.task,payload,input});
         if(turn.beforeReply) await turn.beforeReply(store);

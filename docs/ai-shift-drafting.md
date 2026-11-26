@@ -42,6 +42,7 @@ The implementation calls `POST https://api.openai.com/v1/responses` server-side 
 - At most **20 chat turns per signed-in user per two minutes** (in memory).
 - A message that the local rules cannot route is classified by `/api/ai-intent` and then answered. That is **one turn but up to two provider calls**: both calls count toward the lifetime cap, while a single-use intent pass stops the answer from counting as a second daily or short-term turn (see `docs/acceptance/cs053/USER-STORIES.md`).
 - One active inference per manager; two total in one server process.
+- The chat footer shows the turns left today from `GET /api/ai-usage` (read-only). Startup logs a warning when AI is half-configured. A private routing log in `DATA_DIRECTORY/ai-routing/` records only date, role, route and decision source per message (`npm run ai:routing-report`); see `docs/acceptance/cs056/USER-STORIES.md`.
 - 1,500-character current message, bounded transcript as above, at most 50 active workers, whole serialized provider request at most 16,000 UTF-8 bytes, 1,200 maximum output tokens, at most 65,536 response bytes.
 - 11-second inference/body deadline inside the existing 15-second browser deadline. No automatic paid retries or provider failover. Cancel/timeout cannot prove provider processing stopped; explicit later generations may incur another charge.
 

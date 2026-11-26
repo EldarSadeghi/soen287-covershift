@@ -69,7 +69,8 @@ CS-048 adds 19 deterministic tests. Browser review on port 3056 confirmed “Who
 | CS-045 | Improve chat intent routing and search context | Your review | [#89](https://github.com/EldarSadeghi/soen287-covershift/issues/89) | New | — |
 | CS-053 | Harden AI intent fallback, usage counting and request code | Done | [#127](https://github.com/EldarSadeghi/soen287-covershift/issues/127) | New | #128 |
 | CS-054 | Measure AI intent routing with a labelled evaluation set | Done | [#129](https://github.com/EldarSadeghi/soen287-covershift/issues/129) | New | #130 |
-| CS-055 | Fix AI routing problems found by the evaluation | Your review | [#131](https://github.com/EldarSadeghi/soen287-covershift/issues/131) | New | — |
+| CS-055 | Fix AI routing problems found by the evaluation | Done | [#131](https://github.com/EldarSadeghi/soen287-covershift/issues/131) | New | #132 |
+| CS-056 | Chat improvements: suggestions, usage, classifier context, startup check, routing log | Your review | [#133](https://github.com/EldarSadeghi/soen287-covershift/issues/133) | New | — |
 | CS-043 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
 CS-001–037, CS-040–042 and CS-044 are complete. CS-045 is the conversation quality follow-up before CS-038 and CS-039. CS-043 final deployment remains last. Each increment requires local user review and explicit merge approval. Stable issue numbers preserve historical task mappings.

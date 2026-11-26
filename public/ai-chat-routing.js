@@ -185,6 +185,15 @@ export function resolveChatTarget({
 
 export const GENERIC_CLARIFICATION_PREFIX = 'What would you like me to check';
 
+// One-click suggestions shown under the generic question. Each one is routed
+// by the local rules (no classifier call) and only prepares a reply or draft:
+// nothing is saved without the existing review and confirmation.
+export function clarificationSuggestions(manager) {
+  return manager
+    ? [['Team schedule', 'Show the entire team’s schedule this week.'], ['Create a shift', 'Help me create a shift.'], ['Attention summary', 'Show the attention summary for this week.']]
+    : [['My next shift', 'When is my next shift?'], ['Find openings', 'Show open shifts this week.'], ['Save availability', 'I can take one shift Thursday between 2 PM and 6 PM.']];
+}
+
 // True when the local rules would answer with the generic "What would you like
 // me to check" question, so the server-side intent classifier should be asked.
 // Specific clarifications, negated requests and text without words stay local.

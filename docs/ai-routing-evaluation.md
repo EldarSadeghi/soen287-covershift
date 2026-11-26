@@ -4,7 +4,7 @@
 
 ## Message set
 
-`scripts/ai-eval/messages.json` holds 165 fictional, single-turn messages: 114 employee and 51 manager. Each one is labelled with the route a person sending it would want, decided before looking at routing output. They cover typos, slang, indirect wording, mixed requests, out-of-scope and unsafe messages. Names are the fictional demo employees. Edit `scripts/ai-eval/build-messages.mjs` and regenerate:
+`scripts/ai-eval/messages.json` holds 173 fictional messages: 165 single-turn messages (114 employee, 51 manager) and 8 follow-ups with one earlier turn and the chat's current topic (CS-056). Each one is labelled with the route a person sending it would want, decided before looking at routing output. They cover typos, slang, indirect wording, mixed requests, out-of-scope and unsafe messages. Names are the fictional demo employees. Edit `scripts/ai-eval/build-messages.mjs` and regenerate:
 
 ```bash
 node scripts/ai-eval/build-messages.mjs

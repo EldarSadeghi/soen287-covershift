@@ -22,7 +22,7 @@ test('classifier accepts configured models and returns only role-allowed intent 
     fetchImpl: async (_, { body }) => {
       const payload = JSON.parse(body);
       assert.equal(payload.model, 'configured-model');
-      assert.equal(payload.input, description);
+      assert.deepEqual(JSON.parse(payload.input), { conversation: [], request: description });
       assert.equal(payload.store, false);
       assert.equal(payload.reasoning, undefined);
       return reply(result);

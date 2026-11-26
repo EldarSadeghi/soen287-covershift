@@ -208,6 +208,20 @@ const groups = {
   },
 };
 
+// Follow-ups (CS-056): a short message after one earlier turn. currentTopic is
+// the chat's topic after that turn, as the composer would pass it.
+const turn = (question, answer) => [{ role: 'user', text: question }, { role: 'assistant', text: answer }];
+const followUps = [
+  ['employee', 'questions', 'what about friday?', 'questions', turn('When is my next shift?', 'Your next shift is Thursday, December 3, 9:00 AM to 12:00 PM.')],
+  ['employee', 'search', 'and saturday?', 'search', turn('Are there any open shifts on Friday?', 'I found 2 open shifts on Friday.')],
+  ['employee', 'claimStatus', 'what about the sunday one', 'claimStatus', turn('Did my claim for Saturday get approved?', 'Your Saturday claim is still pending manager approval.')],
+  ['employee', 'coworkers', 'how about monday', 'coworkers', turn('Who is free on Friday?', 'Alex Morgan is free on Friday from 9 AM to 5 PM.')],
+  ['employee', 'clarification', 'thanks, that helps', 'questions', turn('When is my next shift?', 'Your next shift is Thursday, December 3, 9:00 AM to 12:00 PM.')],
+  ['manager', 'questions', 'and on sunday?', 'questions', turn('Who is working tomorrow?', '3 people are scheduled tomorrow.')],
+  ['manager', 'summary', 'what about next week', 'summary', turn('What needs my attention?', '2 claims are waiting for your approval.')],
+  ['manager', 'clarification', 'great, thank you', 'questions', turn('Who is working tomorrow?', '3 people are scheduled tomorrow.')],
+];
+
 const messages = [];
 for (const [role, intents] of Object.entries(groups)) {
   for (const [expected, list] of Object.entries(intents)) {
@@ -216,6 +230,9 @@ for (const [role, intents] of Object.entries(groups)) {
     });
   }
 }
+followUps.forEach(([role, expected, message, currentTopic, history], index) => {
+  messages.push({ id: `${role[0]}-followup-${String(index + 1).padStart(2, '0')}`, role, expected, message, currentTopic, history });
+});
 const target = new URL('./messages.json', import.meta.url);
 writeFileSync(target, `${JSON.stringify({ version: 1, messages }, null, 2)}\n`);
 console.log(`Wrote ${messages.length} labelled messages.`);

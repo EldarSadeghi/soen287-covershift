@@ -5,6 +5,7 @@ import {listWindows,saveWindow,withdrawWindow,teamAvailability,coworkerAvailabil
 import {listTimeOff,requestTimeOff,decideTimeOff} from './time-off/service.js';
 import { workingSummary } from './ai/working-summary.js';
 import { createIntentPasses, takeIntentPass } from './ai/intent-pass.js';
+import { validRoutingEntry } from './ai/routing-log.js';
 import { scheduleShiftDetails } from './ai/schedule-questions.js';
 import { listNotifications, markNotificationsRead } from './notifications/service.js';
 import { withAvailabilityMatching } from './availability/matching.js';
@@ -119,7 +120,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability', 'cover'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability', 'cover'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null, intentPasses = createIntentPasses() }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null, intentPasses = createIntentPasses(), aiAllowance = null, routingLog = null }) {
   const availabilityWindowStore=store; // General windows do not participate in automatic claims.
   store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
@@ -128,6 +129,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitShifts = createSignupLimiter({ limit: 60, message: 'Too many shift changes. Please wait 10 minutes and try again.' });
   const limitCoverage = createSignupLimiter({ limit: 30, message: 'Too many coverage changes. Please wait 10 minutes and try again.' });
   const limitNotificationReads = createSignupLimiter({ limit: 120, message: 'Too many notification updates. Please wait and refresh.' });
+  const limitRoutingLog = createSignupLimiter({ limit: 120, message: 'Too many routing records. Please wait.' });
   const limitAi = createSignupLimiter({ limit: 20, windowMs: 120000, message: seconds => `Too many AI requests. Try again in ${seconds} seconds.` });
   const chatText = input => (typeof input?.description === 'string' ? input.description.trim() : '');
   // Reads an AI chat body and applies the per-turn chat limits. A valid intent
@@ -228,6 +230,31 @@ export function createAppServer({ store, signup = registerManager, login = authe
         const query = new URL(request.url, 'http://localhost').searchParams;
         if (query.size !== 1 || !query.has('week')) throw new HttpError(422, 'Choose this week or next week.');
         sendJson(response, 200, await workingSummary(store, account.user.id, query.get('week'), shiftClock));
+        return;
+      }
+      if (pathname === '/api/ai-routing-log') {
+        requireMethod(request, response, 'POST');
+        protectMutation(request, publicOrigin);
+        const account = await requireAccount(store, sessions, request.headers.cookie);
+        if (!sessions.validCsrf(account.session, request.headers['x-csrf-token'])) {
+          throw new HttpError(403, 'Refresh the page and try again.');
+        }
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Routing records use your signed-in account.');
+        const input = await readJson(request);
+        limitRoutingLog(account.user.id);
+        // Only the role is taken from the account: never its ID or name.
+        if (routingLog) await routingLog.append(account.user.role, input, shiftClock(), account.business.timezone);
+        else validRoutingEntry(input);
+        response.writeHead(204, { 'Cache-Control': 'no-store' });
+        response.end();
+        return;
+      }
+      if (pathname === '/api/ai-usage') {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie);
+        if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Usage is for your signed-in account.');
+        if (!aiAllowance) throw new HttpError(503, 'AI is not configured.');
+        sendJson(response, 200, await aiAllowance.status(account.user.id, shiftClock(), account.business.timezone));
         return;
       }
       if (pathname === '/api/ai-intent' || pathname === '/api/ai-schedule-question') {

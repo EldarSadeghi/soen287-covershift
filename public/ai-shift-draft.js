@@ -2,7 +2,7 @@ import { createClaimStatus, createCoverStatus, createTimeOffStatus } from './ai-
 import { showWorkingSummary, workingSummaryMessage } from './ai-working-summary.js';
 import { createBatchReview } from './ai-shift-batch.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, needsIntentFallback, openingReference, resolveChatTarget, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate, workingSummaryWeek } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationSuggestions, GENERIC_CLARIFICATION_PREFIX, clarificationReplyRoute, needsIntentFallback, openingReference, requestsUnsupportedAction, resolveChatTarget, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate, workingSummaryWeek } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -110,6 +110,15 @@ export function mountAiChat(account, csrfToken) {
     samples.append(button);
   }
 
+  // The last two complete turns, in the shape the server validates (user then
+  // assistant, each at most 1,500 characters, at most 4,500 bytes in total).
+  function recentTurns() {
+    const all = chat.value.messages;
+    const start = all.length % 2;
+    const turns = all.slice(start).slice(-4).map(({ role, text }) => ({ role, text: String(text).slice(0, 1500) }));
+    while (turns.length && (turns[0].role !== 'user' || new TextEncoder().encode(JSON.stringify(turns)).length > 4500)) turns.splice(0, 2);
+    return turns.every((turn, index) => turn.role === (index % 2 ? 'assistant' : 'user') && turn.text.trim()) ? turns : [];
+  }
   // Asks the server to classify a message the local rules could not route.
   // Returns { intent, pass } on success, {} to keep the local clarification,
   // or null when the session expired and the page is navigating away.
@@ -121,7 +130,7 @@ export function mountAiChat(account, csrfToken) {
       const result = await requestJSON('/api/ai-intent', {
         method: 'POST', readOnly: true,
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-        body: JSON.stringify({ description: text }),
+        body: JSON.stringify({ description: text, history: recentTurns() }),
       });
       if (result.status === 401) { chat.clear(); location.replace('/login?expired=1'); return null; }
       const intent = result.data?.intent;
@@ -129,7 +138,67 @@ export function mountAiChat(account, csrfToken) {
       return { intent, pass: typeof result.data.pass === 'string' ? result.data.pass : null };
     } catch {
       return {}; // The local clarification remains available when inference fails.
-    } finally { working(false); }
+    } finally {
+      working(false);
+      void refreshUsage();
+    }
+  }
+  // Private routing log: only the route and how it was decided, never the text.
+  function recordRoute(text, routed, target, askedClassifier) {
+    const decidedBy = askedClassifier ? 'classifier'
+      : requestsUnsupportedAction(text) ? 'unsupported'
+        : target !== routed ? 'follow-up'
+          : target === 'clarification' ? 'local-clarification' : 'local';
+    void requestJSON('/api/ai-routing-log', {
+      method: 'POST', readOnly: true,
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ route: target, decidedBy, clarification: target === 'clarification' }),
+    }).catch(() => {}); // Logging never affects the chat.
+  }
+
+  // Footer line: AI turns left today, from the server's daily allowance.
+  const usageLine = element('p', 'ai-chat-usage');
+  usageLine.setAttribute('aria-live', 'polite');
+  usageLine.hidden = true;
+  find('.ai-chat-controls').after(usageLine); // visible, not inside the collapsed privacy details
+  let usageRead = 0;
+  async function refreshUsage() {
+    const read = ++usageRead;
+    try {
+      const result = await requestJSON('/api/ai-usage');
+      if (read !== usageRead) return;
+      const left = result.data?.remainingToday;
+      if (!result.ok || !Number.isInteger(left)) { usageLine.hidden = true; return; }
+      if (result.data.exhausted === 'lifetime') {
+        usageLine.textContent = 'This project’s AI request allowance is used up. You can still use the workspace directly.';
+      } else if (left === 0) {
+        usageLine.textContent = 'No AI requests left today. They reset at midnight in your business timezone.';
+      } else {
+        usageLine.textContent = `${left} AI request${left === 1 ? '' : 's'} left today.`;
+      }
+      usageLine.classList.toggle('ai-chat-usage-low', left <= 3);
+      usageLine.hidden = false;
+    } catch {
+      if (read === usageRead) usageLine.hidden = true; // Usage is informational.
+    }
+  }
+
+  // Buttons under the generic question; each sends a locally routed message.
+  function showQuickReplies() {
+    const group = element('div', 'ai-chat-quick');
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', 'Choose what to check');
+    for (const [label, example] of clarificationSuggestions(manager)) {
+      const button = element('button', '', label);
+      button.type = 'button';
+      button.addEventListener('click', () => {
+        if (busy) return;
+        composer.value = example;
+        form.requestSubmit();
+      });
+      group.append(button);
+    }
+    messages.lastElementChild?.append(group);
   }
   function assistantReply(text) {
     return text.length > 180 ? responseDetails('View earlier reply', text) : element('p', '', text);
@@ -157,7 +226,7 @@ export function mountAiChat(account, csrfToken) {
     const box = dialog.getBoundingClientRect();
     if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close();
   });
-  launcher.addEventListener('click', () => { dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); composer.focus({preventScroll:true});if(!card.hidden)revealResponse(card); });
+  launcher.addEventListener('click', () => { void refreshUsage(); dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); composer.focus({preventScroll:true});if(!card.hidden)revealResponse(card); });
   composer.addEventListener('input', () => { chat.value.composer = composer.value; chat.save(); });
   composer.addEventListener('keydown', event => {
     if (event.key !== 'Enter' || event.defaultPrevented || event.shiftKey ||
@@ -228,6 +297,7 @@ export function mountAiChat(account, csrfToken) {
   });
   form.addEventListener('submit', async event => {
     event.preventDefault(); if (busy) return;
+    for (const group of messages.querySelectorAll('.ai-chat-quick')) group.remove();
     if (chat.value.batch?.status === 'uncertain') {
       notice('Check the batch receipt or retry the same batch before sending another message.');
       return;
@@ -255,7 +325,8 @@ export function mountAiChat(account, csrfToken) {
     // Only the generic "What would you like me to check" fallback asks the
     // server-side classifier; specific clarifications stay local.
     let intentPass = null;
-    if (target === 'clarification' && needsIntentFallback(text, manager)) {
+    const askedClassifier = target === 'clarification' && needsIntentFallback(text, manager);
+    if (askedClassifier) {
       const classified = await classifyUnmatched(text);
       if (classified === null) return;
       if (classified.intent) {
@@ -264,6 +335,7 @@ export function mountAiChat(account, csrfToken) {
         intentPass = classified.pass;
       }
     }
+    recordRoute(text, routed, target, askedClassifier);
     const wasClarifyingBatch = manager && chat.value.batchClarifying;
     const batch = manager && target === 'draft' && (requestsShiftBatch(text) || wasClarifyingBatch);
     const sameTopic = mode === target;
@@ -430,6 +502,7 @@ export function mountAiChat(account, csrfToken) {
       say('user', text);
       const reply = chatClarification(text, manager);
       appendTurn(reply);
+      if (reply.startsWith(GENERIC_CLARIFICATION_PREFIX)) showQuickReplies();
       notice('Reply below to continue.');
       return;
     }
@@ -537,6 +610,7 @@ export function mountAiChat(account, csrfToken) {
         notice(error.userMessage || `AI is unavailable or took too long. Your message is preserved. Try sending again later${mode==='questions' ? ' or open your saved schedule' : manager ? ' or use the manual Schedule form' : mode==='availability' ? '; Saved availability remains available' : ' or use Open shifts'}. An attempt may still count toward your allowance.`);
       }
     } finally {
+      void refreshUsage();
       if (version !== revision) notice('The earlier request finished. Your new chat is ready.');
       busy = false; send.disabled = false; send.innerHTML = 'Send message <span aria-hidden="true">↑</span>';
     }
