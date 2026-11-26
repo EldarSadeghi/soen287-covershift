@@ -19,10 +19,10 @@ const taskLabels = {
 function explicitRoute(text, manager) {
   const message = normalizedMessage(text);
   if (/^(?:do not|don't|never)\b/.test(message)) return null;
-  if (/^(?:show|list|summari[sz]e|give me|what|which|do i|how many|check|(?:my |team )?(?:working week|attention summary|weekly summary))\b/.test(message)) {
+  if (/^(?:show|list|summari[sz]e|give me|what|which|do i|did my|is anyone|pending approvals|how many|check|(?:my |team )?(?:working week|attention summary|weekly summary))\b/.test(message)) {
     const summary = manager
-      ? /\b(?:attention summary|what needs (?:my )?attention|weekly summary|pending approvals|claims awaiting approval|needs? cover|unresolved coverage|open (?:coverage|requests for cover))\b/
-      : /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/;
+      ? /\b(?:attention summary|what needs (?:my )?attention|weekly summary|pending approvals|claims awaiting approval|waiting for my approval|needs? cover|unresolved coverage|open (?:coverage|requests for cover))\b/
+      : /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions|my claim (?:get|was) approved)\b/;
     if (summary.test(message)) return 'summary';
   }
   if (manager && requestsShiftBatch(message)) return 'draft';
@@ -30,7 +30,7 @@ function explicitRoute(text, manager) {
   if (!manager) {
     if (/\b(?:co[ -]?workers?|colleagues?|teammates?)\b/.test(message) &&
         /\b(?:available|availability|availbility|free|can work|could work)\b/.test(message) ||
-        /^who(?:'s| is) (?:free|available)\b|^who (?:can|could) (?:cover|fill in)\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/.test(message)) return 'coworkers';
+        /(?:^who(?:'s| is)|^is (?:anyone|anybody|someone|somebody)) (?:free|available)\b|^who (?:can|could) (?:cover|fill in)\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/.test(message)) return 'coworkers';
     if (/^(?:what else(?: is available)?|(?:any|what) other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/.test(message)) return 'alternatives';
     if (/^(?:why|how come|explain)\b/.test(message) &&
         openingReference(message, [], null) === null) return 'explanation';
@@ -38,9 +38,10 @@ function explicitRoute(text, manager) {
         /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/.test(message)) return 'explanation';
     if (availabilityRuleCommand(text) ||
         /^(?:(?:show|view|list|open|check) (?:me )?)?(?:my )?(?:saved (?:availability|rules)|availability rules)[.?!]*$/.test(message)) return 'rules';
-    if (/\b(?:open shifts?|openings?|unfilled shifts?|unclaimed shifts?|coverage shifts?)\b|\b(?:find|look for|search for|pick up)\b.*\bshifts?\b/.test(message)) return 'search';
+    if (/^anything (?:i can|to) pick up\b|\b(?:open shifts?|openings?|unfilled shifts?|unclaimed shifts?|coverage shifts?)\b|\b(?:find|look for|search for|pick up)\b.*\bshifts?\b/.test(message)) return 'search';
     if (/\b(?:put|mark|set) me down as available\b|\b(?:save|draft|set|record|confirm)\b.*\bavailability\b|\bavailability (?:rule|draft)\b|\b(?:i can take|i can pick up|limit|maximum)\b.*\bshifts?\b/.test(message)) return 'availability';
   }
+  if (!manager && /^(?:when am i on next|what time do i start (?:today|tomorrow))\b/.test(message)) return 'questions';
   if (/^(?:when|what|which|how many|how long|who|show|list|tell me|am i|do i|give me|pull up|check|remind me)\b/.test(message) &&
       /\b(?:schedules?|roster|rota|shifts?|hours|working|work|come in|clock in|on duty|on the rota)\b/.test(message) ||
       /\b(?:my|team'?s?) (?:schedule|hours|next shift)\b/.test(message)) return 'questions';
@@ -83,7 +84,7 @@ export function routeChat(text, manager, current) {
 export function workingSummaryWeek(text) {
   const message = normalizedMessage(text);
   const weeks = [...message.matchAll(/\b(this|next) week\b/g)].map(match => match[1]);
-  if (new Set(weeks).size > 1 || /\b(?:today|tomorrow|yesterday|weekend|(?:last|previous) week|(?:this|next|last) month|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december)\b|\d{1,4}[-/]\d|\b\d+ (?:days?|weeks?|months?)\b/.test(message)) return null;
+  if (new Set(weeks).size > 1 || /\b(?:today|tomorrow|yesterday|weekend|(?:last|previous) week|(?:this|next|last) month|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december)\b|\d{1,4}[-/]\d|\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|several) (?:days?|weeks?|months?)\b/.test(message)) return null;
   return weeks[0] || 'this';
 }
 
@@ -163,30 +164,27 @@ export function matchingAvailabilityRules(rules, selector) {
 }
 
 export function coworkerLookupDate(text, today) {
-  const iso = /\b(20\d{2}-\d{2}-\d{2})\b/.exec(text);
-  const named = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,?\s+(20\d{2}))?\b/i.exec(text);
-  let date = iso?.[1];
-  if (!date && named) {
-    const month = new Date(`${named[1]} 1, 2000 UTC`).getUTCMonth() + 1;
-    const day = { first: 1, second: 2, third: 3 }[named[2].toLowerCase()] || Number.parseInt(named[2], 10);
+  if (/\b(?:this|next|last) week\b|\b(?:next|last) (?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(text)) return null;
+  const tokens = [...text.matchAll(/\b(?:(20\d{2}-\d{2}-\d{2})|(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,?\s+(20\d{2}))?|(today|tomorrow)|(this\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday))\b/gi)];
+  if (tokens.length !== 1) return null;
+  const [, iso, monthName, dayNumber, explicitYear, relative, thisWeek, weekday] = tokens[0];
+  const anchor = new Date(`${today}T12:00:00Z`);
+  let date = iso;
+  if (monthName) {
+    const month = new Date(`${monthName} 1, 2000 UTC`).getUTCMonth() + 1;
+    const day = { first: 1, second: 2, third: 3 }[dayNumber.toLowerCase()] || Number.parseInt(dayNumber, 10);
     const suffix = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const year = Number(today.slice(0, 4));
-    date = named[3] ? `${named[3]}-${suffix}` : `${year + Number(suffix < today.slice(5))}-${suffix}`;
-  }
-  if (!date && /\btoday\b/i.test(text)) date = today;
-  if (!date && /\btomorrow\b/i.test(text)) {
-    const following = new Date(`${today}T12:00:00Z`);
-    following.setUTCDate(following.getUTCDate() + 1);
-    date = following.toISOString().slice(0, 10);
-  }
-  if (!date) {
-    const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const tokens = text.toLowerCase().match(/\b(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/g) || [];
-    if (tokens.length !== 1 || /\b(?:this|next) week\b/i.test(text)) return null;
-    const following = new Date(`${today}T12:00:00Z`);
-    const offset = (weekdays.indexOf(tokens[0]) - following.getUTCDay() + 7) % 7 || 7;
-    following.setUTCDate(following.getUTCDate() + offset);
-    date = following.toISOString().slice(0, 10);
+    date = `${explicitYear || year + Number(suffix < today.slice(5))}-${suffix}`;
+  } else if (relative) {
+    anchor.setUTCDate(anchor.getUTCDate() + Number(relative.toLowerCase() === 'tomorrow'));
+    date = anchor.toISOString().slice(0, 10);
+  } else if (weekday) {
+    const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const difference = weekdays.indexOf(weekday.toLowerCase()) - (anchor.getUTCDay() + 6) % 7;
+    const offset = thisWeek ? difference : (difference + 7) % 7 || 7;
+    anchor.setUTCDate(anchor.getUTCDate() + offset);
+    date = anchor.toISOString().slice(0, 10);
   }
   const instant = new Date(`${date}T00:00:00Z`);
   return Number.isFinite(instant.getTime()) && instant.toISOString().slice(0, 10) === date ? date : null;
