@@ -8,6 +8,8 @@ import { createAppServer } from './app.js';
 import { SessionStore } from './auth/sessions.js';
 import { AiAllowance } from './ai/allowance.js';
 import { createAiShiftDrafter } from './ai/shift-draft.js';
+import { aiStartupWarnings } from './ai/startup-check.js';
+import { RoutingLog } from './ai/routing-log.js';
 import { dirname, join } from 'node:path';
 
 const host = process.env.HOST || '127.0.0.1';
@@ -23,13 +25,17 @@ const sessions = new SessionStore({ secure: publicOrigin?.startsWith('https://')
 await store.initialize();
 const allowance = new AiAllowance(join(dirname(store.filename), 'ai-usage'));
 const aiOptions = { apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-6-luna', allowance };
+for (const warning of await aiStartupWarnings({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL, usageDirectory: allowance.directory })) {
+  console.warn(`AI configuration: ${warning}`);
+}
+const routingLog = new RoutingLog(join(dirname(store.filename), 'ai-routing'));
 const aiAvailability = createAiAvailabilityDrafter(aiOptions);
 const aiSearch = createAiShiftSearcher(aiOptions);
 const aiSchedule = createAiScheduleAnswerer(aiOptions);
 const aiDraft = createAiShiftDrafter(aiOptions);
 await reconcileAvailability(store);
 const matching = startAvailabilityMatching(store);
-const server = createAppServer({ store, sessions, publicOrigin, aiDraft, aiSearch, aiAvailability, aiSchedule, aiIntent: createAiIntentClassifier(aiOptions) }).listen(port, host, () => {
+const server = createAppServer({ store, sessions, publicOrigin, aiDraft, aiSearch, aiAvailability, aiSchedule, aiIntent: createAiIntentClassifier(aiOptions), aiAllowance: allowance, routingLog }).listen(port, host, () => {
   console.log(`CoverShift is running at http://${host}:${port}`);
 });
 

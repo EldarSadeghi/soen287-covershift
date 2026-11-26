@@ -38,7 +38,7 @@ function liveClassifier(maxCalls) {
     employee: { user: { id: 'ai-eval-employee', role: 'worker' }, business: { timezone: 'America/Toronto' } },
     manager: { user: { id: 'ai-eval-manager', role: 'manager' }, business: { timezone: 'America/Toronto' } },
   };
-  return { maxCalls, classify: async row => (await classifier(accounts[row.role], { description: row.message }, Date.now)).intent };
+  return { maxCalls, classify: async row => (await classifier(accounts[row.role], { description: row.message, history: row.history || [] }, Date.now)).intent };
 }
 
 try {

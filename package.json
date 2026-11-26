@@ -20,6 +20,7 @@
     "demo:start": "node --env-file-if-exists=.env scripts/demo.js start",
     "ai:acceptance": "node scripts/ai-acceptance.js",
     "ai:live-check": "node scripts/ai-live-check.js",
-    "ai:eval": "node --env-file-if-exists=.env scripts/ai-eval.js"
+    "ai:eval": "node --env-file-if-exists=.env scripts/ai-eval.js",
+    "ai:routing-report": "node --env-file-if-exists=.env scripts/ai-routing-report.js"
   }
 }

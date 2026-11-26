@@ -228,3 +228,5 @@
 .ai-working-summary-section{min-width:0;border-top:1px solid #dce4d8;padding-top:12px}
 .ai-working-summary-section h4{margin:0 0 8px;color:#213d32;font-size:14px}
 .ai-working-summary-item{padding:6px 0;overflow-wrap:anywhere}
+.ai-chat-quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.ai-chat-quick button{font:inherit;font-size:13px;min-height:44px;padding:8px 12px;background:#f3f6ef;border:1px solid #adbdaa;color:#214d3d;border-radius:9px;cursor:pointer}.ai-chat-quick button:focus-visible{outline:2px solid #214d3d;outline-offset:2px}
+.ai-chat-usage{font-size:11px;color:#415a40;margin:10px 0 0}.ai-chat-usage-low{color:#8a4b12;font-weight:650}

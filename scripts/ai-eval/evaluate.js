@@ -33,6 +33,9 @@ export function validateMessages(data) {
     if (!labelsFor(row.role).has(row.expected)) problems.push(`Label ${row.expected} is not a ${row.role} route: ${where}`);
     if (typeof row.message !== 'string' || !row.message.trim() || row.message.length > 1500) problems.push(`Invalid message text: ${where}`);
     if (/@|\b\d{3}[-. ]\d{3}[-. ]\d{4}\b/.test(row.message || '')) problems.push(`Message looks like personal contact data: ${where}`);
+    if (Object.hasOwn(row, 'history') && !(Array.isArray(row.history) && row.history.length && row.history.length <= 4 &&
+        row.history.every((turn, index) => turn?.role === (index % 2 ? 'assistant' : 'user') && typeof turn.text === 'string' && turn.text.trim()) &&
+        row.history.length % 2 === 0 && typeof row.currentTopic === 'string')) problems.push(`Invalid follow-up history: ${where}`);
     const key = `${row.role}:${row.expected}`;
     counts.set(key, (counts.get(key) || 0) + 1);
   }
@@ -56,7 +59,8 @@ export async function evaluate(messages, { classify = null, maxCalls = 0 } = {})
   const results = [];
   for (const row of messages) {
     const manager = row.role === 'manager';
-    const local = routeChat(row.message, manager, null);
+    // Follow-ups pass the chat's current topic, as the composer does.
+    const local = routeChat(row.message, manager, row.currentTopic ?? null);
     const fallback = local === 'clarification' && needsIntentFallback(row.message, manager);
     let route = local;
     let source = local === 'clarification' ? 'local-clarification' : 'local';
