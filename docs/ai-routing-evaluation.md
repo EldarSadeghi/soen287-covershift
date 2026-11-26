@@ -27,7 +27,7 @@ Live runs read `OPENAI_API_KEY` and `OPENAI_MODEL` from the environment or `.env
 | Measure | Meaning | Target |
 | --- | --- | --- |
 | Routed correctly | The route matches the label. | At least 95% |
-| Generic clarification | The user would see the generic question (fallback produced no route). | At most 5% |
+| Generic clarification | The user sees the generic "What would you like me to check" question, whether or not the classifier ran. The report also shows how many of these had a real route as their label (unhelpful). | At most 5% |
 | Write-capable wrong route | Sent to `draft`, `availability` or `search` when that was not the label. These can lead to a saved change after the user confirms. | 0 |
 
 Exit codes: 0 when the run passes, 1 when a target is missed, 2 for bad options or a missing key. Offline runs fail only on write-capable wrong routes, because those come from the deterministic local rules. A live run fails if any target is missed or any fallback message was not classified.

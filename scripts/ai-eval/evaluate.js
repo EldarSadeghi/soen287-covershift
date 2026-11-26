@@ -1,7 +1,7 @@
 // Routing evaluation shared by `npm run ai:eval` and its tests. It reproduces
 // the chat's first-message routing: the local rules first, then the intent
 // classifier only when the chat would otherwise ask its generic question.
-import { needsIntentFallback, routeChat } from '../../public/ai-chat-routing.js';
+import { GENERIC_CLARIFICATION_PREFIX, chatClarification, needsIntentFallback, routeChat } from '../../public/ai-chat-routing.js';
 import { allowedIntents } from '../../src/ai/intent.js';
 
 // Routes the browser reaches without the classifier (local rules only).
@@ -73,8 +73,11 @@ export async function evaluate(messages, { classify = null, maxCalls = 0 } = {})
         }
       }
     }
-    // Users see the generic question when the fallback produced no route.
-    const generic = fallback && route === 'clarification';
+    // A clarification route shows chatClarification() in the chat, whether or
+    // not the classifier ran (negated requests never reach it), so count the
+    // reply the user actually sees.
+    const generic = route === 'clarification' &&
+      chatClarification(row.message, manager).startsWith(GENERIC_CLARIFICATION_PREFIX);
     const correct = route === row.expected;
     results.push({
       id: row.id, role: row.role, message: row.message, expected: row.expected, route, source, generic, correct,
