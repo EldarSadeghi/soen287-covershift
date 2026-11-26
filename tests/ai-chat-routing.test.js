@@ -90,3 +90,11 @@ test('coworker lookup resolves December first and includes only free windows on 
   }] };
   assert.deepEqual(coworkersFreeOnDate(data, '2026-12-01'), [{ name: 'Alex Morgan', windows }]);
 });
+
+test('employee claim-status requests route directly with or without active search context', () => {
+  for (const prompt of ['Did my claim get approved?', 'Did my Friday claim get approved?', 'What is the status of my claim?']) {
+    assert.equal(routeChat(prompt, false, 'search'), 'claimStatus');
+    assert.notEqual(routeChat(prompt, true, null), 'claimStatus');
+  }
+  assert.equal(routeChat('Show my pending claims', false, null), 'summary');
+});
