@@ -231,8 +231,12 @@ export function mountAiChat(account, csrfToken) {
       routed === 'clarification' && /^why not[.!?]*$/i.test(text) && employeeRequests.openingContext().selectedId;
     const batchReply = manager && chat.value.batchClarifying && routed === 'clarification' &&
       !chatClarification(text, true).startsWith(MIXED_INTENT_QUESTION);
-    const statusLookup = Object.hasOwn(statusLookups, routed);
-    const target = statusLookup ? routed : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
+    const previousLookup = statusLookups[previousTopic]?.lookup;
+    const choice = previousLookup && routeChat(text, false, null) === 'clarification' &&
+      !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION)
+      ? previousLookup.choiceReply(text) : undefined;
+    const statusLookup = choice !== undefined || Object.hasOwn(statusLookups, routed);
+    const target = statusLookup ? (choice !== undefined ? previousTopic : routed) : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routed;
     const wasClarifyingBatch = manager && chat.value.batchClarifying;
     const batch = manager && target === 'draft' && (requestsShiftBatch(text) || wasClarifyingBatch);
@@ -266,8 +270,15 @@ export function mountAiChat(account, csrfToken) {
       explanations.reset();
       say('user', text);
       const { lookup, reply } = statusLookups[target];
-      appendTurn(reply);
-      await lookup.load(text);
+      if (choice === null) {
+        const clarification = 'Which one do you mean? Try a number from the list or add a date and time of day.';
+        appendTurn(clarification);
+        notice(clarification, true);
+      } else {
+        appendTurn(reply);
+        if (choice !== undefined) await lookup.loadChoice(choice);
+        else await lookup.load(text);
+      }
       return;
     }
     if (target === 'summary') {

@@ -1,4 +1,4 @@
-import { coworkerLookupDate } from './ai-chat-routing.js';
+import { coworkerLookupDate, isStatusDateFollowUp } from './ai-chat-routing.js';
 import { checkedMeta, responseHeader } from './ai-response-card.js';
 import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
@@ -114,8 +114,39 @@ export function createCoverStatus(view, userId) {
   });
 }
 
+export function typedStatusChoice(text, choices, data, match = matchingClaims) {
+  const reply = normalize(text).replace(/[.!?]+$/, '');
+  const ordinal = /^(?:the )?(first|second|third|fourth|fifth|[1-5])(?: (?:one|request|claim|invitation))?$/.exec(reply);
+  if (ordinal) {
+    const words = ['first', 'second', 'third', 'fourth', 'fifth'];
+    const position = Number(ordinal[1]) || words.indexOf(ordinal[1]) + 1;
+    return choices[position - 1]?.id ?? null;
+  }
+
+  const part = reply.match(/\b(morning|afternoon|evening)\b/g) || [];
+  if (part.length > 1) return null;
+  const date = reply.replace(/^(?:(?:what|how) about |the |on |for )+/, '')
+    .replace(/\s+(?:one|request|claim|invitation)$/, '')
+    .replace(/\b(?:morning|afternoon|evening)\b/, '').trim();
+  if (date && !isStatusDateFollowUp(date)) return null;
+  if (!date && !part.length) return null;
+
+  const narrowed = date ? match({ ...data, claims: choices, requests: choices }, date) : choices;
+  const matches = narrowed?.filter(choice => {
+    if (!part.length) return true;
+    if (choice.allDay) return false;
+    const hour = Number(new Intl.DateTimeFormat('en-US', {
+      timeZone: choice.timezone || data.timezone, hour: 'numeric', hourCycle: 'h23',
+    }).format(new Date((choice.shift || choice).startsAt)));
+    return part[0] === (hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening');
+  });
+  return matches?.length === 1 ? matches[0].id : null;
+}
+
 function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) {
+  let picker;
   async function load(text, id) {
+    picker = null;
     setBusy(true);
     card.replaceChildren();
     card.hidden = true;
@@ -144,11 +175,13 @@ function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) 
         message = matches?.length === 0 ? `No matching ${config.singular} found.` : `Which ${config.singular} do you mean?`;
         responseHeader(card, config.heading, message);
         const choices = matches ?? claims;
-        for (const choice of choices.slice(0, 5)) {
+        const visible = choices.slice(0, 5);
+        for (const [index, choice] of visible.entries()) {
           const { title, range } = config.format(choice, data.timezone);
           const recipient = config.recipient?.(choice);
           const label = [title, range, recipient].filter(Boolean).join(' · ');
-          const button = element('button', 'ai-chat-review', label);
+          const button = element('button', 'ai-chat-review', `${index + 1}. ${label}`);
+          if (index === 0) picker = { anchor: button, choices: visible, data, text };
           button.type = 'button';
           button.addEventListener('click', () => { if (button.isConnected) void load(text, choice.id); });
           card.append(button);
@@ -172,5 +205,12 @@ function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) 
       notice(`Couldn’t check your ${config.plural}. Try again.`, true);
     } finally { setBusy(false); }
   }
-  return { load };
+  return {
+    load,
+    choiceReply(text) {
+      if (!picker?.anchor.isConnected || card.hidden) return undefined;
+      return typedStatusChoice(text, picker.choices, picker.data, config.match);
+    },
+    loadChoice(id) { return load(picker.text, id); },
+  };
 }
