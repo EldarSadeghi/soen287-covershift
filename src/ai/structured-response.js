@@ -1,4 +1,28 @@
 import { HttpError } from '../auth/errors.js';
+
+// The default model supports disabling reasoning; other configured models may not.
+const REASONING_OFF_MODELS = new Set(['gpt-6-luna']);
+
+/**
+ * Builds one Responses API request body. Every AI feature uses the same
+ * privacy and output rules: no provider-side storage, a bounded output size and
+ * a strict JSON schema, so model output can never be free-form text.
+ */
+export function responsesBody({ model, name, schema, instructions, input, maxOutputTokens }) {
+  return JSON.stringify({
+    model,
+    store: false,
+    ...(REASONING_OFF_MODELS.has(model) && { reasoning: { effort: 'none' } }),
+    max_output_tokens: maxOutputTokens,
+    instructions,
+    input,
+    text: { format: { type: 'json_schema', name, strict: true, schema } },
+  });
+}
+
+// True when the server has everything required to make a paid AI call.
+export const aiConfigured = ({ apiKey, model, allowance }) => Boolean(apiKey && model?.trim() && allowance);
+
 export async function structuredResponse({apiKey, body, fetchImpl, timeoutMs, unavailable}) {
   const controller = new AbortController(); let timer;
   try {

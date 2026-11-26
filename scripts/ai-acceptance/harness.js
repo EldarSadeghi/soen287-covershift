@@ -1,6 +1,6 @@
 // Acceptance infrastructure defaults to recorded replies and an ephemeral loopback server.
 import assert from 'node:assert/strict';
-import {mkdtemp, readFile, rm} from 'node:fs/promises';
+import {mkdtemp, readFile, readdir, rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {JsonStore} from '../../src/storage/json-store.js';
@@ -12,6 +12,7 @@ import {createAiShiftDrafter} from '../../src/ai/shift-draft.js';
 import {createAiShiftSearcher} from '../../src/ai/shift-search.js';
 import {createAiAvailabilityDrafter} from '../../src/ai/availability-draft.js';
 import {createAiScheduleAnswerer} from '../../src/ai/schedule-questions.js';
+import {createAiIntentClassifier} from '../../src/ai/intent.js';
 
 export const FIXED_NOW = Date.parse('2030-01-07T16:00:00.000Z');
 export const MODE = 'offline-recorded-provider-replies';
@@ -50,7 +51,9 @@ export async function createAcceptanceContext(checks, options = {}) {
       try {
         assert.equal(url,'https://api.openai.com/v1/responses');
         turn=queue.shift();assert.ok(turn,'Unexpected provider call');
-        payload=JSON.parse(init.body);input=JSON.parse(payload.input);
+        payload=JSON.parse(init.body);
+        // The intent classifier sends only the message text, never history or workspace data.
+        input=payload.text.format.name==='covershift_intent'?{request:payload.input,conversation:[]}:JSON.parse(payload.input);
         check('provider-'+(calls.length+1),'Recorded task, latest message, conversation and strict private response contract match.',[payload.text.format.name,input.request,input.conversation,payload.store,payload.text.format.strict],[turn.task,turn.message,turn.history||[],false,true]);
         calls.push({task:turn.task,payload,input});
         if(turn.beforeReply) await turn.beforeReply(store);
@@ -68,7 +71,7 @@ export async function createAcceptanceContext(checks, options = {}) {
       timeoutMs: options.liveKey ? 11000 : options.preview ? 3000 : 200,
     };
     const sessions=new SessionStore();
-    server=createAppServer({store,sessions,shiftClock:()=>FIXED_NOW,...(options.disabled?{}:{aiDraft:createAiShiftDrafter(aiOptions),aiSearch:createAiShiftSearcher(aiOptions),aiAvailability:createAiAvailabilityDrafter(aiOptions),aiSchedule:createAiScheduleAnswerer(aiOptions)})});
+    server=createAppServer({store,sessions,shiftClock:()=>FIXED_NOW,...(options.disabled?{}:{aiDraft:createAiShiftDrafter(aiOptions),aiSearch:createAiShiftSearcher(aiOptions),aiAvailability:createAiAvailabilityDrafter(aiOptions),aiSchedule:createAiScheduleAnswerer(aiOptions),aiIntent:createAiIntentClassifier(aiOptions)})});
     await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(options.port ?? 0,'127.0.0.1',resolve);});
     const base=`http://127.0.0.1:${server.address().port}`,identities=new Map();
     async function identity(user) {
@@ -91,7 +94,11 @@ export async function createAcceptanceContext(checks, options = {}) {
       return {status:response.status,data,headers:response.headers,elapsedMs:Math.round(performance.now()-started)};
     }
     return {base,check,store,manifest,dates:manifest.dates,ids:manifest.scenarios,calls,requests,queue,
-      expect:turn=>queue.push(turn),providerContractValid:()=>!contractFailed,http,bytes:()=>readFile(store.filename,'utf8'),cleanup,
+      expect:turn=>queue.push(turn),
+      // calls = provider-call reservations (lifetime cap); turns = user turns (daily limit).
+      usage:async()=>{const names=(await readdir(join(dir,'usage')).catch(()=>[])).filter(name=>name.endsWith('.json'));
+        const rows=await Promise.all(names.map(async name=>JSON.parse(await readFile(join(dir,'usage',name),'utf8'))));
+        return {calls:rows.length,turns:rows.filter(row=>row.turn!==false).length};},providerContractValid:()=>!contractFailed,http,bytes:()=>readFile(store.filename,'utf8'),cleanup,
       async revision(requestId){const {claimRevision}=await import('../../src/requests/claim.js');const db=await store.read(),r=db.coverageRequests.find(x=>x.id===requestId);return claimRevision(r,db.shifts.find(s=>s.id===r.shiftId));},
       async rule(){const r=await http('worker_jamie','/api/worker/availability-rules');return r.data.rules.find(x=>x.id===manifest.scenarios.availabilityRule);},
     };

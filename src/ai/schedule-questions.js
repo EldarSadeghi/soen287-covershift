@@ -1,7 +1,7 @@
 import { HttpError } from '../auth/errors.js';
 import { businessInstant } from '../shifts/create.js';
 import { validateChatInput } from './shift-draft.js';
-import { structuredResponse } from './structured-response.js';
+import { aiConfigured, responsesBody, structuredResponse } from './structured-response.js';
 const keys=['kind','question','startDate','endDate','workerName'];
 const schema={type:'object',additionalProperties:false,properties:Object.fromEntries(keys.map(k=>[k,k==='kind'?{type:'string',enum:['next','schedule','hours','clarification']}:{type:'string'}])),required:keys};
 const unavailable=()=>new HttpError(503,'Schedule questions are unavailable. Your message is preserved. Use your saved schedule or try again later.');
@@ -50,15 +50,27 @@ export function businessCalendar(now,timezone){
 }
 export function createAiScheduleAnswerer({apiKey,model='gpt-6-luna',allowance,fetchImpl=fetch,timeoutMs=11000}={}){
  const active=new Set();
- return async(store,userId,input,clock=Date.now)=>{
-  input=validateChatInput(input);const {user,business}=account(await store.read(),userId);
-  if(!apiKey||!model?.trim()||!allowance)throw unavailable();
+ return async (store, userId, input, clock = Date.now, { turnCounted = false } = {}) => {
+  input = validateChatInput(input);
+  const { user, business } = account(await store.read(), userId);
+  if (!aiConfigured({ apiKey, model, allowance })) throw unavailable();
   if(active.has(userId)||active.size>=2)throw new HttpError(429,'Schedule questions are busy. Wait for the current reply or use your saved schedule.');
-  const now=clock(),body=JSON.stringify({model,store:false,...(model === 'gpt-6-luna' && { reasoning: { effort: 'none' } }),max_output_tokens:1000,instructions,input:JSON.stringify({role:user.role,timezone:business.timezone,calendar:businessCalendar(now,business.timezone),currentInstant:new Date(now).toISOString(),currentBusinessTime:new Intl.DateTimeFormat('en-CA',{timeZone:business.timezone,dateStyle:'full',timeStyle:'long',hourCycle:'h23'}).format(now),conversation:input.history,request:input.description}),text:{format:{type:'json_schema',name:'schedule_question',strict:true,schema}}});
+  const now = clock();
+  const context = {
+   role: user.role,
+   timezone: business.timezone,
+   calendar: businessCalendar(now, business.timezone),
+   currentInstant: new Date(now).toISOString(),
+   currentBusinessTime: new Intl.DateTimeFormat('en-CA', { timeZone: business.timezone, dateStyle: 'full', timeStyle: 'long', hourCycle: 'h23' }).format(now),
+   conversation: input.history,
+   request: input.description,
+  };
+  const body = responsesBody({ model, name: 'schedule_question', schema, instructions, input: JSON.stringify(context), maxOutputTokens: 1000 });
   if(Buffer.byteLength(body)>16000)throw new HttpError(422,'Start a new chat with a shorter question.');
   active.add(userId);
   try{
-   await allowance.reserve(userId, now, business.timezone);const result=await structuredResponse({apiKey,body,fetchImpl,timeoutMs,unavailable});
+   await allowance.reserve(userId, now, business.timezone, { newTurn: !turnCounted });
+   const result = await structuredResponse({ apiKey, body, fetchImpl, timeoutMs, unavailable });
    if(!result||Array.isArray(result)||Object.keys(result).length!==keys.length||!keys.every(k=>typeof result[k]==='string'))throw unavailable();
    const current=account(await store.read(),userId);if(current.user.role!==user.role||current.business.id!==business.id||current.business.timezone!==business.timezone)throw new HttpError(409,'Your workspace changed. Ask again.');
    if(result.kind==='clarification'){if(!result.question.trim()||result.question.length>500||keys.slice(2).some(k=>result[k]))throw unavailable();return {kind:'clarification',question:result.question,timezone:business.timezone};}
