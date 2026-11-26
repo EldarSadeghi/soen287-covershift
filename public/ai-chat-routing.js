@@ -13,12 +13,15 @@ export const MIXED_INTENT_QUESTION = 'Which should I handle first:';
 const taskLabels = {
   draft: 'draft a shift', search: 'find open shifts', availability: 'draft availability',
   questions: 'check the schedule', summary: 'show a working-week summary', coworkers: 'check coworker availability',
-  claimStatus: 'check a claim status', coverStatus: 'check a cover request', alternatives: 'find alternatives', explanation: 'explain a match or request', rules: 'check saved rules',
+  claimStatus: 'check a claim status', coverStatus: 'check a cover request', timeOffStatus: 'check a time-off request', alternatives: 'find alternatives', explanation: 'explain a match or request', rules: 'check saved rules',
 };
 
 function explicitRoute(text, manager) {
   const message = normalizedMessage(text);
   if (/^(?:do not|don't|never)\b/.test(message)) return null;
+  if (!manager && /^(?:did|has|was|is|what|check|show)\b/.test(message) &&
+      /\bmy\b[^.!?]*\b(?:time[ -]off|leave request)\b/.test(message) &&
+      /\b(?:approv(?:e|ed|al)|declin(?:e|ed)|reject(?:ed)?|cancelled|canceled|pending|status|decision|go through)\b/.test(message)) return 'timeOffStatus';
   if (!manager && /^(?:did|has|was|is|what|check|show)\b/.test(message) &&
       /\b(?:my (?:cover (?:requests?|invitations?)|requests? (?:for|to) cover)|(?:cover (?:requests?|invitations?)) i sent)\b/.test(message) &&
       /\b(?:accept(?:ed)?|approv(?:e|ed|al)|declin(?:e|ed)|reject(?:ed)?|cancelled|canceled|pending|expired|status|respond(?:ed)?|decision|what happened)\b/.test(message)) return 'coverStatus';

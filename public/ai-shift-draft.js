@@ -1,4 +1,4 @@
-import { createClaimStatus, createCoverStatus } from './ai-claim-status.js';
+import { createClaimStatus, createCoverStatus, createTimeOffStatus } from './ai-claim-status.js';
 import { showWorkingSummary, workingSummaryMessage } from './ai-working-summary.js';
 import { createBatchReview } from './ai-shift-batch.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
@@ -45,6 +45,12 @@ export function mountAiChat(account, csrfToken) {
   }
   const claimStatus = !manager ? createClaimStatus({ card, chat, notice, setBusy: working, onOutcome: outcomeText }) : null;
   const coverStatus = !manager ? createCoverStatus({ card, chat, notice, setBusy: working, onOutcome: outcomeText }, account.user.id) : null;
+  const timeOffStatus = !manager ? createTimeOffStatus({ card, chat, notice, setBusy: working, onOutcome: outcomeText }) : null;
+  const statusLookups = {
+    claimStatus: { lookup: claimStatus, reply: 'I’ll check your saved claims.' },
+    coverStatus: { lookup: coverStatus, reply: 'I’ll check your sent cover invitations.' },
+    timeOffStatus: { lookup: timeOffStatus, reply: 'I’ll check your time-off requests.' },
+  };
   const batchReview = manager ? createBatchReview({ card, chat, csrfToken, notice, setBusy: working,
     onOutcome: outcomeText, canAct: () => !busy }) : null;
   const availability = !manager ? createAvailabilityControls({chat,card,notice,csrfToken,setBusy:working,onOutcome:outcomeText}) : null;
@@ -222,7 +228,7 @@ export function mountAiChat(account, csrfToken) {
       routed === 'clarification' && /^why not[.!?]*$/i.test(text) && employeeRequests.openingContext().selectedId;
     const batchReply = manager && chat.value.batchClarifying && routed === 'clarification' &&
       !chatClarification(text, true).startsWith(MIXED_INTENT_QUESTION);
-    const statusLookup = routed === 'claimStatus' || routed === 'coverStatus';
+    const statusLookup = Object.hasOwn(statusLookups, routed);
     const target = statusLookup ? routed : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
       routed;
     const wasClarifyingBatch = manager && chat.value.batchClarifying;
@@ -256,8 +262,9 @@ export function mountAiChat(account, csrfToken) {
     if (statusLookup) {
       explanations.reset();
       say('user', text);
-      appendTurn(target === 'coverStatus' ? 'I’ll check your sent cover invitations.' : 'I’ll check your saved claims.');
-      await (target === 'coverStatus' ? coverStatus : claimStatus).load(text);
+      const { lookup, reply } = statusLookups[target];
+      appendTurn(reply);
+      await lookup.load(text);
       return;
     }
     if (target === 'summary') {
