@@ -4,7 +4,8 @@ export async function structuredResponse({apiKey, body, fetchImpl, timeoutMs, un
   try {
     const work = async () => {
       const response = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body, signal: controller.signal });
-      if (!response.ok) throw unavailable(); // Never return provider errors or keys.
+      if (response.status === 404) throw new HttpError(503, 'The configured AI model is unavailable. Ask an administrator to check OPENAI_MODEL.');
+      if (!response.ok && response.status !== 400) throw unavailable();
       // Bound response bytes as well as output tokens. Body consumption is in deadline.
       const reader = response.body.getReader(); const chunks = []; let size = 0;
       try {
@@ -16,6 +17,12 @@ export async function structuredResponse({apiKey, body, fetchImpl, timeoutMs, un
         }
       } finally { reader.releaseLock(); }
       const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      if (!response.ok) {
+        if (['model_not_found', 'unsupported_model', 'invalid_model'].includes(data.error?.code) || data.error?.param === 'model') {
+          throw new HttpError(503, 'The configured AI model is unavailable. Ask an administrator to check OPENAI_MODEL.');
+        }
+        throw unavailable();
+      }
       if (data.status !== 'completed' || !Array.isArray(data.output)) throw unavailable();
       const content = data.output.filter(item => item.type === 'message').flatMap(item => item.content || []);
       if (content.some(part => part.type === 'refusal')) throw new HttpError(422, 'AI could not interpret that request. Rephrase it as one work shift, or use the manual workflow.');

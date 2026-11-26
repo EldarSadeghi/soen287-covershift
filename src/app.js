@@ -86,7 +86,7 @@ export function createSignupLimiter({ limit = 5, windowMs = 10 * 60 * 1000, mess
       if (attempts.size >= 1000) throw new HttpError(503, 'Please try again later.');
       entry = { count: 0, reset: now + windowMs }; attempts.set(address, entry);
     }
-    if (entry.count >= limit) throw new HttpError(429, message);
+    if (entry.count >= limit) throw new HttpError(429, typeof message === 'function' ? message(Math.ceil((entry.reset - now) / 1000)) : message);
     entry.count++;
   };
 }
@@ -127,7 +127,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
   const limitShifts = createSignupLimiter({ limit: 60, message: 'Too many shift changes. Please wait 10 minutes and try again.' });
   const limitCoverage = createSignupLimiter({ limit: 30, message: 'Too many coverage changes. Please wait 10 minutes and try again.' });
   const limitNotificationReads = createSignupLimiter({ limit: 120, message: 'Too many notification updates. Please wait and refresh.' });
-  const limitAi = createSignupLimiter({ limit: 5, message: 'Too many AI drafting attempts. Wait 10 minutes or use the manual form.' });
+  const limitAi = createSignupLimiter({ limit: 20, windowMs: 120000, message: seconds => `Too many AI requests. Try again in ${seconds} seconds.` });
   return createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'same-origin');
