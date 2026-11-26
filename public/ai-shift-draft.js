@@ -2,7 +2,7 @@ import { createClaimStatus, createCoverStatus, createTimeOffStatus } from './ai-
 import { showWorkingSummary, workingSummaryMessage } from './ai-working-summary.js';
 import { createBatchReview } from './ai-shift-batch.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
-import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, needsIntentFallback, openingReference, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate, workingSummaryWeek } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, MIXED_INTENT_QUESTION, OPENING_CLARIFICATION, availabilityNeedsHours, availabilityRuleCommand, chatClarification, clarificationReplyRoute, needsIntentFallback, openingReference, resolveChatTarget, requestsShiftBatch, routeChat, coworkerLookupDate, coworkersFreeOnDate, workingSummaryWeek } from './ai-chat-routing.js';
 import {responseHeader,responseNote,responseDetails,responseMeta,localDate,localShiftFields,savedShiftFields,revealResponse} from './ai-response-card.js';
 import { scheduleAnswerMessage, showScheduleAnswer } from './ai-schedule.js';
 import { createAvailabilityControls, availabilitySummary } from './ai-availability.js';
@@ -238,27 +238,20 @@ export function mountAiChat(account, csrfToken) {
     delete dialog.dataset.progressMs;
     delete dialog.dataset.answerMs;
     const previous = chat.value.messages.at(-1);
-    const coworkerDateReply = !manager && previous?.topic === 'coworkers' &&
-      /^Which date/.test(previous.text) && routeChat(text, false, null) === 'clarification' &&
-      !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
     const previousTopic = previous?.topic;
     const currentTopic = previousTopic === 'summary' || Object.hasOwn(statusLookups, previousTopic)
       ? previousTopic : previous && previousTopic !== 'clarification' ? mode : null;
     const routed = routeChat(text, manager, currentTopic);
-    const openingReply = !manager && previous?.topic === 'explanation' &&
-      previous.text.startsWith(OPENING_CLARIFICATION) && routed === 'clarification' &&
-      !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION);
-    const shortExplanation = !manager && previous?.topic === 'explanation' &&
-      routed === 'clarification' && /^why not[.!?]*$/i.test(text) && employeeRequests.openingContext().selectedId;
-    const batchReply = manager && chat.value.batchClarifying && routed === 'clarification' &&
-      !chatClarification(text, true).startsWith(MIXED_INTENT_QUESTION);
     const previousLookup = statusLookups[previousTopic]?.lookup;
-    const choice = previousLookup && routeChat(text, false, null) === 'clarification' &&
-      !chatClarification(text, false).startsWith(MIXED_INTENT_QUESTION)
-      ? previousLookup.choiceReply(text) : undefined;
-    let statusLookup = choice !== undefined || Object.hasOwn(statusLookups, routed);
-    let target = statusLookup ? (choice !== undefined ? previousTopic : routed) : (batchReply && 'draft') || ((openingReply || shortExplanation) && 'explanation') || (coworkerDateReply && 'coworkers') || (!manager && previous?.topic === 'clarification' && clarificationReplyRoute(text, previous.text)) ||
-      routed;
+    // Follow-up routing lives in resolveChatTarget so it can be tested; it
+    // never lets an unsupported command continue an earlier question.
+    let { target, statusLookup, choice } = resolveChatTarget({
+      text, manager, routed, previous,
+      batchClarifying: chat.value.batchClarifying,
+      hasSelectedOpening: () => Boolean(employeeRequests.openingContext().selectedId),
+      statusTopics: Object.keys(statusLookups),
+      choiceReply: previousLookup ? reply => previousLookup.choiceReply(reply) : null,
+    });
     // Only the generic "What would you like me to check" fallback asks the
     // server-side classifier; specific clarifications stay local.
     let intentPass = null;

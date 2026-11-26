@@ -27,9 +27,11 @@ Live runs read `OPENAI_API_KEY` and `OPENAI_MODEL` from the environment or `.env
 | Measure | Meaning | Target |
 | --- | --- | --- |
 | Routed correctly | The route matches the label. | At least 95% |
-| Generic clarification | The user sees the generic "What would you like me to check" question, whether or not the classifier ran. The report also shows how many of these had a real route as their label (unhelpful). | At most 5% |
+| Unhelpful generic clarification | The user sees the generic "What would you like me to check" question, whether or not the classifier ran, although the message had a real route as its label. The report also shows all generic replies, including correct ones such as a reply to "hello". | At most 5% |
 | Write-capable wrong route | Sent to `draft`, `availability` or `search` when that was not the label. These can lead to a saved change after the user confirms. | 0 |
 
 Exit codes: 0 when the run passes, 1 when a target is missed, 2 for bad options or a missing key. Offline runs fail only on write-capable wrong routes, because those come from the deterministic local rules. A live run fails if any target is missed or any fallback message was not classified.
+
+CS-055 changed the generic target from all generic replies to unhelpful ones. All generic replies are still reported. The CS-054 results in `docs/acceptance/cs054/` use the original definition.
 
 The classifier can return only its own intents, so labels that only the local rules reach (`explanation`, `rules`, `alternatives`) are counted as misses whenever the local rules miss them.
