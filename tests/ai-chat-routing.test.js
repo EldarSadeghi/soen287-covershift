@@ -114,3 +114,16 @@ test('time-off status uses a read-only employee route regardless of the previous
   }
   assert.notEqual(routeChat('Cancel my pending time-off request', false, null), 'timeOffStatus');
 });
+
+test('date-only follow-ups retain the immediate employee request-status topic', () => {
+  for (const topic of ['claimStatus', 'coverStatus', 'timeOffStatus']) {
+    for (const message of ['What about Saturday?', 'And tomorrow?', 'On December first', '2026-12-05']) {
+      assert.equal(routeChat(message, false, topic), topic, message);
+      assert.notEqual(routeChat(message, true, topic), topic, message);
+      assert.notEqual(routeChat(message, false, null), topic, message);
+    }
+    assert.equal(routeChat('Find me an opening Saturday', false, topic), 'search');
+    assert.equal(routeChat('Cancel it Saturday', false, topic), 'clarification');
+  }
+  assert.equal(routeChat('Was my time off approved?', false, 'claimStatus'), 'timeOffStatus');
+});
