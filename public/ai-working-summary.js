@@ -20,10 +20,10 @@ export function showWorkingSummary(card, data, refresh) {
   for (const group of data.sections) {
     const block = element('section', 'ai-working-summary-section');
     block.append(element('h4', '', `${group.label} · ${group.count}`));
-    if (!group.count) block.append(element('p', 'ai-response-meta', 'None in this date window.'));
+    if (!group.count) block.append(element('p', 'ai-response-meta', 'None to show.'));
     for (const row of group.rows) {
-      const time = formatShiftTime(row, data.timezone);
-      const details = [time.date, `${time.startTime} – ${time.endDate ? time.endDate + ' ' : ''}${time.endTime}`,
+      const time = row.detail ? null : formatShiftTime(row, data.timezone);
+      const details = row.detail || [time.date, `${time.startTime} – ${time.endDate ? time.endDate + ' ' : ''}${time.endTime}`,
         row.relationship, labels[row.status]].filter(Boolean).join(' · ');
       const item = element('div', 'ai-working-summary-item');
       item.append(element('strong', '', row.title), element('p', 'ai-response-meta', details));

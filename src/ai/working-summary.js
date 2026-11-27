@@ -1,6 +1,7 @@
 import { HttpError } from '../auth/errors.js';
 import { coverageDisplayState } from '../requests/status.js';
-import { addDays } from '../schedules/publication.js';
+import { listTimeOff } from '../time-off/service.js';
+import { addDays, getSchedulePeriod } from '../schedules/publication.js';
 import { businessInstant } from '../shifts/create.js';
 import { businessCalendar } from './schedule-questions.js';
 
@@ -49,6 +50,21 @@ export async function workingSummary(store, userId, week, clock = Date.now) {
     section('Other coverage outcomes', coverage.filter(row => !['pending', 'open'].includes(row.status)),
       '/workspace/worker/requests', 'Open My requests'),
   ];
+  if (manager) {
+    const snapshot = { read: async () => db };
+    const { requests } = await listTimeOff(snapshot, userId, 'manager', () => now);
+    const leave = requests.filter(row => row.status === 'pending')
+      .map(({ workerName, startsAt, endsAt }) => ({ title: workerName, startsAt, endsAt }));
+    const period = await getSchedulePeriod(snapshot, userId, null, now);
+    const publication = ['due', 'overdue'].includes(period.dueStatus)
+      ? [{ title: period.dueStatus === 'due' ? 'Publication due today' : 'Publication overdue',
+          detail: `Monday ${period.dueOn} · ${period.drafts.length} unpublished changes` }]
+      : [];
+    sections.push(
+      section('Time-off requests awaiting review', leave, '/workspace/manager/time-off', 'Open Time off'),
+      section('Schedule publication due or overdue', publication, '/workspace/manager/schedule', 'Open Schedule'),
+    );
+  }
   return { kind: 'working_summary', title: manager ? 'Your team’s attention summary' : 'Your working week',
     week, startDate, lastDate: addDays(endDate, -1), timezone, asOf: new Date(now).toISOString(), sections };
 }

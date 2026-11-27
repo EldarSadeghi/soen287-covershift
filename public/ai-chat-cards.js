@@ -1,4 +1,8 @@
 import {
+  managerLookupQuery,
+  renderManagerLookup,
+} from './ai-manager-lookups.js';
+import {
   teamAvailabilityQuery,
   selectAvailabilityWorkers,
   renderTeamAvailability,
@@ -297,27 +301,53 @@ export function createChatCards({
     );
   }
 
+  async function loadManagerData(url) {
+    const response = await requestJSON(url, { cache: 'no-store' });
+    if (response.status === 401) {
+      chat.clear();
+      location.replace('/login?expired=1');
+      return null;
+    }
+    if (!response.ok) {
+      throw new Error(
+        response.data?.message ||
+          'The lookup could not load. Try asking again.',
+      );
+    }
+    return response.data;
+  }
+
+  async function showManagerLookup(kind, text) {
+    const endpoint = '/api/manager/chat-lookup';
+    card.hidden = true;
+    working(true);
+    try {
+      const context = await loadManagerData(endpoint);
+      if (!context) return;
+      const query = managerLookupQuery(kind, text, context.today);
+      if (query.question) {
+        outcomeText(query.question);
+        return;
+      }
+      const data = await loadManagerData(
+        endpoint + '?' + new URLSearchParams(query.params),
+      );
+      if (!data) return;
+      outcomeText(renderManagerLookup(card, data));
+      card.hidden = false;
+    } catch (error) {
+      outcomeText(error.message);
+    } finally {
+      working(false);
+    }
+  }
+
   async function showTeamAvailability(text, subject = text) {
     const endpoint = '/api/manager/availability-windows';
     card.hidden = true;
     working(true);
-    async function load(url) {
-      const response = await requestJSON(url, { cache: 'no-store' });
-      if (response.status === 401) {
-        chat.clear();
-        location.replace('/login?expired=1');
-        return null;
-      }
-      if (!response.ok) {
-        throw new Error(
-          response.data?.message ||
-            'Team availability could not load. Try asking again.',
-        );
-      }
-      return response.data;
-    }
     try {
-      const context = await load(endpoint);
+      const context = await loadManagerData(endpoint);
       if (!context) return;
       const query = teamAvailabilityQuery(
         text,
@@ -328,7 +358,7 @@ export function createChatCards({
         outcomeText(query.question);
         return;
       }
-      const data = await load(
+      const data = await loadManagerData(
         endpoint + '?' + new URLSearchParams(query.params),
       );
       if (!data) return;
@@ -476,6 +506,7 @@ export function createChatCards({
     showSuggestion,
     showCoworkerAvailability,
     showTeamAvailability,
+    showManagerLookup,
     renderProviderReply,
   };
 }
