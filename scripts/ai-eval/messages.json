@@ -2,6 +2,78 @@
   "version": 1,
   "messages": [
     {
+      "id": "e-timeOffDraft-01",
+      "role": "employee",
+      "expected": "timeOffDraft",
+      "message": "I need next Friday off"
+    },
+    {
+      "id": "e-timeOffDraft-02",
+      "role": "employee",
+      "expected": "timeOffDraft",
+      "message": "can I take December 22 to 26 off?"
+    },
+    {
+      "id": "e-timeOffDraft-03",
+      "role": "employee",
+      "expected": "timeOffDraft",
+      "message": "I need Saturday afternoon off from 1 to 5"
+    },
+    {
+      "id": "e-timeOffDraft-04",
+      "role": "employee",
+      "expected": "timeOffDraft",
+      "message": "Request time off for tomorrow"
+    },
+    {
+      "id": "e-timeOffDraft-05",
+      "role": "employee",
+      "expected": "timeOffDraft",
+      "message": "Could you help me book leave for Tuesday?"
+    },
+    {
+      "id": "e-timeOffDraft-06",
+      "role": "employee",
+      "expected": "timeOffDraft",
+      "message": "I need a couple of days away starting next Monday."
+    },
+    {
+      "id": "e-coverDraft-01",
+      "role": "employee",
+      "expected": "coverDraft",
+      "message": "Ask Alex to cover my Saturday shift"
+    },
+    {
+      "id": "e-coverDraft-02",
+      "role": "employee",
+      "expected": "coverDraft",
+      "message": "can Jamie take my Friday opening?"
+    },
+    {
+      "id": "e-coverDraft-03",
+      "role": "employee",
+      "expected": "coverDraft",
+      "message": "Swap my shift with Alex next Tuesday"
+    },
+    {
+      "id": "e-coverDraft-04",
+      "role": "employee",
+      "expected": "coverDraft",
+      "message": "Can you ask Sam to take my Sunday shift?"
+    },
+    {
+      "id": "e-coverDraft-05",
+      "role": "employee",
+      "expected": "coverDraft",
+      "message": "Draft a cover request for Taylor to take my Tuesday closing shift."
+    },
+    {
+      "id": "e-coverDraft-06",
+      "role": "employee",
+      "expected": "coverDraft",
+      "message": "Could I get someone to take over my Monday morning shift?"
+    },
+    {
       "id": "e-questions-01",
       "role": "employee",
       "expected": "questions",
@@ -362,6 +434,12 @@
       "message": "any colleagues free wednesday afternoon?"
     },
     {
+      "id": "e-coworkers-11",
+      "role": "employee",
+      "expected": "coworkers",
+      "message": "Who's free next Friday?"
+    },
+    {
       "id": "e-summary-01",
       "role": "employee",
       "expected": "summary",
@@ -488,6 +566,12 @@
       "message": "was my cover request declined"
     },
     {
+      "id": "e-coverStatus-08",
+      "role": "employee",
+      "expected": "coverStatus",
+      "message": "Did Alex accept my cover request for Friday?"
+    },
+    {
       "id": "e-timeOffStatus-01",
       "role": "employee",
       "expected": "timeOffStatus",
@@ -528,6 +612,12 @@
       "role": "employee",
       "expected": "timeOffStatus",
       "message": "was my time off for the 24th rejected"
+    },
+    {
+      "id": "e-timeOffStatus-08",
+      "role": "employee",
+      "expected": "timeOffStatus",
+      "message": "Was my December time off approved?"
     },
     {
       "id": "e-explanation-01",
@@ -652,7 +742,7 @@
     {
       "id": "e-clarification-10",
       "role": "employee",
-      "expected": "clarification",
+      "expected": "timeOffDraft",
       "message": "request time off for next friday"
     },
     {

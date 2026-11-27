@@ -1,3 +1,4 @@
+import {takeEmployeeDraft} from './ai-employee-drafts.js';
 import {requestJSON} from './request.js';
 import {element} from './shift-card.js';
 const labels={pending:'Pending',approved:'Approved',rejected:'Rejected',cancelled:'Cancelled'};
@@ -79,6 +80,16 @@ export async function mountTimeOff(main,account,csrf){
   if(!manager){
     find('leave-type').addEventListener('change',()=>{find('leave-hours').hidden=find('leave-type').value==='full';find('leave-end-date-label').textContent=find('leave-type').value==='full'?'End date (included)':'End date';for(const id of ['leave-start-time','leave-end-time'])find(id).required=find('leave-type').value==='hours';controls();});
     find('leave-start-date').addEventListener('change',()=>{find('leave-end-date').min=find('leave-start-date').value;if(!find('leave-end-date').value||find('leave-end-date').value<find('leave-start-date').value)find('leave-end-date').value=find('leave-start-date').value;});
+    const draft=takeEmployeeDraft(account,'timeOffDraft');
+    if(draft){
+      const {startLocal,endLocal,allDay}=draft.selection;
+      find('leave-type').value=allDay?'full':'hours';
+      find('leave-type').dispatchEvent(new Event('change'));
+      find('leave-start-date').value=startLocal.slice(0,10);
+      find('leave-end-date').value=allDay?new Date(Date.parse(endLocal+'Z')-1).toISOString().slice(0,10):endLocal.slice(0,10);
+      if(!allDay){find('leave-start-time').value=startLocal.slice(11);find('leave-end-time').value=endLocal.slice(11);}
+      find('leave-start-date').focus();
+    }
     find('leave-form').addEventListener('submit',event=>{
       event.preventDefault();if(saving||uncertain||loading||reconciling)return;clear();
       try{const full=find('leave-type').value==='full';reviewed={startLocal:find('leave-start-date').value+'T'+(full?'00:00':find('leave-start-time').value),endLocal:full?fullDayEnd(find('leave-end-date').value):find('leave-end-date').value+'T'+find('leave-end-time').value,allDay:full,note:find('leave-note').value.trim(),submissionId:crypto.randomUUID(),timezone};

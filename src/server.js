@@ -1,3 +1,4 @@
+import { createEmployeeDrafter } from './ai/employee-drafts.js';
 import { createAiShiftEditor } from './ai/shift-edit.js';
 import { createAiIntentClassifier } from './ai/intent.js';
 import { createAiScheduleAnswerer } from './ai/schedule-questions.js';
@@ -36,7 +37,7 @@ const aiSchedule = createAiScheduleAnswerer(aiOptions);
 const aiDraft = createAiShiftDrafter(aiOptions);
 await reconcileAvailability(store);
 const matching = startAvailabilityMatching(store);
-const server = createAppServer({ store, sessions, publicOrigin, aiDraft, aiEdit: createAiShiftEditor(aiOptions), aiSearch, aiAvailability, aiSchedule, aiIntent: createAiIntentClassifier(aiOptions), aiAllowance: allowance, routingLog }).listen(port, host, () => {
+const server = createAppServer({ store, sessions, publicOrigin, aiDraft, aiEdit: createAiShiftEditor(aiOptions), aiTimeOff: createEmployeeDrafter('timeOffDraft', aiOptions), aiCover: createEmployeeDrafter('coverDraft', aiOptions), aiSearch, aiAvailability, aiSchedule, aiIntent: createAiIntentClassifier(aiOptions), aiAllowance: allowance, routingLog }).listen(port, host, () => {
   console.log(`CoverShift is running at http://${host}:${port}`);
 });
 

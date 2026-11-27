@@ -1,4 +1,6 @@
 export const CHAT_ENDPOINTS = {
+  timeOffDraft: '/api/worker/ai-time-off-draft',
+  coverDraft: '/api/worker/ai-cover-draft',
   shiftEdit: '/api/manager/ai-shift-edit',
   draft: '/api/manager/ai-shift-draft',
   search: '/api/worker/ai-shift-search',
@@ -22,6 +24,8 @@ export const MANAGER_LOOKUPS = [
   'publicationStatus',
 ];
 
+export const EMPLOYEE_DRAFTS = ['timeOffDraft', 'coverDraft'];
+
 export const EMPLOYEE_LOOKUPS = ['history', 'updates'];
 
 const taskLabels = {
@@ -39,6 +43,8 @@ const taskLabels = {
   updates: 'check recent updates',
   coworkers: 'check coworker availability',
   claimStatus: 'check a claim status',
+  timeOffDraft: 'prepare a time-off request',
+  coverDraft: 'prepare a cover request',
   coverStatus: 'check a cover request',
   timeOffStatus: 'check a time-off request',
   alternatives: 'find alternatives',
@@ -57,6 +63,14 @@ const patterns = {
       /^(?:(?:any|show (?:me )?(?:my )?|check (?:my )?)\s*(?:new |recent )?updates(?: for me)?|what(?:'s| is) new(?: for me)?|did anything change(?: for me)?)[.!?]*$/,
     duties:
       /^(?:(?:what(?:'s| are| is)|show|list|tell me)\b.*\b(?:my|shift) (?:duties|tasks)\b|(?:what (?:do i have|am i supposed|do i need) to do|what (?:tasks|duties) (?:do i have|are assigned to me))\b.*\b(?:shift|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)/,
+  },
+  employeeDrafts: {
+    timeOffDraft:
+      /^(?:request (?:time[ -]off|leave)\b|(?:i (?:need|want|would like)(?: to take)?|can i take|could i take|i'd like)\b[^.!?]*\boff\b)/,
+    coverDraft:
+      /^(?:swap my shift\b|request cover (?:for|on) my\b|ask .+ to cover my\b|(?:can|could|would) .+ (?:take|cover) my\b)/,
+    correction:
+      /^(?:actually|instead|make it|add .* too|full day|all day|from|until|\d{1,2}(?::\d{2})?\s*[ap]m)\b/,
   },
   timeOffStatus: {
     lead: /^(?:did|has|was|is|what|check|show)\b/,
@@ -185,6 +199,9 @@ function explicitRoute(text, manager) {
     }
   }
   if (!manager) {
+    if (patterns.employeeDrafts.timeOffDraft.test(message))
+      return 'timeOffDraft';
+    if (patterns.employeeDrafts.coverDraft.test(message)) return 'coverDraft';
     if (patterns.employeeLookups.history.test(message)) return 'history';
     if (patterns.employeeLookups.updates.test(message)) return 'updates';
     if (isDutiesQuestion(text)) return 'questions';
@@ -293,10 +310,16 @@ const UNSUPPORTED_ACTION =
 export const UNSUPPORTED_ACTION_MESSAGE =
   'I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.';
 
-export function requestsUnsupportedAction(text) {
-  return chatRequests(text).some((request) =>
-    UNSUPPORTED_ACTION.test(normalizedMessage(request)),
-  );
+export function requestsUnsupportedAction(text, manager = false) {
+  return chatRequests(text).some((request) => {
+    const message = normalizedMessage(request);
+    if (
+      !manager &&
+      /^(?:request (?:time[ -]off|leave)|swap my shift)\b/.test(message)
+    )
+      return false;
+    return UNSUPPORTED_ACTION.test(message);
+  });
 }
 
 export function requestsShiftBatch(text) {
@@ -343,7 +366,10 @@ export function isDutiesQuestion(text) {
 }
 
 export function routeChat(text, manager, current) {
-  if (requestsUnsupportedAction(text) || mixedRoutes(text, manager).length > 1)
+  if (
+    requestsUnsupportedAction(text, manager) ||
+    mixedRoutes(text, manager).length > 1
+  )
     return 'clarification';
   const route = explicitRoute(text, manager);
   if (route) return route;
@@ -369,6 +395,12 @@ export function routeChat(text, manager, current) {
     manager &&
     current === 'shiftEdit' &&
     patterns.shiftEdit.followUp.test(message)
+  )
+    return current;
+  if (
+    !manager &&
+    EMPLOYEE_DRAFTS.includes(current) &&
+    patterns.employeeDrafts.correction.test(message)
   )
     return current;
   const editable = manager
@@ -400,7 +432,8 @@ export function workingSummaryWeek(text) {
 }
 
 export function chatClarification(text, manager) {
-  if (requestsUnsupportedAction(text)) return UNSUPPORTED_ACTION_MESSAGE;
+  if (requestsUnsupportedAction(text, manager))
+    return UNSUPPORTED_ACTION_MESSAGE;
   const routes = mixedRoutes(text, manager);
   if (routes.length > 1) {
     const choices = routes.map((route) => taskLabels[route]).join(' or ');
@@ -438,7 +471,7 @@ export function resolveChatTarget({
   choiceReply = null,
 }) {
   const previousTopic = previous?.topic;
-  const blocked = requestsUnsupportedAction(text);
+  const blocked = requestsUnsupportedAction(text, manager);
   // A plain reply is neither an unsupported command nor a mixed request.
   const plainReply = (isManager) =>
     !blocked &&
@@ -469,6 +502,19 @@ export function resolveChatTarget({
     /^Which date/.test(previous.text) &&
     unroutedForEmployee &&
     plainReply(false);
+  const employeeDraftReply =
+    !manager &&
+    EMPLOYEE_DRAFTS.includes(previousTopic) &&
+    unroutedForEmployee &&
+    /^(?:Which|What|Full day)\b/.test(previous.text) &&
+    plainReply(false) &&
+    (isStatusDateFollowUp(text) ||
+      (/^Full day/i.test(previous.text) &&
+        patterns.employeeDrafts.correction.test(normalizedMessage(text))) ||
+      (/^(?:Which shift|What time)/i.test(previous.text) &&
+        /^[\p{L}\p{N}][\p{L}\p{N} :'-]{0,79}[.!?]?$/u.test(text.trim())) ||
+      (/^Which coworker/i.test(previous.text) &&
+        /^[\p{L}][\p{L}'-]*(?: [\p{L}][\p{L}'-]*){0,3}$/u.test(text.trim())));
   const historyPeriodReply = new RegExp(
     `^${followUpPrefix}(?:last month|last 30 days|this year|${followUpMonth}(?: 20[0-9]{2})?)[.!?]*$`,
   );
@@ -511,6 +557,7 @@ export function resolveChatTarget({
   const target =
     (batchReply && 'draft') ||
     (explanationReply && 'explanation') ||
+    (employeeDraftReply && previousTopic) ||
     (historyReply && 'history') ||
     (editReply && 'shiftEdit') ||
     (teamDateReply && previousTopic) ||

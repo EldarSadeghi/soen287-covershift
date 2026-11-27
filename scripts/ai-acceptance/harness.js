@@ -1,3 +1,4 @@
+import { createEmployeeDrafter } from '../../src/ai/employee-drafts.js';
 // Acceptance infrastructure defaults to recorded replies and an ephemeral loopback server.
 import assert from 'node:assert/strict';
 import {mkdtemp, readFile, readdir, rm} from 'node:fs/promises';
@@ -72,7 +73,7 @@ export async function createAcceptanceContext(checks, options = {}) {
       timeoutMs: options.liveKey ? 11000 : options.preview ? 3000 : 200,
     };
     const sessions=new SessionStore();
-    server=createAppServer({store,sessions,shiftClock:()=>FIXED_NOW,...(options.disabled?{}:{aiDraft:createAiShiftDrafter(aiOptions),aiEdit:createAiShiftEditor(aiOptions),aiSearch:createAiShiftSearcher(aiOptions),aiAvailability:createAiAvailabilityDrafter(aiOptions),aiSchedule:createAiScheduleAnswerer(aiOptions),aiIntent:createAiIntentClassifier(aiOptions)})});
+    server=createAppServer({store,sessions,shiftClock:()=>FIXED_NOW,...(options.disabled?{}:{aiDraft:createAiShiftDrafter(aiOptions),aiEdit:createAiShiftEditor(aiOptions),aiTimeOff:createEmployeeDrafter('timeOffDraft',aiOptions),aiCover:createEmployeeDrafter('coverDraft',aiOptions),aiSearch:createAiShiftSearcher(aiOptions),aiAvailability:createAiAvailabilityDrafter(aiOptions),aiSchedule:createAiScheduleAnswerer(aiOptions),aiIntent:createAiIntentClassifier(aiOptions)})});
     await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(options.port ?? 0,'127.0.0.1',resolve);});
     const base=`http://127.0.0.1:${server.address().port}`,identities=new Map();
     async function identity(user) {

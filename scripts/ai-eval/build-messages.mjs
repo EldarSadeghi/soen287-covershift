@@ -6,6 +6,22 @@ import { writeFileSync } from 'node:fs';
 
 const groups = {
   employee: {
+    timeOffDraft: [
+      'I need next Friday off',
+      'can I take December 22 to 26 off?',
+      'I need Saturday afternoon off from 1 to 5',
+      'Request time off for tomorrow',
+      'Could you help me book leave for Tuesday?',
+      'I need a couple of days away starting next Monday.',
+    ],
+    coverDraft: [
+      'Ask Alex to cover my Saturday shift',
+      'can Jamie take my Friday opening?',
+      'Swap my shift with Alex next Tuesday',
+      'Can you ask Sam to take my Sunday shift?',
+      'Draft a cover request for Taylor to take my Tuesday closing shift.',
+      'Could I get someone to take over my Monday morning shift?',
+    ],
     questions: [
       'When is my next shift?',
       'what time do i start tomorrow',
@@ -73,6 +89,7 @@ const groups = {
       'are any of my teammates free on the 5th',
       'who could fill in for me tomorrow',
       'any colleagues free wednesday afternoon?',
+      "Who's free next Friday?",
     ],
     summary: [
       'Give me my working week summary',
@@ -100,6 +117,7 @@ const groups = {
       'did alex accept my cover request',
       'check my cover requests',
       'was my cover request declined',
+      "Did Alex accept my cover request for Friday?",
     ],
     timeOffStatus: [
       'Was my time off approved?',
@@ -109,6 +127,7 @@ const groups = {
       'has my manager approved my time off yet',
       "what's the decision on my leave request",
       'was my time off for the 24th rejected',
+      "Was my December time off approved?",
     ],
     explanation: [
       "Why wasn't I matched to the Saturday shift?",
@@ -306,6 +325,8 @@ for (const [role, intents] of Object.entries(groups)) {
 followUps.forEach(([role, expected, message, currentTopic, history], index) => {
   messages.push({ id: `${role[0]}-followup-${String(index + 1).padStart(2, '0')}`, role, expected, message, currentTopic, history });
 });
+// CS-062 changes this existing supported outcome while keeping the case ID stable.
+messages.find(({ id }) => id === 'e-clarification-10').expected = 'timeOffDraft';
 const target = new URL('./messages.json', import.meta.url);
 writeFileSync(target, `${JSON.stringify({ version: 1, messages }, null, 2)}\n`);
 console.log(`Wrote ${messages.length} labelled messages.`);

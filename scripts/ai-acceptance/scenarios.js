@@ -1,6 +1,7 @@
 // These messages and replies are deliberately paired fixtures, NOT a mock model
 // that pretends to understand language. Production parsers, policies and saves
 // remain real. Add a stable scenario/check ID whenever an increment expands AI.
+import {saveWindow} from '../../src/availability/windows.js';
 import {randomUUID} from 'node:crypto';
 import {createEmployeeChatState} from '../../public/ai-employee-state.js';
 import {chatClarification,routeChat} from '../../public/ai-chat-routing.js';
@@ -335,4 +336,59 @@ export const scenarios=[
   c.check('schedule-saved','The existing Schedule endpoint saves the reviewed change.',(await c.http('manager_morgan',save,payload)).status,200);
   c.check('stale','A second save with the preview revision is rejected.',(await c.http('manager_morgan',save,payload)).status,409);
 }},
+{
+ id:'CS062-C01',title:'Prepare time off, review conflicts, submit and safely replay',async run(c){
+  const message='I need Thursday off for a personal appointment';
+  const endpoint='/api/worker/ai-time-off-draft';
+  const fields={startLocal:c.dates.thursday+'T00:00',endLocal:c.dates.friday+'T00:00',allDay:true};
+  const before=await c.bytes();
+  c.check('role','Managers cannot draft employee time off.',(await c.http(manager,endpoint,{description:message})).status,403);
+  c.expect({task:'time_off_draft',message,reply:{kind:'draft',question:'',...fields}});
+  const preview=await c.http(employee,endpoint,{description:message});
+  c.check('preview','The time-off preview carries only date and time selection fields.',[preview.status,preview.data.kind,preview.data.selection],[200,'timeOffDraft',fields]);
+  c.check('blockers','The overlapping shift appears in the preview.',JSON.stringify(preview.data.blockers).includes(c.ids.assignedThursday));
+  c.check('read-only','Drafting leaves business data byte-for-byte unchanged.',await c.bytes(),before);
+  const payload={...fields,timezone:preview.data.timezone,note:'',submissionId:randomUUID()};
+  c.check('submit','The existing endpoint creates a request after explicit confirmation.',(await c.http(employee,'/api/worker/time-off',payload)).status,201);
+  c.check('replay','Replaying the same submission is idempotent.',(await c.http(employee,'/api/worker/time-off',payload)).status,200);
+  c.check('changed-replay','Reusing the ID for a changed submission is rejected.',(await c.http(employee,'/api/worker/time-off',{...payload,note:'changed'})).status,409);
+ }},
+{
+ id:'CS062-C02',title:'Prepare a cover request, send and reject a stale review',async run(c){
+  const message='Ask Alex to cover my Thursday opening';
+  const endpoint='/api/worker/ai-cover-draft';
+  const timezone='America/Toronto',date=c.dates.thursday;
+  await saveWindow(c.store,'worker_alex',{submissionId:randomUUID(),window:{timezone,startLocal:date+'T09:00',endLocal:date+'T12:00'}},()=>Date.parse('2030-01-07T16:00:00Z'));
+  const before=await c.bytes();
+  c.expect({task:'cover_draft',message,reply:{kind:'draft',question:'',coworker:'Alex',date,title:'opening',time:''}});
+  const preview=await c.http(employee,endpoint,{description:message});
+  c.check('preview','The preview resolves the employee shift and coworker.',[preview.status,preview.data.kind,preview.data.shift?.id,preview.data.recipient?.id],[200,'coverDraft',c.ids.assignedThursday,'worker_alex']);
+  c.check('provider-scope','The provider does not see structured shift or employee IDs.',JSON.stringify(c.calls[0].input).includes(c.ids.assignedThursday)||JSON.stringify(c.calls[0].input).includes('worker_alex'),false);
+  c.check('read-only','Drafting leaves business data byte-for-byte unchanged.',await c.bytes(),before);
+  const payload={recipientId:preview.data.recipient.id,shiftId:preview.data.shift.id,revision:preview.data.shift.revision,note:'',submissionId:randomUUID()};
+  const sent=await c.http(employee,'/api/worker/cover-invitations',payload);
+  c.check('send','The existing endpoint sends the reviewed invitation.',sent.status,201);
+  c.check('replay','Replaying the same submission is idempotent.',(await c.http(employee,'/api/worker/cover-invitations',payload)).status,200);
+  c.check('stale','A different submission with the now-ineligible revision is rejected.',(await c.http(employee,'/api/worker/cover-invitations',{...payload,submissionId:randomUUID()})).status,409);
+  async function explain(coworker, title='opening') {
+    const prompt='Ask '+coworker+' to cover my Thursday shift';
+    c.expect({task:'cover_draft',message:prompt,reply:{kind:'draft',question:'',coworker,date,title,time:''}});
+    return (await c.http(employee,endpoint,{description:prompt})).data;
+  }
+  c.check('pending','A pending invitation explains why a fresh draft is unavailable.',/already pending/.test((await explain('Alex')).message));
+  const invitation=sent.data.invitation;
+  const inbox=await c.http('worker_alex','/api/worker/cover-invitations');
+  const received=inbox.data.invitations.find(row=>row.id===invitation.id);
+  c.check('decline','The coworker can decline through the existing endpoint.',(await c.http('worker_alex','/api/worker/cover-invitations/'+invitation.id+'/decline',{revision:received.revision})).status,200);
+  c.check('declined','A prior decline is explained.',/already declined/.test((await explain('Alex')).message));
+  c.check('ineligible','A coworker without a free window is excluded.',/no longer available/.test((await explain('Sam')).message));
+  c.check('unassigned','A coworker’s shift does not match the employee’s own schedule.',/No future assigned shift/.test((await explain('Alex','Afternoon coverage')).message));
+  c.check('unknown','An unknown name asks for clarification.',(await explain('Nobody')).kind,'clarification');
+  await c.store.transaction(db=>{
+    const sam=db.users.find(row=>row.id==='worker_sam');
+    sam.name='Alex Rivera';
+  });
+  c.check('ambiguous','A shared first name asks for clarification.',(await explain('Alex')).kind,'clarification');
+
+ }},
 ];

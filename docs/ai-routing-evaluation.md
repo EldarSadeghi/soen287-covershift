@@ -47,3 +47,5 @@ The evaluator treats `shiftEdit` as write-capable because its proposal can be re
 ## CS-061 employee lookups
 
 The offline evaluation includes 232 messages. It retains all 217 previous messages and adds 15 employee prompts covering duties, coverage history, updates and schedule look-alikes. It found zero incorrect write-capable routes and 56 classifier candidates. For the approved live run, use `npm run ai:eval -- --live --max-calls 56`. Compare the 217 existing prompts with CS-060’s 215/217 live reference.
+
+CS-062 adds the employee intents `timeOffDraft` and `coverDraft` to the write-capable route set. The evaluation includes 15 additional labelled messages covering drafts and similar read-only questions. The existing request-time-off case keeps its ID and changes its expected outcome to the newly supported draft.

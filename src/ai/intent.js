@@ -2,7 +2,7 @@ import { HttpError } from '../auth/errors.js';
 import { aiConfigured, responsesBody, structuredResponse } from './structured-response.js';
 import { validateChatInput } from './shift-draft.js';
 
-const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates'];
+const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft'];
 const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
@@ -17,6 +17,8 @@ summary = their working-week or coverage overview ("overview of my upcoming work
 claimStatus = status of a shift THEY claimed ("any news on the opening I claimed").
 coverStatus = status of a cover request THEY sent to a coworker ("did my swap ask get a reply").
 timeOffStatus = status of THEIR time-off request ("did my holiday request get the ok").
+timeOffDraft = prepare a NEW request to be absent ("I'd like to put in for leave on August 8").
+coverDraft = prepare a NEW invitation asking a coworker to take an assigned shift ("could Priya fill in for me on the Sunday close"). A question about who might be free is coworkers. Questions about existing requests are status.
 history = past coverage outcomes for their own shifts, including counts over a period ("how much cover did I take over in October").
 updates = recent notifications or changes affecting them ("anything come through for me lately").
 Viewing, pausing or cancelling SAVED availability rules is not availability: return clarification.`,

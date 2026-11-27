@@ -7,7 +7,7 @@ import { HttpError } from '../auth/errors.js';
 // only the date, role and how the message was routed: never message text,
 // user IDs or names. Each month is capped, so the log cannot grow without bound.
 export const ROUTES = new Set([
-  'questions', 'search', 'availability', 'coworkers', 'history', 'updates', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus',
+  'questions', 'search', 'availability', 'coworkers', 'history', 'updates', 'timeOffDraft', 'coverDraft', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus',
   'explanation', 'rules', 'alternatives', 'draft', 'shiftEdit', 'clarification',
 ]);
 export const DECIDERS = new Set(['local', 'follow-up', 'classifier', 'unsupported', 'local-clarification']);
