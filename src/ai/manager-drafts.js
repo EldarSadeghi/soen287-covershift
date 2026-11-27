@@ -117,23 +117,37 @@ export function copyWeekDraft(db, business, { source, target }, now) {
 }
 
 /**
- * The shift on business-local date `from` (optionally narrowed by a title word
+ * The shift on business-local date `from` (optionally narrowed by a title
  * and the assigned employee's name) to add a duty to, as the Schedule edit form
  * needs it. One match is returned with its edit lock, if any; several are listed.
  */
 export function dutyShift(db, business, { from, title, worker }, now) {
   const { timezone } = business;
-  const matches = visibleShifts(db, business)
+  const candidates = visibleShifts(db, business)
     .filter(
       (shift) =>
         localDate(shift.startsAt, timezone) === from &&
-        matchesShiftTitle(shift.title, title) &&
         matchesRecordName(nameOf(db, shift.assignedWorkerId), worker),
     )
     .sort(
       (a, b) =>
         a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id),
     );
+  const fullMatches = candidates.filter((shift) =>
+    matchesShiftTitle(shift.title, title),
+  );
+  // A leading conversational modifier may describe the shift without being
+  // part of its title. Keep every other title word as a constraint.
+  const shorterTitle =
+    /^(?:morning|afternoon|evening|early|late|new)\s+(.+)$/i.exec(
+      title ?? '',
+    )?.[1];
+  const matches =
+    fullMatches.length || !shorterTitle
+      ? fullMatches
+      : candidates.filter((shift) =>
+          matchesShiftTitle(shift.title, shorterTitle),
+        );
   // Every choice carries what the Schedule edit form needs, so picking one
   // from a list opens it directly. Rechecked when the edit is saved.
   const row = (shift) => {

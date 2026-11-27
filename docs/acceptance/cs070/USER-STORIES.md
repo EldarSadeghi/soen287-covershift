@@ -7,3 +7,10 @@
 | As a manager, I can identify a copy source and destination by dates. | Week-copy lookup shares date parsing with replacement and duty lookups. Tests cover explicit invalid dates and day ordinals. |
 
 The handlers still decide which records are eligible for their task. Existing review and save endpoints enforce the corresponding validation. The offline evaluation measures routing, while the record matching tests assert the records returned by the lookups.
+
+## PR review follow-up
+
+- Replacement titles recognize hyphen and slash separators.
+- The duty lookup tries the full selector first. If it has no match, it can omit a recognized leading descriptor while retaining the employee, date and remaining title words. Duplicate employee names still return choices when multiple shifts match.
+- In the scripted fictional manager preview, “Add ‘sweep’ to the morning opening shift on December 3” showed Jamie Lee’s Opening service (9 AM to noon) with a Review on Schedule button. The browser check stopped at the review card.
+- 539 tests and 25 offline scenarios (217 checks) passed. Offline routing remained at 275 of 327 with zero wrong routes into save-capable features. No live provider calls were made.

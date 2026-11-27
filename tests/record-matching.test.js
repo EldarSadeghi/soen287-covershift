@@ -61,3 +61,59 @@ test('a long duty selector stays intact and both lookups return no match for the
     assert.equal(result.total, 2);
   }
 });
+
+test('replacement selectors recognize title words separated by hyphens and slashes', () => {
+  assert.equal(matchesShiftTitle('Front-counter', 'counter'), true);
+  assert.equal(
+    matchesShiftTitle('Front/Counter Opening', 'front-counter opening'),
+    true,
+  );
+  assert.equal(matchesShiftTitle('Front-counter', 'back counter'), false);
+});
+
+test('duty lookups recognize conversational modifiers and preserve the rest of the title', () => {
+  const business = { id: 'shop', timezone: 'America/Toronto' };
+  const now = Date.parse('2026-11-27T17:00Z');
+  const db = {
+    users: [
+      { id: 'jamie', name: 'Jamie Lee' },
+      { id: 'other-jamie', name: 'Jamie Lee' },
+    ],
+    coverageRequests: [],
+    shifts: [
+      {
+        id: 'opening',
+        businessId: 'shop',
+        assignedWorkerId: 'jamie',
+        startsAt: '2026-12-03T14:00:00Z',
+        endsAt: '2026-12-03T17:00:00Z',
+        title: 'Opening service',
+      },
+    ],
+  };
+
+  for (const phrase of ['the morning', 'Jamie’s early', 'the new']) {
+    const { params } = dutyQuery(
+      `Add 'sweep' to ${phrase} opening shift on December 3`,
+      '2026-11-27',
+    );
+    assert.equal(dutyShift(db, business, params, now).shift.id, 'opening');
+  }
+
+  const { params } = dutyQuery(
+    "Add 'sweep' to Jamie’s early front counter opening shift on December 3",
+    '2026-11-27',
+  );
+  assert.equal(dutyShift(db, business, params, now).status, 'none');
+
+  db.shifts.push({
+    ...db.shifts[0],
+    id: 'second',
+    assignedWorkerId: 'other-jamie',
+  });
+  const ambiguous = { ...params, title: 'early opening' };
+  assert.equal(dutyShift(db, business, ambiguous, now).status, 'choose');
+
+  db.shifts[1].title = 'Early opening';
+  assert.equal(dutyShift(db, business, ambiguous, now).shift.id, 'second');
+});

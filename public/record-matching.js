@@ -11,10 +11,17 @@ export function matchesRecordName(name, selector) {
     : actual.join(' ') === wanted.join(' ');
 }
 
+const titleWords = (value) =>
+  value
+    .toLowerCase()
+    .split(/[\s/\p{Pd}]+/u)
+    .filter(Boolean);
+
 export function matchesShiftTitle(title, selector) {
   if (!selector) return true;
-  const wanted = words(selector);
-  const actual = words(title);
+  const wanted = titleWords(selector);
+  const actual = titleWords(title);
+  if (!wanted.length) return false;
   return actual.some((_, start) =>
     wanted.every((part, index) => actual[start + index]?.startsWith(part)),
   );
