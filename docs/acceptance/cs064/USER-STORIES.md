@@ -31,7 +31,7 @@ Issue [#151](https://github.com/EldarSadeghi/soen287-covershift/issues/151). The
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed (syntax and format) |
-| `npm test` | 513 / 513 passed (7 new help tests; blocked-reply tests now check the specific wording) |
+| `npm test` | 514 / 514 passed (8 new help tests; blocked-reply tests now check the specific wording) |
 | `npm run ai:acceptance` | 25 / 25 scenarios, 217 checks |
 | `npm run ai:eval` (offline) | 236 / 279 local, 0 write-capable wrong routes; help 21 / 21 local |
 | Evaluation set | 19 new help messages. "help" (`e-clarification-02`, `m-clarification-10`) is relabelled `help` by ID, so no other ID changes |
@@ -47,6 +47,18 @@ Issue [#151](https://github.com/EldarSadeghi/soen287-covershift/issues/151). The
 - Only a question with no shift in it, such as "why can't I pick up extra hours", gets the general rule from the help catalog.
 
 A regression test covers this, next to the existing tests that blocked actions stay blocked and that every help link is a page of the asker's role. No code change was needed.
+
+## Review fixes (Codex on PR #152)
+
+- **Blocked commands link the object they name, not just the verb.** Each rule now needs both the verb and its object:
+  - "Delete my availability rule" (employee) suggests "cancel my saved availability rule" in chat, where rules are managed, and shows no link.
+  - "Delete my availability for Friday" links Availability, where windows are withdrawn.
+  - "Delete my time off request" links Time off.
+  - Declining a cover invitation links Cover requests.
+  - An employee's "approve Sam's claim" now links My requests.
+
+  A command with an unclear object ("delete Jamie", "approve all pending", "approve the new schedule", "publish my availability") gets the general refusal and no link. Against the previous fixture, only those 5 employee claim replies changed text, and no route changed.
+- **Publication guidance says when employees see changes.** Shifts stay private only after a two-week schedule has been prepared ("Prepare this schedule" turns on private drafts). Before that, saved shifts are visible straight away. The add-shift, publish and "published" answers now say this for both roles, and a test makes sure no answer promises privacy without that condition.
 
 ## Browser check (fictional demo)
 

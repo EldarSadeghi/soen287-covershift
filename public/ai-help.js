@@ -41,7 +41,7 @@ export function renderBlocked(card, answer, manager) {
   responseHeader(
     card,
     'Not available in chat',
-    'Use the workspace page',
+    answer.page ? 'Use the workspace page' : 'What you can do instead',
     'pending',
   );
   card.append(element('p', '', answer.message));

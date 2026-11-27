@@ -179,7 +179,7 @@ export const HELP_TOPICS = [
     steps: {
       manager: [
         'Open Schedule and add the shift, or ask me to “create a shift for Jamie on Friday 9–5” to prepare a draft for review.',
-        'New and changed shifts stay private until you publish the schedule.',
+        'Once you’ve prepared a two-week schedule, new and changed shifts stay private until you publish it. Before that, saved shifts are visible to employees right away.',
       ],
     },
     page: { manager: 'schedule' },
@@ -208,11 +208,11 @@ export const HELP_TOPICS = [
     title: 'Publishing the schedule',
     steps: {
       manager: [
-        'Open Schedule, review the two-week period and choose Publish. Employees see changes only after you publish.',
+        'Open Schedule, review the two-week period and choose Publish. In a prepared period, employees see changes only after you publish.',
         'A reminder shows on Mondays when the next period is due.',
       ],
       worker: [
-        'Your manager publishes the schedule. Your shifts appear on My shifts once it’s published.',
+        'If your manager prepares the schedule in two-week periods, your shifts appear on My shifts once it’s published. Otherwise they appear as soon as they’re saved.',
       ],
     },
     page: { manager: 'schedule', worker: 'shifts' },
@@ -485,10 +485,11 @@ export const HELP_TOPICS = [
     title: 'Published',
     steps: {
       manager: [
-        'Published shifts are visible to employees. New or changed shifts stay as a private draft until you publish the schedule.',
+        'Published shifts are visible to employees.',
+        'Once you’ve prepared a two-week schedule, new or changed shifts stay as a private draft until you publish it. Before that, saved shifts are visible right away.',
       ],
       worker: [
-        'Published shifts are the ones your manager has shared. Changes appear once your manager publishes them.',
+        'Published shifts are the ones your manager has shared. If your manager uses two-week schedule periods, changes appear once they publish; otherwise saved shifts appear right away.',
       ],
     },
     page: { manager: 'schedule', worker: 'shifts' },
@@ -554,10 +555,17 @@ export function helpRoute(message, manager) {
 }
 
 // Actions chat never takes, with where to do them instead: [reply, page].
+// Each rule needs both the verb and the object it acts on, so the link fits
+// what was asked ("delete my availability rule" is not about shifts). A
+// command whose object is unclear ("delete Jamie", "approve all pending")
+// gets the general refusal with no link.
+const TIME_OFF_WORDS =
+  '(?:time[ -]?off|leave|vacation|holidays?|days? off)(?: requests?)?';
 const BLOCKED = [
   {
-    match:
-      /^(?:approve|reject|decline)\b.*\b(?:time[ -]?off|leave|vacation|days? off)\b/,
+    match: new RegExp(
+      `^(?:approve|reject|decline)\\b.*\\b${TIME_OFF_WORDS}\\b`,
+    ),
     manager: [
       'I can’t approve or decline time off from chat. Review it on Time off.',
       'time-off',
@@ -568,18 +576,32 @@ const BLOCKED = [
     ],
   },
   {
-    match: /^(?:approve|reject|decline)\b/,
+    match:
+      /^(?:approve|reject|decline|accept)\b.*\b(?:cover )?(?:invitations?|invites?)\b/,
+    manager: [
+      'I can’t answer cover invitations from chat. Coworkers accept them, then you review claims on Approvals.',
+      'approvals',
+    ],
+    worker: [
+      'I can’t answer invitations from chat. Accept or decline them on Cover requests.',
+      'cover',
+    ],
+  },
+  {
+    match:
+      /^(?:approve|reject|decline)\b.*\b(?:claims?|cover(?:age)?(?: requests?)?|swaps?)\b/,
     manager: [
       'I can’t approve or decline claims from chat. Review them on Approvals.',
       'approvals',
     ],
     worker: [
-      'I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.',
-      'cover',
+      'I can’t approve claims. Your manager decides; you can follow yours on My requests.',
+      'requests',
     ],
   },
   {
-    match: /^publish\b/,
+    match:
+      /^publish\b(?:.*\b(?:schedule|roster|rota|shifts?|weeks?|period|fortnight)\b|\s+(?:it|now|today)\b|[.!?]*$)/,
     manager: [
       'I can’t publish from chat. Review and publish the schedule on Schedule.',
       'schedule',
@@ -590,7 +612,7 @@ const BLOCKED = [
     ],
   },
   {
-    match: /^(?:delete|cancel)\b/,
+    match: /^(?:delete|cancel)\b.*\bshifts?\b/,
     manager: [
       'I can’t delete or cancel shifts from chat. Change them on Schedule.',
       'schedule',
@@ -601,18 +623,43 @@ const BLOCKED = [
     ],
   },
   {
-    match: /^assign me\b/,
-    manager: [
-      'I can’t assign shifts that way. Use Schedule, or ask me to prepare a shift draft.',
-      'schedule',
+    match: /^(?:delete|remove)\b.*\b(?:availability )?rules?\b/,
+    worker: [
+      'I can’t delete rules. Ask me to “cancel my saved availability rule” and confirm it, or pause it instead.',
+      null,
     ],
+  },
+  {
+    match: /^(?:delete|remove)\b.*\bavailability\b/,
+    worker: [
+      'I can’t delete availability from chat. Withdraw it on Availability.',
+      'availability',
+    ],
+  },
+  {
+    match: new RegExp(`^(?:delete|remove)\\b.*\\b${TIME_OFF_WORDS}\\b`),
+    worker: [
+      'I can’t delete time-off requests from chat. Cancel one on Time off.',
+      'time-off',
+    ],
+  },
+  {
+    match:
+      /^(?:delete|remove)\b.*\b(?:employees?|workers?|staff|team members?|accounts?)\b/,
+    manager: [
+      'I can’t remove employees from chat. Deactivate them on Team.',
+      'team',
+    ],
+  },
+  {
+    match: /^assign me\b.*\bshifts?\b/,
     worker: [
       'I can’t assign shifts. Claim an open shift on Open shifts instead.',
       'open',
     ],
   },
   {
-    match: /^swap\b/,
+    match: /^swap\b.*\bshifts?\b/,
     manager: [
       'I can’t swap shifts from chat. Change assignments on Schedule.',
       'schedule',
@@ -641,7 +688,7 @@ const BLOCKED = [
     ],
   },
   {
-    match: /^request (?:time[ -]?off|leave)\b/,
+    match: new RegExp(`^request ${TIME_OFF_WORDS}\\b`),
     manager: [
       'I can’t request time off from chat. Employees request it, and you review it on Time off.',
       'time-off',

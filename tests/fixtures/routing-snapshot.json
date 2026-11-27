@@ -3516,7 +3516,7 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
+        "clarification": "I can’t approve claims. Your manager decides; you can follow yours on My requests.",
         "unsupported": true
       },
       "manager": {
@@ -6837,7 +6837,7 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
+        "clarification": "I can’t approve claims. Your manager decides; you can follow yours on My requests.",
         "unsupported": true
       },
       "manager": {
@@ -7026,7 +7026,7 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
+        "clarification": "I can’t approve claims. Your manager decides; you can follow yours on My requests.",
         "unsupported": true
       },
       "manager": {
@@ -8424,7 +8424,7 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
+        "clarification": "I can’t approve claims. Your manager decides; you can follow yours on My requests.",
         "unsupported": true
       },
       "manager": {
@@ -9801,7 +9801,7 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
+        "clarification": "I can’t approve claims. Your manager decides; you can follow yours on My requests.",
         "unsupported": true
       },
       "manager": {
