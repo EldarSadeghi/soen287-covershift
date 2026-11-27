@@ -42,7 +42,7 @@ Issue [#155](https://github.com/EldarSadeghi/soen287-covershift/issues/155). An 
 | `npm run ai:eval` (offline) | 0 write-capable wrong routes; new routes 15 / 19 local (4 paraphrases left to the classifier) |
 | Evaluation set | 19 new labelled messages (311 in total); existing IDs unchanged |
 | Routing snapshot vs `main` | 446 phrases (19 new), 144 follow-ups unchanged. Exactly four existing employee phrases change, from the generic "What would you like me to check?" to the new routes: "cancel my cover request", "cancel my claim for Friday's shift", "cancel my cover request for the Saturday shift" and "cancel my time off request for the shift on Friday". Manager routes and every blocked command are unchanged |
-| Live evaluation | Not run yet; needs your approval for paid calls |
+| Live evaluation (user-approved) | 305 / 311 correct (98.1%), 1.9% unhelpful generic, 0 write-capable wrong routes; all targets met. New routes 19 / 19, including the 4 paraphrases only the classifier could route. 52 classifier calls succeeded. The other 13 were refused locally because the evaluation's own lifetime ledger reached its 500-call safety cap (`MAX_CALLS_LIMIT` in `scripts/ai-eval.js`), so they never reached the provider. The 6 misses are among those 13 (5 follow-ups and "anything waiting on me?"); they all passed in the CS-066 live run and are unrelated to this change |
 
 ## Browser check (fictional demo, America/Toronto)
 
