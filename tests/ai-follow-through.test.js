@@ -142,6 +142,12 @@ test('reads the answer, the coworker and a bare day of the month', () => {
     shiftWords('Cancel my cover request for the opening shift on Friday'),
     ['opening'],
   );
+  assert.deepEqual(
+    shiftWords(
+      'Cancel my cover request for the front counter opening service shift on Friday',
+    ),
+    ['front', 'counter', 'opening', 'service'],
+  );
   assert.deepEqual(shiftWords('my Friday’s closing shift'), ['closing']);
   assert.deepEqual(shiftWords('the Saturday shift'), []);
   assert.deepEqual(shiftWords('the second one'), []);
@@ -425,6 +431,10 @@ test('chat finds only the employee’s own items and links to their confirmation
     ],
     [
       'Cancel my cover request for the opening shift on Friday',
+      'No matching cover request found.',
+    ],
+    [
+      'Cancel my cover request for the front counter opening service shift on Friday',
       'No matching cover request found.',
     ],
     [

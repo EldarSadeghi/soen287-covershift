@@ -115,9 +115,11 @@ const DAY_PARTS = {
 
 // The words describing the shift: "the opening shift on Friday" → opening,
 // "my Friday closing shift" → closing, "the morning one" → morning.
+// A new determiner starts a new phrase, so "my cover request for the ..."
+// does not become part of the shift title.
 export function shiftWords(text) {
   const match =
-    /\b(?:the|my|this|that)\s+((?:[\p{L}\d'’-]+\s+){1,3}?)(?:shift|one)s?\b/iu.exec(
+    /\b(?:the|my|this|that)\s+((?:(?!(?:the|my|this|that)\s)[\p{L}\d'’-]+\s+)+?)(?:shift|one)s?\b/iu.exec(
       text,
     );
   if (!match) return [];
