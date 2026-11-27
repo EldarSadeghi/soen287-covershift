@@ -16,6 +16,12 @@ import { MAX_COPY_SHIFTS, saveShiftBatch } from '../src/shifts/batch.js';
 import { WRITE_CAPABLE } from '../scripts/ai-eval/evaluate.js';
 import { MANAGER_DRAFTS, routeChat } from '../public/ai-chat-routing.js';
 import {
+  CHAT_KEY,
+  MAX_COPY_ROSTER as CLIENT_COPY_ROSTER,
+  createChatState,
+} from '../public/ai-chat-state.js';
+import { MAX_COPY_ROSTER } from '../src/ai/manager-drafts.js';
+import {
   copyWeekBatch,
   copyWeeks,
   dutyQuery,
@@ -416,4 +422,121 @@ test('finds the shift for a duty and prepares an edit that saves through the edi
   assert.equal((await fetch(url, cookie('worker_alex'))).status, 403);
   assert.equal((await fetch(url, cookie(manager))).status, 200);
   assert.equal(JSON.stringify(await store.read()), before);
+});
+
+test('a named destination week is used, or the chat asks (Codex review on #158)', () => {
+  const weeks = (text) => copyWeeks(text, '2026-11-26');
+  for (const [text, target] of [
+    ["Copy this week's schedule to December 14", '2026-12-14'],
+    ['copy this week to the 14th', '2026-12-14'],
+    ['copy this week to 2026-12-16', '2026-12-14'],
+    ['copy this week to Monday', '2026-11-30'],
+    ['copy this week into the week after next', '2026-12-07'],
+  ])
+    assert.deepEqual(weeks(text), { source: '2026-11-23', target }, text);
+  assert.deepEqual(weeks('copy the week of December 7 to December 14'), {
+    source: '2026-12-07',
+    target: '2026-12-14',
+  });
+  // Unreadable, doubled or earlier destinations ask instead of guessing.
+  for (const text of [
+    'copy this week to February 30',
+    'copy this week to next week and the week after',
+    'copy this week to December 14 next week',
+    'copy this week to the team',
+    'copy next week to this week',
+    'copy this week to November 2',
+  ])
+    assert.equal(weeks(text), null, text);
+});
+
+test('a copied batch survives a reload for any roster the copy flow accepts (Codex review on #158)', () => {
+  assert.equal(CLIENT_COPY_ROSTER, MAX_COPY_ROSTER);
+  const owner = 'owner';
+  const shifts = Array.from({ length: 40 }, (_, n) => ({
+    title: 'Copy ' + n,
+    assignedWorkerId: 'w' + (n % 7),
+    startLocal: `2026-12-${String(7 + (n % 7)).padStart(2, '0')}T${String(n % 20).padStart(2, '0')}:00`,
+    endLocal: `2026-12-${String(7 + (n % 7)).padStart(2, '0')}T${String((n % 20) + 1).padStart(2, '0')}:00`,
+    ...(n === 0 && { duties: ['Unlock the doors'] }),
+  }));
+  const restored = (workers, copy = true) => {
+    const store = new Map();
+    const storage = {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    };
+    const batch = {
+      id: '7b0d2c4e-1f3a-4b5c-8d6e-9f0a1b2c3d4e',
+      status: 'uncertain',
+      timezone,
+      shifts: copy
+        ? shifts
+        : shifts.slice(0, 5).map(({ duties, ...shift }) => shift),
+      workers: Array.from({ length: workers }, (_, n) => ({
+        id: 'w' + n,
+        name: 'Worker ' + n,
+      })),
+      ...(copy && { copy: true }),
+    };
+    storage.setItem(
+      CHAT_KEY,
+      JSON.stringify({ owner, updatedAt: Date.now(), messages: [], batch }),
+    );
+    return createChatState(storage, owner).value.batch;
+  };
+  for (const size of [50, 51, 300, MAX_COPY_ROSTER]) {
+    const batch = restored(size);
+    assert.equal(
+      batch?.id,
+      '7b0d2c4e-1f3a-4b5c-8d6e-9f0a1b2c3d4e',
+      String(size),
+    );
+    assert.equal(batch.status, 'uncertain');
+    assert.equal(batch.copy, true);
+    assert.equal(batch.workers.length, size);
+  }
+  assert.equal(restored(MAX_COPY_ROSTER + 1), undefined);
+  // Other batches keep their limits.
+  assert.ok(restored(50, false));
+  assert.equal(restored(51, false), undefined);
+});
+
+test('the copy lookup refuses a team the chat could not restore', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'covershift-cs068-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const store = new JsonStore(join(root, 'db.json'));
+  await buildDemoFixtures(store, {
+    now: clock(),
+    timezone,
+    hash: async () => 'fictional-hash',
+  });
+  const lookup = () =>
+    managerLookup(
+      store,
+      manager,
+      new URLSearchParams({
+        kind: 'copyWeek',
+        from: '2026-11-30',
+        through: '2026-12-07',
+      }),
+      clock,
+    );
+  const addWorkers = (count) =>
+    store.transaction((db) => {
+      const template = db.users.find((user) => user.id === 'worker_sam');
+      const start = db.users.length;
+      for (let n = 0; n < count; n++)
+        db.users.push({
+          ...template,
+          id: `worker_extra_${start + n}`,
+          name: `Fictional ${start + n}`,
+          email: `extra${start + n}@example.test`,
+        });
+    });
+  await addWorkers(MAX_COPY_ROSTER - 4); // 4 demo employees already
+  assert.equal((await lookup()).workers.length, MAX_COPY_ROSTER);
+  await addWorkers(1);
+  await assert.rejects(lookup(), /up to 1000 employees/);
 });

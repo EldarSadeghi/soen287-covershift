@@ -12,6 +12,7 @@ import {
 } from './ai-response-card.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
+import { withMonth } from './ai-follow-through.js';
 
 export const DUTY_DATE_QUESTION =
   'Which date’s shift should I add it to? Say a day such as Friday or December 5.';
@@ -126,24 +127,77 @@ const plusDays = (day, count) =>
     .toISOString()
     .slice(0, 10);
 
-/** The Monday of the week to copy and of the week to copy it to. */
-export function copyWeeks(text, today) {
+// Any mention of a particular day: "December 14", "2026-12-14", "Monday",
+// "tomorrow", "the 14th".
+const DATE_MENTION =
+  /\b(?:20\d{2}-\d{2}-\d{2}|today|tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}(?:st|nd|rd|th))\b/i;
+// The word that introduces the destination week.
+const DESTINATION = /\b(?:to|into|onto)\b/i;
+
+/**
+ * The Monday of the week named in one part of the message, null when that
+ * part names no week, or undefined when it names one that can't be read
+ * (two weeks, or a date that isn't a real day), so the chat asks instead.
+ */
+function weekIn(part, today, previous) {
   const base = monday(today);
-  const refs = [...text.matchAll(WEEK_REF)];
-  if (!refs.length || refs.length > 2) return null;
-  const weekOf = (match, previous) => {
-    const word = match[1]?.toLowerCase();
+  const refs = [...part.matchAll(WEEK_REF)];
+  const rest = part.replace(WEEK_REF, ' ');
+  const dated = DATE_MENTION.test(rest);
+  if (refs.length > 1 || (refs.length && dated)) return undefined;
+  if (refs.length) {
+    const [, word, afterNext] = refs[0];
     if (word)
       return plusDays(
         base,
-        { last: -7, previous: -7, this: 0, current: 0, next: 7 }[word],
+        { last: -7, previous: -7, this: 0, current: 0, next: 7 }[
+          word.toLowerCase()
+        ],
       );
     // "the week after" follows the week just named; "the week after next" is +14.
-    return plusDays(match[2] ? base : (previous ?? base), match[2] ? 14 : 7);
-  };
-  const source = weekOf(refs[0], null);
-  const target = refs[1] ? weekOf(refs[1], source) : plusDays(source, 7);
-  return target > source ? { source, target } : null;
+    return plusDays(afterNext ? base : (previous ?? base), afterNext ? 14 : 7);
+  }
+  if (!dated) return null;
+  const day = coworkerLookupDate(withMonth(rest, today), today);
+  return day ? monday(day) : undefined;
+}
+
+/**
+ * The Monday of the week to copy and of the week to copy it to, or null to
+ * ask. A destination the manager names ("to December 14", "into next week")
+ * is always used; with none, it is the following week.
+ */
+export function copyWeeks(text, today) {
+  const split = DESTINATION.exec(text);
+  const from = split ? text.slice(0, split.index) : text;
+  const to = split ? text.slice(split.index + split[0].length) : '';
+  // "repeat this week next week": both weeks before any "to".
+  const refs = [...from.matchAll(WEEK_REF)];
+  if (
+    !split &&
+    refs.length === 2 &&
+    !DATE_MENTION.test(from.replace(WEEK_REF, ' '))
+  ) {
+    const source = weekIn(refs[0][0], today, null);
+    const target = weekIn(refs[1][0], today, source);
+    return later(source, target);
+  }
+  const source = weekIn(from, today, null);
+  if (!source) return null;
+  const named = split ? weekIn(to, today, source) : null;
+  if (named === undefined || (split && named === null)) return null;
+  const target = named ?? plusDays(source, 7);
+  return later(source, target);
+}
+
+// A destination more than 12 weeks on ("to November 2" read as next year) is
+// almost certainly not what was meant, so the chat asks instead.
+const MAX_COPY_WEEKS_AHEAD = 12;
+function later(source, target) {
+  const weeks = (Date.parse(target) - Date.parse(source)) / (7 * 86400000);
+  return weeks >= 1 && weeks <= MAX_COPY_WEEKS_AHEAD
+    ? { source, target }
+    : null;
 }
 
 const weekLabel = (day) =>
@@ -181,7 +235,7 @@ export function copyWeekBatch(data) {
       timezone: data.timezone,
       warning: notes.join(' '),
     },
-    message: `Copies of ${data.shifts.length} shifts from ${from} are ready to review. Nothing is saved until you confirm.`,
+    message: `Copies of ${data.shifts.length} shifts from ${from} to ${to} are ready to review. Nothing is saved until you confirm.`,
   };
 }
 

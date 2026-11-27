@@ -3,6 +3,10 @@ import { formatShiftTime } from './shift-time.js';
 export const CHAT_KEY = 'covershift.ai.chat.v1';
 const draftKeys = ['title', 'assignedWorkerId', 'startLocal', 'endLocal'];
 export const validDraft = draft => draft && typeof draft === 'object' && Object.keys(draft).length === 4 && draftKeys.every(key => typeof draft[key] === 'string') && draft.title.length <= 100 && /^[a-zA-Z0-9_-]{1,80}$/.test(draft.assignedWorkerId) && ['startLocal','endLocal'].every(key => /^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft[key]));
+// A copied week (CS-068) lists every active employee for its worker choices,
+// so a larger team must still be restored after a reload (Codex review on
+// #158). The copy lookup refuses teams over this size up front.
+export const MAX_COPY_ROSTER = 1000;
 // A copied week (CS-068) may carry the original shift's duties.
 const validCopy = draft => {
   if (!draft || typeof draft !== 'object') return false;
@@ -34,7 +38,7 @@ export function createChatState(storage, owner, now = Date.now) {
           Array.isArray(batch.shifts) && (batch.copy === true
             ? batch.shifts.length >= 1 && batch.shifts.length <= 40 && batch.shifts.every(validCopy)
             : batch.shifts.length >= 2 && batch.shifts.length <= 5 && batch.shifts.every(validDraft)) &&
-          Array.isArray(batch.workers) && batch.workers.length <= 50 && batch.workers.every(worker =>
+          Array.isArray(batch.workers) && batch.workers.length <= (batch.copy === true ? MAX_COPY_ROSTER : 50) && batch.workers.every(worker =>
             validId(worker?.id) && typeof worker.name === 'string' && worker.name.length <= 100)) state.batch = batch;
       if (saved.batchClarifying === true) state.batchClarifying = true;
       if (saved.refinementPending === true) state.refinementPending = true;

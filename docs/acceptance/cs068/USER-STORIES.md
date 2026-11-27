@@ -30,6 +30,20 @@ Issue [#157](https://github.com/EldarSadeghi/soen287-covershift/issues/157). A m
   - "How do I add a new employee?" stays help.
   - "add jamie to the team schedule friday" isn't read as a new employee.
 
+## Review fixes (Codex on PR #158)
+
+- **A named destination is used, or the chat asks.** "Copy this week's schedule to December 14" used to prepare copies for the following week. The message is now read in two parts, split at "to", "into" or "onto": the week to copy, then the destination.
+  - Each part may be a relative week ("next week"), "the week after", or a date ("December 14", "the 14th", "2026-12-16", "Monday"), which means that date's Monday–Sunday week.
+  - The chat asks "Which week should I copy, and to which week?" in these cases:
+    - a date that can't be read ("February 30");
+    - two weeks in the destination ("to next week and the week after", "to December 14 next week");
+    - a destination that isn't a week ("to the team");
+    - a destination that is earlier, or more than 12 weeks later ("to November 2", read as next year).
+  - The review and the chat reply now name both weeks.
+- **A copied batch survives a reload for any team the copy flow accepts.** The chat only restored batches listing up to 50 employees, so with 51 an uncertain copied save lost its confirmation ID on reload. Copied batches now keep up to 1,000 employees (`MAX_COPY_ROSTER`, the same on client and server), and the copy lookup refuses larger teams up front. Other batches keep their limit of 50.
+- **Tests.** Destination cases, including the reported one; reload of an uncertain 40-shift copied batch with 50, 51, 300 and 1,000 employees (restored with the same ID), with 1,001 (not restored), and the 50-employee limit for other batches; the lookup accepting 1,000 employees and refusing 1,001. 535 / 535 tests, 25 / 25 acceptance scenarios, routing snapshot unchanged, offline eval 0 write-capable wrong routes.
+- **Browser.** "Copy next week's schedule to December 14" → "Copies of 7 of 7 shifts from the week of Nov 30 to the week of Dec 14…"; "copy next week to November 2" → the chat asks which weeks.
+
 ## A note on the issue text
 
 The issue said duties would not be copied. The existing batch save already keeps a shift's duties, so copies now keep them, and the review says so ("1 copy keeps its duties").

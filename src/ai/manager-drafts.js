@@ -13,6 +13,9 @@ import { periodBounds } from './manager-insights.js';
 import { lockReason } from './shift-edit.js';
 
 export const MAX_COPY_SHIFTS = 40;
+// The chat keeps a copied batch, with every active employee, across a reload
+// up to this many employees (MAX_COPY_ROSTER in public/ai-chat-state.js).
+export const MAX_COPY_ROSTER = 1000;
 export const DUTY_SHIFT_CHOICES = 10;
 const MAX_DUTIES = 10;
 
@@ -93,6 +96,11 @@ export function copyWeekDraft(db, business, { source, target }, now) {
     )
     .map(({ id, name }) => ({ id, name }))
     .sort((a, b) => a.name.localeCompare(b.name));
+  if (workers.length > MAX_COPY_ROSTER)
+    throw new HttpError(
+      422,
+      `Copying a week in chat supports up to ${MAX_COPY_ROSTER} employees. Create these shifts on Schedule instead.`,
+    );
   return {
     source,
     target,
