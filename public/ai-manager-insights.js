@@ -2,6 +2,7 @@
 // from a question, and renders the read-only cards for team hours, coverage
 // gaps and shift history.
 import { coworkerLookupDate } from './ai-chat-routing.js';
+import { MONTHS, WEEKDAYS } from './routing/text.js';
 import { checkedMeta, localDate, responseHeader } from './ai-response-card.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
@@ -13,9 +14,26 @@ const addDays = (day, count) =>
     .toISOString()
     .slice(0, 10);
 
+// Does the text mention a date, readable or not ("December 32", "Dec 3",
+// "next Friday", "12/5")? Used so a date the chat can't read is asked about
+// instead of being replaced by the default period.
+const DATE_MENTION = new RegExp(
+  [
+    `\\b(?:${MONTHS})\\s+\\d`,
+    `\\b\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?(?:${MONTHS})\\b`,
+    '\\b(?:jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec)\\.?\\s+\\d',
+    `\\b(?:${WEEKDAYS})\\b`,
+    '\\b(?:today|tomorrow)\\b',
+    '\\b\\d{4}-\\d{1,2}-\\d{1,2}\\b',
+    '\\b\\d{1,2}/\\d{1,2}\\b',
+  ].join('|'),
+  'i',
+);
+
 // A period from the question: "this/next/last week" (Monday–Sunday), "next two
-// weeks", "December 3 through December 5", or one date. Null when none given;
-// { reversed: true } when a range ends before it starts.
+// weeks", "December 3 through December 5", or one date. Null when the text
+// names no dates; { reversed: true } for a range that ends before it starts;
+// { unreadable: true } when it names a date that can't be read.
 export function insightPeriod(text, today) {
   const week = /\b(this|next|last) week\b/i.exec(text)?.[1]?.toLowerCase();
   if (week) {
@@ -36,10 +54,16 @@ export function insightPeriod(text, today) {
     const through = coworkerLookupDate(parts[1], today);
     if (from && through)
       return from <= through ? { from, through } : { reversed: true };
-    return null;
+    // "December 3 to December 32": one side names a date that can't be read.
+    if (
+      (!from && DATE_MENTION.test(parts[0])) ||
+      (!through && DATE_MENTION.test(parts[1]))
+    )
+      return { unreadable: true };
   }
   const day = coworkerLookupDate(text, today);
-  return day ? { from: day, through: day } : null;
+  if (day) return { from: day, through: day };
+  return DATE_MENTION.test(text) ? { unreadable: true } : null;
 }
 
 export function hoursFocus(text) {
@@ -75,10 +99,23 @@ export function historyTitle(text) {
   return words || null;
 }
 
-export function insightQuery(kind, text, today) {
+const PERIOD_QUESTION = {
+  reversed:
+    'Which dates should I check? That range ends before it starts. For example, December 3 to December 5.',
+  unreadable:
+    'Which dates should I check? I couldn’t read a date in your question. For example, December 3 to December 5.',
+};
+
+/**
+ * The lookup for a question. `dateReply` is the manager's answer to an earlier
+ * "Which date…" question: its dates replace the original ones, while the focus,
+ * hours and shift title still come from the original question in `text`.
+ */
+export function insightQuery(kind, text, today, dateReply = null) {
   const params = { kind };
+  const dateText = dateReply ?? text;
   if (kind === 'shiftHistory') {
-    const day = coworkerLookupDate(text, today);
+    const day = coworkerLookupDate(dateText, today);
     if (!day)
       return {
         question:
@@ -89,14 +126,13 @@ export function insightQuery(kind, text, today) {
       params: { ...params, from: day, through: day, ...(title && { title }) },
     };
   }
-  // Defaults (only when no period is given): hours for this business week,
-  // gaps for the next 14 days. A reversed range is asked about, not replaced.
-  const asked = insightPeriod(text, today);
-  if (asked?.reversed)
-    return {
-      question:
-        'That range ends before it starts. Which dates should I check? For example, December 3 to December 5.',
-    };
+  // The default period (hours: this business week; gaps: the next 14 days) is
+  // used only when the question names no dates. Dates that are reversed or
+  // can't be read are asked about, and so is a reply without readable dates.
+  const asked = insightPeriod(dateText, today);
+  if (asked?.reversed) return { question: PERIOD_QUESTION.reversed };
+  if (asked?.unreadable || (dateReply && !asked))
+    return { question: PERIOD_QUESTION.unreadable };
   const period =
     asked ??
     (kind === 'teamHours'

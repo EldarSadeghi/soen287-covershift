@@ -24,7 +24,7 @@ Issue [#149](https://github.com/EldarSadeghi/soen287-covershift/issues/149). Thr
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed (syntax and format) |
-| `npm test` | 504 / 504 passed (5 new insight tests, plus new lookup and routing-group cases) |
+| `npm test` | 505 / 505 passed (6 new insight tests, plus new lookup and routing-group cases) |
 | `npm run ai:acceptance` | 25 / 25 scenarios, 217 checks |
 | `npm run ai:eval` (offline) | 217 / 260 local, 0 write-capable wrong routes; new labels 11 / 13 local (2 paraphrases left to the classifier) |
 | Routing snapshot | 356 phrases, 144 follow-ups; 0 existing phrases changed |
@@ -45,6 +45,8 @@ At a 320px viewport, the coverage gaps card fits with no horizontal overflow. Th
 ## Review fixes (Codex on PR #150)
 
 - **Reversed date range.** "Who has the most hours from December 5 to December 3?" used to fall back silently to the current week. It now asks: "That range ends before it starts. Which dates should I check?" This applies to hours and to coverage gaps. The default period is used only when the question names no period. Checked in the browser.
+- **Corrected dates keep the question** (second review). When the chat asks "Which dates should I check?", a reply such as "December 3 to December 5" continues the same lookup. The reply's dates replace the original ones, and the focus, hours threshold and shift title still come from the first question. In the browser, "Who is under 20 hours from December 5 to December 3?" followed by "December 3 to December 5" answered "4 employees are under 20 hours" for December 3–5.
+- **Unreadable dates are asked about** (second review). A question that mentions a date the chat can't read, such as "December 3 to December 32", "December 32", "Dec 3" or "next Friday", now gets "I couldn’t read a date in your question" instead of the default period. The default is used only when the question names no dates.
 - **Busy days in shift history.** The server returns at most 10 shifts but now also sends the `total`. With 11 matching shifts, the card says "Showing 10 of 11 shifts", followed by a hint to add a title word to narrow it down.
 
 ## Out of scope

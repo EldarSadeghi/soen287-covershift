@@ -29,8 +29,9 @@ const status = {
   approved: 'Covered',
 };
 
-export function managerLookupQuery(kind, text, today) {
-  if (INSIGHT_KINDS.includes(kind)) return insightQuery(kind, text, today);
+export function managerLookupQuery(kind, text, today, dateReply = null) {
+  if (INSIGHT_KINDS.includes(kind))
+    return insightQuery(kind, text, today, dateReply);
   const params = { kind };
   const quoted = text.match(/["“]([^"”]+)["”]/);
   const named = /^\s*(?:is|was) (.+?) covered\b/i

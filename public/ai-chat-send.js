@@ -348,7 +348,8 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       if (target === 'teamAvailability') {
         await showTeamAvailability(query, continuing ? earlier : text);
       } else {
-        await showManagerLookup(target, query);
+        // A date reply replaces the earlier dates; the rest of the question stays.
+        await showManagerLookup(target, query, continuing ? text : null);
       }
       return;
     }

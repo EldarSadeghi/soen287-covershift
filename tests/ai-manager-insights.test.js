@@ -444,3 +444,74 @@ test('shift history reports every matching shift when it shows only the first te
     globalThis.document = original;
   }
 });
+
+test('a corrected date reply keeps the lookup and its filters; unreadable dates are asked about', async () => {
+  const { resolveChatTarget, routeChat } = await import(
+    '../public/ai-chat-routing.js'
+  );
+  const today = '2026-11-26';
+  const original = 'Who is under 20 hours from December 5 to December 3?';
+  const first = insightQuery('teamHours', original, today);
+  assert.match(first.question, /^Which dates/);
+  // The reply goes back to the same lookup, with the original focus and hours.
+  const reply = 'December 3 to December 5';
+  assert.equal(
+    resolveChatTarget({
+      text: reply,
+      manager: true,
+      routed: routeChat(reply, true, null),
+      previous: { topic: 'teamHours', text: first.question },
+    }).target,
+    'teamHours',
+  );
+  assert.deepEqual(
+    insightQuery('teamHours', original + ' ' + reply, today, reply).params,
+    {
+      kind: 'teamHours',
+      from: '2026-12-03',
+      through: '2026-12-05',
+      focus: 'under',
+      hours: '20',
+    },
+  );
+  assert.match(
+    insightQuery('teamHours', original + ' soon', today, 'soon').question,
+    /^Which dates/,
+  );
+  const history = 'What happened with the closing shift on December 32?';
+  assert.deepEqual(
+    insightQuery('shiftHistory', history + ' Saturday', today, 'Saturday')
+      .params,
+    {
+      kind: 'shiftHistory',
+      from: '2026-11-28',
+      through: '2026-11-28',
+      title: 'closing',
+    },
+  );
+
+  // A date that can't be read is never replaced by the default period.
+  for (const text of [
+    'Who has the most hours from December 3 to December 32?',
+    'Who has the most hours on December 32?',
+    'Any coverage gaps from Dec 3 to Dec 5?',
+  ]) {
+    const kind = /gaps/.test(text) ? 'coverageGaps' : 'teamHours';
+    const query = insightQuery(kind, text, today);
+    assert.equal(query.params, undefined, text);
+    assert.match(query.question, /couldn’t read a date/, text);
+  }
+  // No dates at all still uses the default, and "going to" is not a range.
+  assert.deepEqual(
+    insightQuery('teamHours', 'Who has the most hours?', today).params.from,
+    '2026-11-23',
+  );
+  assert.equal(
+    insightQuery(
+      'teamHours',
+      'Who is going to have the most hours on December 3?',
+      today,
+    ).params.from,
+    '2026-12-03',
+  );
+});
