@@ -2,7 +2,7 @@ import { requestJSON } from './request.js';
 import { element } from './shift-card.js';
 export function coverageAction({ kind, id, revision, title, description, csrfToken, onSuccess }) {
   const container = element('div', 'coverage-action');
-  const trigger = element('button', 'logout-button', kind === 'request' ? 'Request coverage' : 'Cancel request'); trigger.type = 'button'; trigger.setAttribute('aria-label', `${kind === 'request' ? 'Request coverage for' : 'Cancel request for'} ${title}`);
+  const trigger = element('button', 'logout-button', kind === 'request' ? 'Request coverage' : 'Cancel request'); trigger.type = 'button'; trigger.dataset.coverageAction = kind; trigger.setAttribute('aria-label', `${kind === 'request' ? 'Request coverage for' : 'Cancel request for'} ${title}`);
   const confirmation = element('section', 'coverage-confirm'); confirmation.hidden = true;
   confirmation.setAttribute('role', 'group'); confirmation.setAttribute('aria-label', `${kind === 'request' ? 'Request coverage' : 'Cancel request'} for ${title}`);
   confirmation.append(element('h3', '', kind === 'request' ? 'Request coverage?' : 'Cancel this request?'), element('p', '', description));

@@ -620,6 +620,120 @@
       "message": "Was my December time off approved?"
     },
     {
+      "id": "e-answerInvite-01",
+      "role": "employee",
+      "expected": "answerInvite",
+      "message": "Alex asked me to cover Saturday, accept it"
+    },
+    {
+      "id": "e-answerInvite-02",
+      "role": "employee",
+      "expected": "answerInvite",
+      "message": "decline Jamie's invite for Friday"
+    },
+    {
+      "id": "e-answerInvite-03",
+      "role": "employee",
+      "expected": "answerInvite",
+      "message": "accept the cover invitation from Sam"
+    },
+    {
+      "id": "e-answerInvite-04",
+      "role": "employee",
+      "expected": "answerInvite",
+      "message": "I want to accept Taylor's cover request"
+    },
+    {
+      "id": "e-answerInvite-05",
+      "role": "employee",
+      "expected": "answerInvite",
+      "message": "turn down the invitation for the 5th"
+    },
+    {
+      "id": "e-answerInvite-06",
+      "role": "employee",
+      "expected": "answerInvite",
+      "message": "say yes to Alex's swap request"
+    },
+    {
+      "id": "e-answerInvite-07",
+      "role": "employee",
+      "expected": "answerInvite",
+      "message": "Jamie wants me to take her Friday shift, tell her yes"
+    },
+    {
+      "id": "e-cancelCover-01",
+      "role": "employee",
+      "expected": "cancelCover",
+      "message": "cancel my cover request for Friday"
+    },
+    {
+      "id": "e-cancelCover-02",
+      "role": "employee",
+      "expected": "cancelCover",
+      "message": "withdraw the invitation I sent to Sam"
+    },
+    {
+      "id": "e-cancelCover-03",
+      "role": "employee",
+      "expected": "cancelCover",
+      "message": "cancel my claim for Saturday"
+    },
+    {
+      "id": "e-cancelCover-04",
+      "role": "employee",
+      "expected": "cancelCover",
+      "message": "take back my request to cover the Sunday shift"
+    },
+    {
+      "id": "e-cancelCover-05",
+      "role": "employee",
+      "expected": "cancelCover",
+      "message": "call off the cover invite I sent Taylor"
+    },
+    {
+      "id": "e-cancelCover-06",
+      "role": "employee",
+      "expected": "cancelCover",
+      "message": "I no longer need cover on Thursday, scrap my request"
+    },
+    {
+      "id": "e-cancelTimeOff-01",
+      "role": "employee",
+      "expected": "cancelTimeOff",
+      "message": "withdraw my time-off request for the 24th"
+    },
+    {
+      "id": "e-cancelTimeOff-02",
+      "role": "employee",
+      "expected": "cancelTimeOff",
+      "message": "cancel my leave on December 9"
+    },
+    {
+      "id": "e-cancelTimeOff-03",
+      "role": "employee",
+      "expected": "cancelTimeOff",
+      "message": "cancel my vacation request"
+    },
+    {
+      "id": "e-cancelTimeOff-04",
+      "role": "employee",
+      "expected": "cancelTimeOff",
+      "message": "take back my day off on Friday"
+    },
+    {
+      "id": "e-cancelTimeOff-05",
+      "role": "employee",
+      "expected": "cancelTimeOff",
+      "message": "my plans changed so I want to cancel my holiday on the 12th"
+    },
+    {
+      "id": "e-cancelTimeOff-06",
+      "role": "employee",
+      "expected": "cancelTimeOff",
+      "message": "scrap the leave I booked for next Monday"
+    },
+    {
       "id": "e-explanation-01",
       "role": "employee",
       "expected": "explanation",

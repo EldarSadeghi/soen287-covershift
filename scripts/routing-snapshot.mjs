@@ -180,7 +180,14 @@ function probe(text) {
 }
 
 // Multi-turn: the composer's follow-up decision for each earlier question.
-const statusTopics = ['claimStatus', 'coverStatus', 'timeOffStatus'];
+const statusTopics = [
+  'claimStatus',
+  'coverStatus',
+  'timeOffStatus',
+  'answerInvite',
+  'cancelCover',
+  'cancelTimeOff',
+];
 const previousQuestions = [
   [
     false,

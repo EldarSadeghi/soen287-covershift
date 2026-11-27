@@ -2,7 +2,7 @@ import { HttpError } from '../auth/errors.js';
 import { aiConfigured, responsesBody, structuredResponse } from './structured-response.js';
 import { validateChatInput } from './shift-draft.js';
 
-const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft', 'help'];
+const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft', 'answerInvite', 'cancelCover', 'cancelTimeOff', 'help'];
 const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'replacements', 'help'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
@@ -19,6 +19,9 @@ coverStatus = status of a cover request THEY sent to a coworker ("did my swap as
 timeOffStatus = status of THEIR time-off request ("did my holiday request get the ok").
 timeOffDraft = prepare a NEW request to be absent ("I'd like to put in for leave on August 8").
 coverDraft = prepare a NEW invitation asking a coworker to take an assigned shift ("could Priya fill in for me on the Sunday close"). A question about who might be free is coworkers. Questions about existing requests are status.
+answerInvite = accept or decline a cover invitation a coworker sent THEM ("Priya wants me to take her Sunday close, I'm in").
+cancelCover = withdraw a cover request or invitation THEY created, or a claim they made ("scrap the swap I put out for the 14th").
+cancelTimeOff = withdraw THEIR own time-off request ("I don't need the leave on the 9th any more, pull it").
 history = past coverage outcomes for their own shifts, including counts over a period ("how much cover did I take over in October").
 updates = recent notifications or changes affecting them ("anything come through for me lately").
 help = how to use CoverShift itself, why the app doesn't allow something, or what a status word means ("where in the app do I hand off a shift", "what's the deal with requests that say declined"). Questions about their own records are not help.

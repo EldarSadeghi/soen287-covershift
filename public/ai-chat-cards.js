@@ -30,6 +30,11 @@ import {
   createTimeOffStatus,
 } from './ai-claim-status.js';
 import {
+  createCancelCover,
+  createCancelTimeOff,
+  createInviteAnswer,
+} from './ai-follow-through.js';
+import {
   showWorkingSummary,
   workingSummaryMessage,
 } from './ai-working-summary.js';
@@ -91,6 +96,13 @@ export function createChatCards({
         onOutcome: outcomeText,
       })
     : null;
+  const followView = {
+    card,
+    chat,
+    notice,
+    setBusy: working,
+    onOutcome: outcomeText,
+  };
   const statusLookups = {
     claimStatus: {
       lookup: claimStatus,
@@ -103,6 +115,19 @@ export function createChatCards({
     timeOffStatus: {
       lookup: timeOffStatus,
       reply: 'I’ll check your time-off requests.',
+    },
+    // CS-067: find the employee's own item and link to its confirmation.
+    answerInvite: {
+      lookup: !manager ? createInviteAnswer(followView, account.user.id) : null,
+      reply: 'I’ll find the cover invitation.',
+    },
+    cancelCover: {
+      lookup: !manager ? createCancelCover(followView, account.user.id) : null,
+      reply: 'I’ll find the request to cancel.',
+    },
+    cancelTimeOff: {
+      lookup: !manager ? createCancelTimeOff(followView) : null,
+      reply: 'I’ll find the time off to cancel.',
     },
   };
   const batchReview = manager
