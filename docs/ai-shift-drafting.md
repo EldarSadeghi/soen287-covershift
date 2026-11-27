@@ -97,3 +97,11 @@ The provider extracts the employee, date, optional title or time, and requested 
 **Review change** opens the existing Schedule editor with the proposed values and the original duties. **Save changes** submits the captured revision through the usual Schedule endpoint. A stale revision returns the standard conflict message. Workspaces with publication enabled stage the change privately until publication.
 
 [Acceptance checks and browser evidence](acceptance/cs060/USER-STORIES.md)
+
+## Employee time-off and cover drafts
+
+Employees can prepare time-off and cover requests in chat. A time-off draft uses the business timezone and the existing date validator. Its preview lists overlapping commitments that would block approval. The Time off form opens with the proposed dates and an empty private note. The employee reviews and confirms using the existing submission flow.
+
+A cover draft resolves one active coworker by name within the employee's business and checks one of the employee's own shifts against the existing cover options. The cover composer opens with that coworker and shift selected. The employee reviews and sends through the existing revision-checked form.
+
+Both endpoints prepare previews. They use the existing AI limits and single-use intent passes. Draft review carries the proposed fields in a short-lived, account-scoped browser handoff.

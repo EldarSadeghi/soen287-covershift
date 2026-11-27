@@ -1,4 +1,4 @@
-import { CHAT_ENDPOINTS } from './ai-chat-routing.js';
+import { CHAT_ENDPOINTS, EMPLOYEE_DRAFTS } from './ai-chat-routing.js';
 import { revealResponse } from './ai-response-card.js';
 import { requestJSON } from './request.js';
 
@@ -41,11 +41,13 @@ export async function sendProviderMessage(
         ? chat.value.suggestion?.draft
         : flow.mode === 'shiftEdit'
           ? chat.value.editSelection || chat.value.shiftEdit
-          : flow.mode === 'availability'
-            ? chat.value.availabilityDraft
-            : flow.mode === 'search'
-              ? chat.value.criteria
-              : null;
+          : EMPLOYEE_DRAFTS.includes(flow.mode)
+            ? chat.value.employeeDraft?.selection
+            : flow.mode === 'availability'
+              ? chat.value.availabilityDraft
+              : flow.mode === 'search'
+                ? chat.value.criteria
+                : null;
   const body = JSON.stringify({
     description: text,
     history,
@@ -168,7 +170,9 @@ export async function sendProviderMessage(
             ? ['shiftEdit', 'editChoices', 'editBlocked', 'clarification']
             : manager
               ? [batch ? 'batch' : 'draft', 'clarification']
-              : ['matches', 'availability', 'clarification']
+              : EMPLOYEE_DRAFTS.includes(flow.mode)
+                ? [flow.mode, 'draftBlocked', 'clarification']
+                : ['matches', 'availability', 'clarification']
       ).includes(data.kind)
     )
       throw new Error('AI could not prepare a reply.');

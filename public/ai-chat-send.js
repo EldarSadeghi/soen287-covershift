@@ -3,6 +3,7 @@ import {
   MIXED_INTENT_QUESTION,
   MANAGER_LOOKUPS,
   EMPLOYEE_LOOKUPS,
+  EMPLOYEE_DRAFTS,
   OPENING_CLARIFICATION,
   GENERIC_CLARIFICATION_PREFIX,
   availabilityNeedsHours,
@@ -79,6 +80,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
             'availability',
             'coworkers',
             ...EMPLOYEE_LOOKUPS,
+            ...EMPLOYEE_DRAFTS,
             'claimStatus',
             'coverStatus',
             'timeOffStatus',
@@ -117,7 +119,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
   function recordRoute(text, routed, target, askedClassifier) {
     const decidedBy = askedClassifier
       ? 'classifier'
-      : requestsUnsupportedAction(text)
+      : requestsUnsupportedAction(text, manager)
         ? 'unsupported'
         : target !== routed
           ? 'follow-up'
@@ -209,7 +211,10 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       target === 'shiftEdit' &&
       !chat.value.editSelection &&
       (routeChat(text, manager, null) === 'shiftEdit' || askedClassifier);
-    const sameTopic = flow.mode === target && !freshEdit;
+    const freshEmployeeDraft =
+      EMPLOYEE_DRAFTS.includes(target) &&
+      (routeChat(text, manager, null) === target || askedClassifier);
+    const sameTopic = flow.mode === target && !freshEdit && !freshEmployeeDraft;
     const inScope = chat.value.messages.slice(-8);
     let history = [];
     if (
@@ -417,6 +422,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       Object.assign(chat.value, {
         suggestion: null,
         shiftEdit: null,
+        employeeDraft: null,
         editSelection: null,
         pending: null,
         completion: null,

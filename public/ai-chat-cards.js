@@ -1,5 +1,10 @@
+import {
+  reviewEmployeeDraft,
+  showEmployeeDraft,
+} from './ai-employee-drafts.js';
 import { renderEmployeeLookup } from './ai-employee-lookups.js';
 import {
+  EMPLOYEE_DRAFTS,
   coworkerLookupDate,
   coworkersFreeOnDate,
   historyPeriod,
@@ -497,6 +502,17 @@ export function createChatCards({
   }
 
   function renderProviderReply(data, batch, appendTurn) {
+    if (EMPLOYEE_DRAFTS.includes(flow.mode) && data.kind !== 'clarification') {
+      chat.value.employeeDraft = data.selection ? data : null;
+      const reply = showEmployeeDraft(card, data, () => {
+        if (flow.busy || chat.value.employeeDraft !== data) return;
+        if (!reviewEmployeeDraft(account, data))
+          notice('Open the workspace form to review this request manually.');
+      });
+      appendTurn(reply);
+      chat.save();
+      return reply;
+    }
     if (flow.mode === 'shiftEdit' && data.kind !== 'clarification') {
       const initialRequest = view.composer.value.trim();
       chat.value.shiftEdit =
