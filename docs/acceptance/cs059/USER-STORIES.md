@@ -20,13 +20,14 @@ Recorded on main at `64226f5` before source changes. The current suite contained
 
 ## Verification
 
-- Final regression suite: 469 tests passed, including format and syntax checks.
+- Final regression suite: 472 tests passed, including format and syntax checks.
 
 - Offline acceptance: 22 scenarios, 179 checks, all passed.
 - Offline routing: 166/202 local matches, 55 classifier candidates, 0 incorrect write-capable routes. All 181 prior prompts retained their IDs and contents.
 - Scripted Morgan preview: exact Alex question, date clarification and follow-up, approved and pending time off, a pending coverage claim, overdue publication with one unpublished change, and the attention summary. An unmatched leave phrasing resolved through the scripted classifier.
 - At a 320 CSS-pixel viewport, the time-off card width and scroll width both measured 256 px. The screenshot excludes the browser scrollbar.
-- Live evaluation awaits approval. The plan caps the separate evaluation ledger at 55 classifier calls and measures the original cohort separately.
+- First live evaluation: 199/202 correct, 21/21 new prompts, one unhelpful generic reply and zero incorrect write-capable routes. The 178/181 result on existing prompts fell short of 98.8%.
+- The new miss, “give Jamie a shift on Saturday,” now routes locally to manager draft review. Regression tests cover the phrase, manager role scope, status wording and mixed commands. The updated offline run matched 167/202 labels, with 54 classifier candidates and zero incorrect write-capable routes. A live rerun awaits approval.
 
 ## Browser evidence
 

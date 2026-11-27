@@ -13,6 +13,8 @@ const examples = [
   ['teamAvailability', 'Is anyone available tomorrow afternoon?', true],
   ['teamAvailability', 'Is Alex free?', true],
   ['draft', 'Create a shift for Alex', true],
+  ['draft', 'give jamie a shift on saturday', true],
+  ['draft', 'Could you give Jamie Lee a new shift tomorrow?', true],
   ['coworkers', 'Are my coworkers free Friday?'],
   ['alternatives', 'Suggest eligible alternatives'],
   ['explanation', 'Why did my shift claim conflict?'],
@@ -28,3 +30,12 @@ for (const [intent, text, manager = false] of examples) {
     assert.equal(routeChat(text, manager, null), intent);
   });
 }
+
+test('give-a-shift rule stays manager-only and keeps unsupported actions blocked', () => {
+  assert.notEqual(routeChat('Give Jamie a shift on Saturday', false), 'draft');
+  assert.notEqual(routeChat('Give Jamie a shift status update', true), 'draft');
+  assert.equal(
+    routeChat('Give Jamie a shift on Saturday and publish the schedule', true),
+    'clarification',
+  );
+});

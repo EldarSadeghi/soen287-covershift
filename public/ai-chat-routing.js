@@ -71,6 +71,8 @@ const patterns = {
       /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/,
   },
   draft: {
+    giveShift:
+      /^give [\p{L}][\p{L}'-]*(?: [\p{L}][\p{L}'-]*){0,3} (?:a|an) (?:new )?shift(?=$|[.!?]| (?:on|for|this|next|today|tomorrow)\b)/u,
     command:
       /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/,
   },
@@ -166,7 +168,12 @@ function explicitRoute(text, manager) {
     if (summary.test(message)) return 'summary';
   }
   if (manager && requestsShiftBatch(message)) return 'draft';
-  if (manager && patterns.draft.command.test(message)) return 'draft';
+  if (
+    manager &&
+    (patterns.draft.command.test(message) ||
+      patterns.draft.giveShift.test(message))
+  )
+    return 'draft';
   const team = patterns.teamAvailability;
   if (
     manager &&
