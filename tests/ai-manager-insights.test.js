@@ -515,3 +515,41 @@ test('a corrected date reply keeps the lookup and its filters; unreadable dates 
     '2026-12-03',
   );
 });
+
+test('yesterday uses the previous business date for manager insights', async () => {
+  const { resolveChatTarget, routeChat } = await import(
+    '../public/ai-chat-routing.js'
+  );
+  const today = '2027-01-01';
+  const message = 'Who has the most hours yesterday?';
+  assert.equal(routeChat(message, true, null), 'teamHours');
+  assert.deepEqual(insightQuery('teamHours', message, today).params, {
+    kind: 'teamHours',
+    from: '2026-12-31',
+    through: '2026-12-31',
+    focus: 'most',
+  });
+  assert.deepEqual(insightPeriod('yesterday to today', today), {
+    from: '2026-12-31',
+    through: '2027-01-01',
+  });
+  const text = 'Yesterday';
+  const original = 'Who is under 20 hours on December 32?';
+  const question = insightQuery('teamHours', original, today).question;
+  assert.equal(
+    resolveChatTarget({
+      text,
+      manager: true,
+      routed: routeChat(text, true, null),
+      previous: { topic: 'teamHours', text: question },
+    }).target,
+    'teamHours',
+  );
+  assert.deepEqual(insightQuery('teamHours', original, today, text).params, {
+    kind: 'teamHours',
+    from: '2026-12-31',
+    through: '2026-12-31',
+    focus: 'under',
+    hours: '20',
+  });
+});

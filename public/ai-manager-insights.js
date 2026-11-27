@@ -14,6 +14,13 @@ const addDays = (day, count) =>
     .toISOString()
     .slice(0, 10);
 
+// The caller supplies the business-local date, so subtract a calendar day.
+const insightDate = (text, today) =>
+  coworkerLookupDate(
+    text.replace(/\byesterday\b/gi, addDays(today, -1)),
+    today,
+  );
+
 // Does the text mention a date, readable or not ("December 32", "Dec 3",
 // "next Friday", "12/5")? Used so a date the chat can't read is asked about
 // instead of being replaced by the default period.
@@ -23,7 +30,7 @@ const DATE_MENTION = new RegExp(
     `\\b\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?(?:${MONTHS})\\b`,
     '\\b(?:jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec)\\.?\\s+\\d',
     `\\b(?:${WEEKDAYS})\\b`,
-    '\\b(?:today|tomorrow)\\b',
+    '\\b(?:today|tomorrow|yesterday)\\b',
     '\\b\\d{4}-\\d{1,2}-\\d{1,2}\\b',
     '\\b\\d{1,2}/\\d{1,2}\\b',
   ].join('|'),
@@ -50,8 +57,8 @@ export function insightPeriod(text, today) {
     return { from: today, through: addDays(today, 13) };
   const parts = text.split(/\s+(?:through|until|to|–|—)\s+/i);
   if (parts.length === 2) {
-    const from = coworkerLookupDate(parts[0], today);
-    const through = coworkerLookupDate(parts[1], today);
+    const from = insightDate(parts[0], today);
+    const through = insightDate(parts[1], today);
     if (from && through)
       return from <= through ? { from, through } : { reversed: true };
     // "December 3 to December 32": one side names a date that can't be read.
@@ -61,7 +68,7 @@ export function insightPeriod(text, today) {
     )
       return { unreadable: true };
   }
-  const day = coworkerLookupDate(text, today);
+  const day = insightDate(text, today);
   if (day) return { from: day, through: day };
   return DATE_MENTION.test(text) ? { unreadable: true } : null;
 }
@@ -91,7 +98,7 @@ export function historyTitle(text) {
     )?.[1] ?? '';
   const words = phrase
     .replace(
-      /\b(?:today|tomorrow|this|next|last|on|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}(?:st|nd|rd|th)?|20\d{2}-\d{2}-\d{2})\b|['’]s\b|,/gi,
+      /\b(?:today|tomorrow|yesterday|this|next|last|on|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}(?:st|nd|rd|th)?|20\d{2}-\d{2}-\d{2})\b|['’]s\b|,/gi,
       ' ',
     )
     .trim()
@@ -115,7 +122,7 @@ export function insightQuery(kind, text, today, dateReply = null) {
   const params = { kind };
   const dateText = dateReply ?? text;
   if (kind === 'shiftHistory') {
-    const day = coworkerLookupDate(dateText, today);
+    const day = insightDate(dateText, today);
     if (!day)
       return {
         question:

@@ -340,10 +340,15 @@ export function resolveChatTarget({
     plainReply(true) &&
     text
       .split(/\s+(?:through|to|until)\s+/i)
-      .every((part) =>
-        isStatusDateFollowUp(
-          part.replace(/\s+(morning|afternoon|evening)(?=[.!?]*$)/i, ''),
-        ),
+      .every(
+        (part) =>
+          (['teamHours', 'coverageGaps', 'shiftHistory'].includes(
+            previousTopic,
+          ) &&
+            /^yesterday[.!?]*$/i.test(part.trim())) ||
+          isStatusDateFollowUp(
+            part.replace(/\s+(morning|afternoon|evening)(?=[.!?]*$)/i, ''),
+          ),
       );
   const answerRoute =
     !manager &&
