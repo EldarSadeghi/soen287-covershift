@@ -6,8 +6,11 @@ import test from 'node:test';
 import { buildDemoFixtures } from '../src/demo/fixtures.js';
 import { JsonStore } from '../src/storage/json-store.js';
 import { managerLookup } from '../src/ai/manager-lookups.js';
+import { coverOptions } from '../src/cover/service.js';
+import { coverShiftFingerprint } from '../src/cover/lifecycle.js';
 import {
   EXCLUSION_REASONS,
+  INVITATION_STATUS,
   REPLACEMENT_SHIFT_CHOICES,
   eligibleByInvitationRule,
   replacementSuggestions,
@@ -176,8 +179,16 @@ test('suggestions follow the cover-invitation rule and rank by hours that week',
   // Pending time off does not block (only approved time off does), so Taylor
   // can take it; Taylor has fewer hours than Alex, so ranks first.
   assert.deepEqual(result.suggestions, [
-    { workerName: 'Taylor Brooks', weekHours: 3 },
-    { workerName: 'Alex Morgan', weekHours: 12 },
+    {
+      workerName: 'Taylor Brooks',
+      weekHours: 3,
+      invitation: INVITATION_STATUS.now,
+    },
+    {
+      workerName: 'Alex Morgan',
+      weekHours: 12,
+      invitation: INVITATION_STATUS.now,
+    },
   ]);
   assert.deepEqual(result.excluded, [
     { workerName: 'Casey Park', weekHours: 3, reason: EXCLUSION_REASONS.busy },
@@ -245,6 +256,92 @@ test('suggestions follow the cover-invitation rule and rank by hours that week',
       false,
       worker,
     );
+});
+
+test('invitation status matches the invitation flow: pending, declined, invited and outside the window (Codex review on #153)', async () => {
+  const db = makeDb();
+  const business = db.businesses[0];
+  const store = { read: async () => db };
+  const opening = db.shifts.find((row) => row.id === 'open');
+  const invitation = (recipientId, status, shift = opening) => ({
+    id: 'inv-' + recipientId + status,
+    businessId: 'b1',
+    senderId: 'jamie',
+    recipientId,
+    shiftId: shift.id,
+    shiftSnapshot: {
+      title: shift.title,
+      startsAt: shift.startsAt,
+      endsAt: shift.endsAt,
+      timezone: tz,
+      revision: coverShiftFingerprint(shift),
+    },
+    status,
+    requestId: null,
+    history: [],
+  });
+  const statuses = async () => {
+    const { suggestions } = replacementSuggestions(
+      db,
+      business,
+      { from: opening.startsAt.slice(0, 10), title: 'opening' },
+      now,
+    );
+    for (const row of suggestions) {
+      // "Can be invited now" exactly when Jamie's own invitation options list it.
+      const id = db.users.find((user) => user.name === row.workerName).id;
+      const { shifts } = await coverOptions(store, 'jamie', id, () => now);
+      assert.equal(
+        row.invitation === INVITATION_STATUS.now,
+        shifts.some((shift) => shift.id === opening.id),
+        row.workerName,
+      );
+    }
+    return Object.fromEntries(
+      suggestions.map((row) => [row.workerName, row.invitation]),
+    );
+  };
+  db.coverInvitations = [];
+  assert.deepEqual(await statuses(), {
+    'Taylor Brooks': INVITATION_STATUS.now,
+    'Alex Morgan': INVITATION_STATUS.now,
+  });
+
+  // Alex already declined this shift; Taylor can still be invited.
+  db.coverInvitations.push(invitation('alex', 'declined'));
+  assert.deepEqual(await statuses(), {
+    'Taylor Brooks': INVITATION_STATUS.now,
+    'Alex Morgan': INVITATION_STATUS.declined,
+  });
+
+  // A pending invitation to Taylor blocks every other invitation for the shift.
+  db.coverInvitations.push(invitation('taylor', 'pending'));
+  assert.deepEqual(await statuses(), {
+    'Taylor Brooks': INVITATION_STATUS.pending,
+    'Alex Morgan': INVITATION_STATUS.pending,
+  });
+
+  // A cancelled invitation no longer counts.
+  db.coverInvitations = [invitation('taylor', 'cancelled')];
+  assert.equal((await statuses())['Taylor Brooks'], INVITATION_STATUS.now);
+
+  // Outside the 14-day window: still suggested as available, but not invitable.
+  db.coverInvitations = [];
+  for (const row of [opening, ...db.availabilityWindows]) {
+    row.startsAt = row.startsAt
+      .replace('2026-12-04', '2026-12-18')
+      .replace('2026-12-05', '2026-12-19');
+    row.endsAt = row.endsAt
+      .replace('2026-12-04', '2026-12-18')
+      .replace('2026-12-05', '2026-12-19');
+  }
+  db.shifts = db.shifts.filter(
+    (row) => !['c-fri', 'close'].includes(row.id) || row === opening,
+  );
+  const far = await statuses();
+  assert.ok(Object.keys(far).length > 0);
+  for (const status of Object.values(far))
+    assert.equal(status, INVITATION_STATUS.window);
 });
 
 test('the shift is chosen by date, title and assignee; several are listed, none and started say so', () => {
@@ -489,7 +586,7 @@ test('the card lists suggestions, exclusions and honest empty states', () => {
     };
     assert.equal(
       renderReplacements(card, ready),
-      '2 employees can take Opening service: Taylor Brooks (3 hours this week) and Alex Morgan (12 hours this week).',
+      '2 employees are available for all of Opening service: Taylor Brooks (3 hours this week) and Alex Morgan (12 hours this week).',
     );
     assert.ok(
       texts(card).includes(

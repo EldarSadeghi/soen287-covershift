@@ -1,14 +1,26 @@
-// Replacement suggestions for managers in chat (CS-066): who could take a
-// shift, using exactly the rule cover invitations use (coverEligibility), and
-// ranked by scheduled hours that week. Read-only: nothing is sent or saved.
+// Replacement suggestions for managers in chat (CS-066): who is available
+// for the whole shift (the availability and conflict rule cover invitations
+// use, coverEligibility), ranked by scheduled hours that week. Each also says
+// whether the assignee could invite them right now, from the invitation
+// flow's own check (invitationBlocker). Read-only: nothing is sent or saved.
 import { findClaimConflicts } from '../../public/claim-conflicts.js';
 import { coversPeriod } from '../availability/intervals.js';
 import { coverEligibility } from '../cover/eligibility.js';
+import { invitationBlocker } from '../cover/service.js';
 import { claimCommitments } from '../requests/claim.js';
 import { addDays, localDate } from '../schedules/publication.js';
 import { teamHours } from './manager-insights.js';
 
 export const REPLACEMENT_SHIFT_CHOICES = 10;
+
+// Whether the assignee could invite a suggested coworker right now.
+export const INVITATION_STATUS = {
+  now: 'Can be invited now',
+  window: 'Invitations are only for upcoming shifts in the next 14 days',
+  pending: 'This shift already has a pending invitation or claim',
+  declined: 'Already declined this shift',
+  invited: 'Already invited to this shift',
+};
 
 // Generic reasons only: never a time-off note, private cause or contact.
 export const EXCLUSION_REASONS = {
@@ -116,7 +128,13 @@ export function replacementSuggestions(
       weekHours: hours.get(candidate.name) ?? 0,
     };
     if (reason) excluded.push({ ...row, reason: EXCLUSION_REASONS[reason] });
-    else suggestions.push(row);
+    else {
+      const blocker = invitationBlocker(db, shift, candidate.id, now);
+      suggestions.push({
+        ...row,
+        invitation: INVITATION_STATUS[blocker ?? 'now'],
+      });
+    }
   }
   const byName = (a, b) => a.workerName.localeCompare(b.workerName);
   return {

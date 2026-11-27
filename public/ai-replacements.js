@@ -141,26 +141,26 @@ export function renderReplacements(card, data) {
         .map(
           (row) => `${row.workerName} (${hoursLabel(row.weekHours)} this week)`,
         );
-      reply = `${data.suggestions.length} ${data.suggestions.length === 1 ? 'employee can' : 'employees can'} take ${shift.title}: ${names(top)}.`;
+      reply = `${data.suggestions.length} ${data.suggestions.length === 1 ? 'employee is' : 'employees are'} available for all of ${shift.title}: ${names(top)}.`;
       card.append(element('p', '', reply));
       for (const row of data.suggestions)
         card.append(
           element(
             'p',
             '',
-            `${row.workerName} · ${hoursLabel(row.weekHours)} this week · Available for the full shift`,
+            `${row.workerName} · ${hoursLabel(row.weekHours)} this week · Available for the full shift · ${row.invitation}`,
           ),
         );
       card.append(
         element(
           'p',
           'ai-response-meta',
-          'Ranked by fewest scheduled hours this week. Nothing is sent: the employee whose shift it is can invite one of them from My shifts.',
+          'Ranked by fewest scheduled hours this week. Nothing is sent. You can change the assignment on Schedule; the employee whose shift it is can invite anyone marked “Can be invited now” from My shifts.',
         ),
       );
     }
     if (data.excluded?.length) {
-      card.append(element('h4', '', 'Can’t take it'));
+      card.append(element('h4', '', 'Not available for this shift'));
       for (const row of data.excluded)
         card.append(
           element('p', 'ai-response-meta', `${row.workerName} · ${row.reason}`),

@@ -27,12 +27,24 @@ Issue [#153](https://github.com/EldarSadeghi/soen287-covershift/issues/153). A m
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed (syntax and format) |
-| `npm test` | 520 / 520 passed (5 new replacement tests and one routing example) |
+| `npm test` | 521 / 521 passed (6 new replacement tests and one routing example) |
 | `npm run ai:acceptance` | 25 / 25 scenarios, 217 checks |
 | `npm run ai:eval` (offline) | 0 write-capable wrong routes; replacements 11 / 13 local (2 paraphrases left to the classifier) |
 | Evaluation set | 13 new labelled messages (292 in total); existing IDs unchanged |
 | Routing snapshot vs `main` | 427 phrases, 144 follow-ups; **no existing phrase changed** |
 | Live evaluation (user-approved) | 291 / 292 correct (99.7%), 0 unhelpful generic, 0 write-capable wrong routes; 61 classifier calls, 0 errors; replacements 13 / 13; all targets met. The one miss is an existing employee message, "my coverage decisions this week" (`e-summary-06`): the classifier chose history instead of summary. It is unrelated to this change and is read-only; it passed in the CS-064 live run |
+
+## Review clarification (Codex on #153): available vs. invitable
+
+`coverEligibility` checks only availability and conflicts. The invitation flow also checks the 14-day window, a pending invitation or claim on the shift, and whether that coworker was already invited or declined it. So the card is now explicitly a **planning** answer, with each person's invitation status alongside:
+- **Wording.** Suggestions read "N employees are available for all of [shift]". Each row says "Available for the full shift" (not "can take it"), and the excluded list is headed "Not available for this shift". The note says you can change the assignment on Schedule, and that the assignee can invite anyone marked "Can be invited now".
+- **Invitation status per suggestion**, from `invitationBlocker` in `src/cover/service.js`. This check was extracted from the invitation flow, which now uses it too, so the two can't disagree:
+  - Can be invited now
+  - Invitations are only for upcoming shifts in the next 14 days
+  - This shift already has a pending invitation or claim
+  - Already declined this shift
+  - Already invited to this shift
+- **Regression test.** For a pending invitation, a prior decline, a cancelled invitation (which no longer counts) and a shift outside the window, "Can be invited now" appears exactly when the assignee's real invitation options (`coverOptions`) list that shift for that coworker. The existing cover-invitation tests still pass.
 
 ## Browser check (fictional demo, manager Morgan Chen, America/Toronto)
 
@@ -41,7 +53,7 @@ The preview saved fictional all-day availability for Sam and Taylor on December 
 | Message | Result |
 | --- | --- |
 | Who can cover a shift on December 3? | "Which shift should I check? There are 4 on Dec 3, 2026. Reply with its title, such as "Opening service"." |
-| the opening one | Opening service (Jamie Lee): Sam Rivera (1 hour this week), then Taylor Brooks (2 hours). Alex Morgan: "Not confirmed available for the full shift" |
+| the opening one | Opening service (Jamie Lee): Sam Rivera (1 hour this week), then Taylor Brooks (2 hours). Alex Morgan: "Not confirmed available for the full shift". After the review fix, both rows also say "Can be invited now" |
 | Who can cover Alex's afternoon shift on December 3? (320px) | Afternoon coverage (Alex Morgan): Sam and Taylor suggested, Jamie excluded; no horizontal overflow |
 
 The AI allowance stayed at 5 of 5, so none of these used a paid call.
