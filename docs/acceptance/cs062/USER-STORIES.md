@@ -14,7 +14,7 @@
 
 Baseline on main at `32b3d28` after CS-061 was 482 passing tests, 23 offline scenarios with 189 checks, and 195 of 232 offline routes correct with zero incorrect write-capable routes.
 
-The branch passed 487 tests and 25 offline scenarios with 217 checks. CS-062 adds 15 labelled messages. The established case `e-clarification-10` now expects a time-off draft, since requesting time off is supported in this increment. The case ID and wording stay stable. The offline evaluation reports 205 of 247 correct, 61 classifier candidates, 42 unhelpful generic replies and zero incorrect write-capable routes. Live evaluation awaits approval.
+The branch passed 487 tests and 25 offline scenarios with 217 checks. CS-062 adds 15 labelled messages. The established case `e-clarification-10` now expects a time-off draft, since requesting time off is supported in this increment. The case ID and wording stay stable. The offline evaluation reports 205 of 247 correct, 61 classifier candidates, 42 unhelpful generic replies and zero incorrect write-capable routes. The approved live evaluation passed all targets. It routed 245 of 247 messages correctly (99.2%), including all 15 new cases. The 232 existing cases stayed at 230 correct, with no previously correct case regressing. There were no unhelpful generic replies, incorrect write-capable routes or classifier errors. The evaluation used 61 calls on the separate ledger.
 
 ## Browser evidence
 
