@@ -51,6 +51,7 @@ const assets = new Map([
   ['/ai-chat-view.js', ['ai-chat-view.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-provider.js', ['ai-chat-provider.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-send.js', ['ai-chat-send.js', 'text/javascript; charset=utf-8']],
+  ['/ai-team-availability.js', ['ai-team-availability.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-cards.js', ['ai-chat-cards.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-draft.js', ['ai-shift-draft.js', 'text/javascript; charset=utf-8']],
   ['/remove-worker.js', ['remove-worker.js', 'text/javascript; charset=utf-8']],
@@ -188,7 +189,9 @@ export function createAppServer({ store, signup = registerManager, login = authe
         requireMethod(request,response,role==='manager'||listing?'GET':'POST');
         const account=await requireAccount(store,sessions,request.headers.cookie,role),query=new URL(request.url,'http://localhost').searchParams;
         if(role==='manager'){
-          if(id||query.size!==3||!['startLocal','endLocal','timezone'].every(k=>query.getAll(k).length===1))throw new HttpError(400,'Choose only a start, end and business timezone.');
+          const period = query.size === 3 && ['startLocal','endLocal','timezone'].every(k => query.getAll(k).length === 1);
+          const day = query.size === 1 && query.has('date');
+          if(id || (query.size && !period && !day))throw new HttpError(400,'Choose only a start, end and business timezone.');
           sendJson(response,200,await teamAvailability(availabilityWindowStore,account.user.id,Object.fromEntries(query),shiftClock));return;
         }
         if(query.size)throw new HttpError(400,'Availability uses your signed-in account.');
