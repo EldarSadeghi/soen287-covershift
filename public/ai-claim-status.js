@@ -185,7 +185,7 @@ export function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, c
         const detail = config.detail(claim);
         if (detail) card.append(element('p', '', detail));
       } else {
-        message = matches?.length === 0 ? `No matching ${config.singular} found.` : `Which ${config.singular} do you mean?`;
+        message = matches?.length === 0 ? (config.noMatch?.(text) ?? `No matching ${config.singular} found.`) : `Which ${config.singular} do you mean?`;
         responseHeader(card, config.heading, message);
         const choices = matches ?? claims;
         const visible = choices.slice(0, 5);

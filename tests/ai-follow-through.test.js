@@ -11,6 +11,11 @@ import { coverOptions, sendCoverInvitation } from '../src/cover/service.js';
 import { buildDemoFixtures } from '../src/demo/fixtures.js';
 import { JsonStore } from '../src/storage/json-store.js';
 import { requestTimeOff } from '../src/time-off/service.js';
+import { createShift } from '../src/shifts/create.js';
+import {
+  coverageShiftRevision,
+  requestCoverage,
+} from '../src/requests/coverage.js';
 import { ROUTES } from '../src/ai/routing-log.js';
 import { WRITE_CAPABLE } from '../scripts/ai-eval/evaluate.js';
 import {
@@ -24,6 +29,8 @@ import {
   createCancelTimeOff,
   createInviteAnswer,
   namedCoworker,
+  requestedKinds,
+  shiftWords,
   withMonth,
 } from '../public/ai-follow-through.js';
 import { openRequestedAction } from '../public/requested-action.js';
@@ -131,6 +138,22 @@ test('reads the answer, the coworker and a bare day of the month', () => {
     withMonth('December 3rd leave', '2026-11-26'),
     'December 3rd leave',
   );
+  assert.deepEqual(
+    shiftWords('Cancel my cover request for the opening shift on Friday'),
+    ['opening'],
+  );
+  assert.deepEqual(shiftWords('my Friday’s closing shift'), ['closing']);
+  assert.deepEqual(shiftWords('the Saturday shift'), []);
+  assert.deepEqual(shiftWords('the second one'), []);
+  assert.deepEqual(requestedKinds('Cancel my claim for Friday'), ['claim']);
+  assert.deepEqual(requestedKinds('Withdraw the invitation I sent'), [
+    'invitation',
+  ]);
+  assert.deepEqual(requestedKinds('cancel my cover request'), [
+    'request',
+    'invitation',
+  ]);
+  assert.equal(requestedKinds('the Friday one'), null);
 });
 
 // A minimal DOM for rendering the chat card in Node.
@@ -232,6 +255,30 @@ test('chat finds only the employee’s own items and links to their confirmation
       clock,
     )
   ).request;
+  // Codex review on #156: Taylor has exactly one cancellable cover request
+  // (Closing service on Friday) and no claims or sent invitations.
+  await createShift(
+    store,
+    'manager_morgan',
+    {
+      title: 'Closing service',
+      assignedWorkerId: 'worker_taylor',
+      startLocal: '2026-12-04T17:00',
+      endLocal: '2026-12-04T22:00',
+    },
+    clock,
+  );
+  db = await store.read();
+  const closing = db.shifts.find((shift) => shift.title === 'Closing service');
+  const closingRequest = (
+    await requestCoverage(
+      store,
+      'worker_taylor',
+      closing.id,
+      { revision: coverageShiftRevision(db, closing) },
+      clock,
+    )
+  ).request;
   db = await store.read();
   const before = JSON.stringify(db);
 
@@ -306,12 +353,20 @@ test('chat finds only the employee’s own items and links to their confirmation
   );
   assert.equal(reply.message, 'Which invitation do you mean?');
   assert.equal(reply.buttons.length, 2);
+  // Both were sent at the same moment, so read which one is listed second.
+  const second = /Afternoon coverage/.test(reply.buttons[1].textContent)
+    ? fromAlex
+    : fromJamie;
+  assert.match(reply.buttons[1].textContent, /^2\. /);
+  // "the closing one" describes neither invitation, so nothing is picked.
+  assert.equal(reply.lookup.choiceReply('the closing one'), null);
   const picked = reply.lookup.choiceReply('the second one');
-  assert.equal(picked, fromAlex.id);
+  assert.equal(picked, second.id);
   await reply.lookup.loadChoice(picked);
   assert.deepEqual(reply.answer().hrefs, [
-    `/workspace/worker/cover?invitation=${fromAlex.id}&action=accept`,
+    `/workspace/worker/cover?invitation=${second.id}&action=accept`,
   ]);
+
   // The sender sees nothing to answer.
   assert.equal(
     (
@@ -357,9 +412,53 @@ test('chat finds only the employee’s own items and links to their confirmation
   assert.match(reply.message, /can’t be withdrawn in CoverShift/);
   assert.deepEqual(reply.hrefs, ['/workspace/worker/requests']);
   assert.equal(
-    (await ask('worker_taylor', createCancelCover, 'cancel my cover request'))
+    (await ask('worker_sam', createCancelCover, 'cancel my cover request'))
       .message,
     'You have no pending cover requests or invitations to cancel.',
+  );
+  // The kind and the shift asked for must match; otherwise no cancel link.
+  for (const [text, message] of [
+    ['Cancel my claim for Friday', 'No matching claim found.'],
+    [
+      'Withdraw the invitation I sent',
+      'No matching invitation you sent was found.',
+    ],
+    [
+      'Cancel my cover request for the opening shift on Friday',
+      'No matching cover request found.',
+    ],
+    [
+      'Cancel my cover request for the morning shift on Friday',
+      'No matching cover request found.',
+    ],
+  ]) {
+    reply = await ask('worker_taylor', createCancelCover, text);
+    assert.equal(reply.message, message, text);
+    assert.ok(
+      reply.hrefs.every((href) => !href.includes('action=')),
+      text,
+    );
+  }
+  for (const text of [
+    'Cancel my cover request for the closing shift on Friday',
+    'cancel my Friday evening cover request',
+    'cancel my cover request',
+  ])
+    assert.deepEqual(
+      (await ask('worker_taylor', createCancelCover, text)).hrefs,
+      [`/workspace/worker/requests?request=${closingRequest.id}&action=cancel`],
+      text,
+    );
+  // Invitations are narrowed by the shift too.
+  assert.equal(
+    (
+      await ask(
+        'worker_sam',
+        createInviteAnswer,
+        'accept the invite for the closing shift',
+      )
+    ).message,
+    'No matching invitation found.',
   );
 
   // Cancel time off, read as December 24.

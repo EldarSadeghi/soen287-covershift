@@ -103,12 +103,72 @@ function byPerson(records, text, person) {
   });
 }
 
+// Words that place a shift in time rather than name it.
+const NOT_TITLE =
+  /^(?:the|my|a|an|this|that|next|last|today|tomorrow|tonight|(?:mon|tues|wednes|thurs|fri|satur|sun)day|january|february|march|april|may|june|july|august|september|october|november|december|\d+(?:st|nd|rd|th)?|first|second|third|fourth|fifth|one|shifts?)$/i;
+const DAY_PARTS = {
+  morning: [0, 12],
+  afternoon: [12, 17],
+  evening: [17, 24],
+  night: [17, 24],
+};
+
+// The words describing the shift: "the opening shift on Friday" → opening,
+// "my Friday closing shift" → closing, "the morning one" → morning.
+export function shiftWords(text) {
+  const match =
+    /\b(?:the|my|this|that)\s+((?:[\p{L}\d'’-]+\s+){1,3}?)(?:shift|one)s?\b/iu.exec(
+      text,
+    );
+  if (!match) return [];
+  return match[1]
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.replace(/['’]s$/i, '').toLowerCase())
+    .filter((word) => !NOT_TITLE.test(word));
+}
+
+// Keeps records whose shift fits every described word: in its title, or a
+// part of the day it starts in. Never falls back to other shifts.
+function byShiftWords(records, text, timezone) {
+  const words = shiftWords(text);
+  if (!words.length) return records;
+  return records.filter(({ shift }) => {
+    const title = shift.title.toLowerCase();
+    const hour = Number(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour: 'numeric',
+        hourCycle: 'h23',
+      }).format(new Date(shift.startsAt)),
+    );
+    return words.every(
+      (word) =>
+        title.split(/\s+/).some((part) => part.startsWith(word)) ||
+        (DAY_PARTS[word] &&
+          hour >= DAY_PARTS[word][0] &&
+          hour < DAY_PARTS[word][1]),
+    );
+  });
+}
+
 function shiftMatches(person) {
   return (data, text) => {
     const today = localDay(data.asOf, data.timezone);
     const dated = matchingClaims(data, withMonth(text, today));
-    return dated && byPerson(dated, text, person);
+    return (
+      dated && byShiftWords(byPerson(dated, text, person), text, data.timezone)
+    );
   };
+}
+
+// Which kind of record a cancel message names: a claim, an invitation, or a
+// cover request (which may be either a board request or an invitation).
+export function requestedKinds(text) {
+  if (/\bclaims?\b/i.test(text)) return ['claim'];
+  if (/\binvit(?:e|es|ation|ations)\b/i.test(text)) return ['invitation'];
+  if (/\brequests?\b/i.test(text)) return ['request', 'invitation'];
+  return null; // A reply such as "the Friday one" keeps the listed kinds.
 }
 
 const pageLink = (path, key, id, action) =>
@@ -219,7 +279,25 @@ export function createCancelCover(view, userId) {
   return createStatusLookup(view, {
     fetch: (text) => cancellableCover(userId, text),
     list: (data) => data.items,
-    match: shiftMatches((item) => item.person),
+    // Only the kind of record asked for, so "cancel my claim" never offers a
+    // cover request (Codex review on #156).
+    match: (data, text) => {
+      const kinds = requestedKinds(text);
+      return shiftMatches((item) => item.person)(
+        {
+          ...data,
+          claims: kinds
+            ? data.claims.filter((item) => kinds.includes(item.kind))
+            : data.claims,
+        },
+        text,
+      );
+    },
+    noMatch: (text) =>
+      ({
+        claim: 'No matching claim found.',
+        invitation: 'No matching invitation you sent was found.',
+      })[requestedKinds(text)?.[0]] ?? 'No matching cover request found.',
     format: formatStatusShift,
     singular: 'request',
     plural: 'requests',
