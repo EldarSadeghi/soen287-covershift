@@ -20,6 +20,7 @@ import {
   DATE_QUESTION,
   renderReplacements,
   replacementQuery,
+  replacementContext,
   replacementWorker,
 } from '../public/ai-replacements.js';
 import { resolveChatTarget, routeChat } from '../public/ai-chat-routing.js';
@@ -724,4 +725,27 @@ test('the card lists suggestions, exclusions and honest empty states', () => {
   } finally {
     globalThis.document = original;
   }
+});
+
+test('a date reply followed by a shift title retains the original assignee', () => {
+  const original = 'Who can cover Jamie’s shift?';
+  const today = '2026-11-27';
+  const datePrompt = replacementQuery(original, today).question;
+  const messages = [
+    { topic: 'replacements', text: original },
+    { topic: 'replacements', text: datePrompt },
+    { topic: 'replacements', text: 'Friday' },
+    { topic: 'replacements', text: 'Which shift should I check? There are 2.' },
+  ];
+  const { question, dateReply } = replacementContext(messages);
+  assert.deepEqual(
+    replacementQuery(question, today, 'the opening one', dateReply).params,
+    {
+      kind: 'replacements',
+      from: '2026-12-04',
+      through: '2026-12-04',
+      title: 'opening',
+      worker: 'Jamie',
+    },
+  );
 });

@@ -30,8 +30,15 @@ const status = {
   approved: 'Covered',
 };
 
-export function managerLookupQuery(kind, text, today, dateReply = null) {
-  if (kind === 'replacements') return replacementQuery(text, today, dateReply);
+export function managerLookupQuery(
+  kind,
+  text,
+  today,
+  dateReply = null,
+  priorDate = null,
+) {
+  if (kind === 'replacements')
+    return replacementQuery(text, today, dateReply, priorDate);
   if (INSIGHT_KINDS.includes(kind))
     return insightQuery(kind, text, today, dateReply);
   const params = { kind };

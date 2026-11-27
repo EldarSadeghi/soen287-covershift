@@ -74,14 +74,31 @@ function replyTitle(reply) {
   return words || null;
 }
 
+// Walk the pending clarification chain to recover the original question
+// and the last date reply. Stop at the previous completed lookup or topic.
+export function replacementContext(messages) {
+  let index = messages.length - 2;
+  let dateReply = null;
+  while (index >= 2) {
+    const prompt = messages[index - 1];
+    const answer = messages[index];
+    if (prompt.topic !== 'replacements' || answer.topic !== 'replacements')
+      break;
+    if (prompt.text.startsWith(DATE_QUESTION)) dateReply ??= answer.text;
+    else if (!prompt.text.startsWith(SHIFT_QUESTION)) break;
+    index -= 2;
+  }
+  return { question: messages[index]?.text, dateReply };
+}
+
 /**
  * The lookup for a question. `reply` answers an earlier "Which date…" or
  * "Which shift…" question: a date replaces the date, other words name the
  * shift. The employee and title otherwise come from the question in `text`.
  */
-export function replacementQuery(text, today, reply = null) {
+export function replacementQuery(text, today, reply = null, priorDate = null) {
   const replyDate = reply && coworkerLookupDate(reply, today);
-  const day = replyDate || coworkerLookupDate(text, today);
+  const day = replyDate || coworkerLookupDate(priorDate ?? text, today);
   if (!day) return { question: DATE_QUESTION };
   const title =
     reply && !replyDate ? replyTitle(reply) : historyTitle(text) || null;

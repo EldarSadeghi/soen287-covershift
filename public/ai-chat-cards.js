@@ -386,14 +386,25 @@ export function createChatCards({
     return showCard(() => renderHelp(card, CAPABILITIES, manager));
   }
 
-  async function showManagerLookup(kind, text, dateReply = null) {
+  async function showManagerLookup(
+    kind,
+    text,
+    dateReply = null,
+    priorDate = null,
+  ) {
     const endpoint = '/api/manager/chat-lookup';
     card.hidden = true;
     working(true);
     try {
       const context = await loadLookupData(endpoint);
       if (!context) return;
-      const query = managerLookupQuery(kind, text, context.today, dateReply);
+      const query = managerLookupQuery(
+        kind,
+        text,
+        context.today,
+        dateReply,
+        priorDate,
+      );
       if (query.question) {
         outcomeText(query.question);
         return;
