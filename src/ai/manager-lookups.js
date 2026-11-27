@@ -8,6 +8,7 @@ import {
 import { managerBusiness } from '../shifts/create.js';
 import { listTimeOff } from '../time-off/service.js';
 import { coverageGaps, shiftHistory, teamHours } from './manager-insights.js';
+import { replacementSuggestions } from './replacements.js';
 
 const kinds = new Set([
   'teamTimeOff',
@@ -16,6 +17,7 @@ const kinds = new Set([
   'teamHours',
   'coverageGaps',
   'shiftHistory',
+  'replacements',
 ]);
 const HOURS_FOCUS = new Set([
   'most',
@@ -54,8 +56,15 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
     !kinds.has(kind) ||
     [...query.keys()].some(
       (key) =>
-        !['kind', 'from', 'through', 'title', 'focus', 'hours'].includes(key) ||
-        query.getAll(key).length !== 1,
+        ![
+          'kind',
+          'from',
+          'through',
+          'title',
+          'focus',
+          'hours',
+          'worker',
+        ].includes(key) || query.getAll(key).length !== 1,
     )
   ) {
     throw new HttpError(422, 'Choose a supported manager lookup.');
@@ -69,13 +78,31 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
     (from && through < from) ||
     (!from && through) ||
     (query.has('title') &&
-      (!['coverageStatus', 'shiftHistory'].includes(kind) ||
+      (!['coverageStatus', 'shiftHistory', 'replacements'].includes(kind) ||
         !title ||
         title.length > 120))
   ) {
     throw new HttpError(422, 'Choose an ordered date range or a shift title.');
   }
   const metadata = { kind, timezone, asOf, from, through };
+
+  if (kind === 'replacements') {
+    const worker = query.get('worker')?.trim();
+    if (!from || from !== through)
+      throw new HttpError(422, 'Choose the date of the shift to cover.');
+    if (query.has('focus') || query.has('hours'))
+      throw new HttpError(422, 'Choose a supported manager lookup.');
+    if (query.has('worker') && (!worker || worker.length > 80))
+      throw new HttpError(422, 'Choose the employee whose shift needs cover.');
+    return {
+      ...metadata,
+      title: query.get('title'),
+      worker: query.get('worker'),
+      ...replacementSuggestions(db, business, { from, title, worker }, now),
+    };
+  }
+  if (query.has('worker'))
+    throw new HttpError(422, 'Choose a supported manager lookup.');
 
   if (['teamHours', 'coverageGaps', 'shiftHistory'].includes(kind)) {
     if (!from) throw new HttpError(422, 'Choose a date or period to check.');

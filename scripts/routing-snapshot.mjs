@@ -70,6 +70,21 @@ const EXTRA = [
 // CS-065 manager insights and their look-alikes.
 // CS-064 help questions, blocked commands and look-alikes that must keep
 // their own routes.
+// CS-066 replacement questions and look-alikes that keep their routes.
+const REPLACEMENTS = [
+  'who can cover Jamie\u2019s Friday shift?',
+  'who could replace Sam on Saturday',
+  'find a replacement for the Dec 5 closing shift',
+  'who is free to take Alex\u2019s shift tomorrow',
+  'is there anyone who can cover the Saturday close?',
+  'who can cover?',
+  'who is working Friday',
+  'who\u2019s free Friday',
+  'who can work Friday',
+  'who covered Jamie\u2019s shift',
+  'who is covering Saturday',
+];
+
 const HELP = [
   'how do I request time off?',
   'how do I give away my shift?',
@@ -261,6 +276,7 @@ export async function buildSnapshot() {
       ...EXTRA,
       ...INSIGHTS,
       ...HELP,
+      ...REPLACEMENTS,
       ...auditPrompts,
     ]),
   ];

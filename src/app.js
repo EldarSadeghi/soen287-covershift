@@ -170,6 +170,10 @@ const assets = new Map([
     ['ai-manager-insights.js', 'text/javascript; charset=utf-8'],
   ],
   ['/ai-help.js', ['ai-help.js', 'text/javascript; charset=utf-8']],
+  [
+    '/ai-replacements.js',
+    ['ai-replacements.js', 'text/javascript; charset=utf-8'],
+  ],
   ['/ai-shift-edit.js', ['ai-shift-edit.js', 'text/javascript; charset=utf-8']],
   [
     '/ai-team-availability.js',

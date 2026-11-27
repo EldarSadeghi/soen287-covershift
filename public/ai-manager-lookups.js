@@ -7,6 +7,7 @@ import {
   insightQuery,
   renderInsight,
 } from './ai-manager-insights.js';
+import { renderReplacements, replacementQuery } from './ai-replacements.js';
 
 const views = {
   teamTimeOff: [
@@ -30,6 +31,7 @@ const status = {
 };
 
 export function managerLookupQuery(kind, text, today, dateReply = null) {
+  if (kind === 'replacements') return replacementQuery(text, today, dateReply);
   if (INSIGHT_KINDS.includes(kind))
     return insightQuery(kind, text, today, dateReply);
   const params = { kind };
@@ -87,6 +89,7 @@ export function managerLookupQuery(kind, text, today, dateReply = null) {
 }
 
 export function renderManagerLookup(card, data) {
+  if (data.kind === 'replacements') return renderReplacements(card, data);
   if (INSIGHT_KINDS.includes(data.kind)) return renderInsight(card, data);
   const [label, page, linkLabel, empty] = views[data.kind];
   const dateRange = data.from

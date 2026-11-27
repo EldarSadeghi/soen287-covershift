@@ -3,7 +3,7 @@ import { aiConfigured, responsesBody, structuredResponse } from './structured-re
 import { validateChatInput } from './shift-draft.js';
 
 const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft', 'help'];
-const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'help'];
+const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'replacements', 'help'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
 // the evaluation measures generalisation rather than memorised answers.
@@ -35,6 +35,7 @@ summary = what needs the manager's attention: pending approvals, unfilled covera
 teamHours = comparing scheduled hours across employees: most, fewest, under or over a number, near overtime ("is anybody getting too many hours", "who's light on hours in a fortnight").
 coverageGaps = upcoming shifts that are not safely staffed, including ones clashing with time off ("where am I short-handed next week").
 shiftHistory = what happened to a specific shift over time: requests, claims, approvals ("walk me through the Sunday brunch shift's changes").
+replacements = who could take or cover one specific shift instead of the assigned employee ("I need somebody to step in for Priya on the Sunday close").
 help = how to use CoverShift itself, why the app doesn't allow something, or what a status word means ("which screen lets me bring on a new hire", "what's the point of the publish step"). Questions about the team's records are not help.`,
 };
 

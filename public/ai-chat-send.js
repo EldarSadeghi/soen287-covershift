@@ -343,7 +343,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       const continuing =
         previousTopic === target &&
         routed === 'clarification' &&
-        /^Which date/.test(previous.text) &&
+        /^Which (?:date|shift)/.test(previous.text) &&
         earlier;
       say('user', text);
       appendTurn('I’ll check the saved records.');
