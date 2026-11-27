@@ -233,6 +233,26 @@ const groups = {
       'How many shifts remain unpublished in the next period?',
       'Can employees see the upcoming rota yet?',
     ],
+    // CS-065 manager insights.
+    teamHours: [
+      'Who has the most hours scheduled next week?',
+      'Which employees are under 15 hours this week?',
+      'Is anyone close to overtime next week?',
+      'Show hours per employee for this week.',
+      'Who is being given too few shifts compared with everyone else?',
+    ],
+    coverageGaps: [
+      'Are there any coverage gaps this week?',
+      'Show unfilled shifts for the next two weeks.',
+      'Which shifts are affected by time off next week?',
+      'Where are we short-staffed over the coming days?',
+    ],
+    shiftHistory: [
+      'What happened with Sunday\u2019s brunch shift?',
+      'Show the history of the December 6 closing shift.',
+      'What is the history for Thursday\u2019s delivery shift?',
+      'Walk me through everything that changed on Tuesday\u2019s opening shift.',
+    ],
     questions: [
       'Who is working tomorrow?',
       'show the team schedule for next week',

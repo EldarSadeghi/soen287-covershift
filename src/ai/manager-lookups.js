@@ -7,8 +7,24 @@ import {
 } from '../schedules/publication.js';
 import { managerBusiness } from '../shifts/create.js';
 import { listTimeOff } from '../time-off/service.js';
+import { coverageGaps, shiftHistory, teamHours } from './manager-insights.js';
 
-const kinds = new Set(['teamTimeOff', 'coverageStatus', 'publicationStatus']);
+const kinds = new Set([
+  'teamTimeOff',
+  'coverageStatus',
+  'publicationStatus',
+  'teamHours',
+  'coverageGaps',
+  'shiftHistory',
+]);
+const HOURS_FOCUS = new Set([
+  'most',
+  'fewest',
+  'under',
+  'over',
+  'overtime',
+  'all',
+]);
 
 function validateDate(date) {
   const instant = Date.parse(date + 'T12:00Z');
@@ -38,7 +54,7 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
     !kinds.has(kind) ||
     [...query.keys()].some(
       (key) =>
-        !['kind', 'from', 'through', 'title'].includes(key) ||
+        !['kind', 'from', 'through', 'title', 'focus', 'hours'].includes(key) ||
         query.getAll(key).length !== 1,
     )
   ) {
@@ -53,11 +69,46 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
     (from && through < from) ||
     (!from && through) ||
     (query.has('title') &&
-      (kind !== 'coverageStatus' || !title || title.length > 120))
+      (!['coverageStatus', 'shiftHistory'].includes(kind) ||
+        !title ||
+        title.length > 120))
   ) {
     throw new HttpError(422, 'Choose an ordered date range or a shift title.');
   }
   const metadata = { kind, timezone, asOf, from, through };
+
+  if (['teamHours', 'coverageGaps', 'shiftHistory'].includes(kind)) {
+    if (!from) throw new HttpError(422, 'Choose a date or period to check.');
+    if (kind === 'shiftHistory' && from !== through)
+      throw new HttpError(422, 'Choose one date for shift history.');
+    if (kind !== 'teamHours' && (query.has('focus') || query.has('hours')))
+      throw new HttpError(422, 'Choose a supported manager lookup.');
+    if (kind === 'teamHours') {
+      const focus = query.get('focus') ?? 'all';
+      const threshold = Number(query.get('hours'));
+      const needsHours = ['under', 'over'].includes(focus);
+      if (
+        !HOURS_FOCUS.has(focus) ||
+        needsHours !== query.has('hours') ||
+        (needsHours &&
+          (!Number.isInteger(threshold) || threshold < 1 || threshold > 168))
+      )
+        throw new HttpError(
+          422,
+          'Choose who to compare, such as under 20 hours.',
+        );
+      return {
+        ...metadata,
+        ...teamHours(db, business, { from, through, focus, threshold }),
+      };
+    }
+    const lookup = kind === 'coverageGaps' ? coverageGaps : shiftHistory;
+    return {
+      ...metadata,
+      ...(kind === 'shiftHistory' && { title: query.get('title') }),
+      ...(await lookup(db, business, userId, { from, through, title }, now)),
+    };
+  }
 
   if (kind === 'publicationStatus') {
     if (from !== through)

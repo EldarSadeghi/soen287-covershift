@@ -67,6 +67,32 @@ const EXTRA = [
   '   ',
 ];
 
+// CS-065 manager insights and their look-alikes.
+const INSIGHTS = [
+  'who has the most hours this week?',
+  'who is working the fewest hours next week',
+  'who\u2019s under 20 hours next week?',
+  'who is over 30 hours',
+  'which employees are under 25 hours this week',
+  'who\u2019s close to overtime?',
+  'is anyone close to overtime this week',
+  'show hours by employee',
+  'who is getting too many shifts this week',
+  'who\u2019s given too few hours',
+  'hours per employee next week',
+  'any coverage gaps next week?',
+  'show uncovered shifts this week',
+  'are there any gaps in the schedule tomorrow',
+  'which shifts are affected by time off',
+  'what happened with Saturday\u2019s closing shift?',
+  'show me the history of the December 5 opening shift',
+  'what is the history for Friday\u2019s delivery shift',
+  'how many hours is Jamie working this week',
+  'how many hours has the team got scheduled next week',
+  'which shifts need cover this week?',
+  'who covered the delivery shift on December 15',
+];
+
 function probe(text) {
   const row = {};
   for (const manager of [false, true]) {
@@ -186,8 +212,21 @@ export async function buildSnapshot() {
   const { messages } = JSON.parse(
     await readFile(new URL('./ai-eval/messages.json', import.meta.url), 'utf8'),
   );
+  // Release audit prompts (docs/acceptance/ai-release-audit/probes.mjs).
+  const audit = await readFile(
+    new URL('../docs/acceptance/ai-release-audit/probes.mjs', import.meta.url),
+    'utf8',
+  );
+  const auditPrompts = [...audit.matchAll(/\['[EM]','((?:[^'\\]|\\.)*)'/g)].map(
+    (match) => match[1],
+  );
   const corpus = [
-    ...new Set([...messages.map((row) => row.message), ...EXTRA]),
+    ...new Set([
+      ...messages.map((row) => row.message),
+      ...EXTRA,
+      ...INSIGHTS,
+      ...auditPrompts,
+    ]),
   ];
   return {
     version: 1,

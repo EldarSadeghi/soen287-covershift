@@ -1100,6 +1100,84 @@
       "message": "Can employees see the upcoming rota yet?"
     },
     {
+      "id": "m-teamHours-01",
+      "role": "manager",
+      "expected": "teamHours",
+      "message": "Who has the most hours scheduled next week?"
+    },
+    {
+      "id": "m-teamHours-02",
+      "role": "manager",
+      "expected": "teamHours",
+      "message": "Which employees are under 15 hours this week?"
+    },
+    {
+      "id": "m-teamHours-03",
+      "role": "manager",
+      "expected": "teamHours",
+      "message": "Is anyone close to overtime next week?"
+    },
+    {
+      "id": "m-teamHours-04",
+      "role": "manager",
+      "expected": "teamHours",
+      "message": "Show hours per employee for this week."
+    },
+    {
+      "id": "m-teamHours-05",
+      "role": "manager",
+      "expected": "teamHours",
+      "message": "Who is being given too few shifts compared with everyone else?"
+    },
+    {
+      "id": "m-coverageGaps-01",
+      "role": "manager",
+      "expected": "coverageGaps",
+      "message": "Are there any coverage gaps this week?"
+    },
+    {
+      "id": "m-coverageGaps-02",
+      "role": "manager",
+      "expected": "coverageGaps",
+      "message": "Show unfilled shifts for the next two weeks."
+    },
+    {
+      "id": "m-coverageGaps-03",
+      "role": "manager",
+      "expected": "coverageGaps",
+      "message": "Which shifts are affected by time off next week?"
+    },
+    {
+      "id": "m-coverageGaps-04",
+      "role": "manager",
+      "expected": "coverageGaps",
+      "message": "Where are we short-staffed over the coming days?"
+    },
+    {
+      "id": "m-shiftHistory-01",
+      "role": "manager",
+      "expected": "shiftHistory",
+      "message": "What happened with Sunday’s brunch shift?"
+    },
+    {
+      "id": "m-shiftHistory-02",
+      "role": "manager",
+      "expected": "shiftHistory",
+      "message": "Show the history of the December 6 closing shift."
+    },
+    {
+      "id": "m-shiftHistory-03",
+      "role": "manager",
+      "expected": "shiftHistory",
+      "message": "What is the history for Thursday’s delivery shift?"
+    },
+    {
+      "id": "m-shiftHistory-04",
+      "role": "manager",
+      "expected": "shiftHistory",
+      "message": "Walk me through everything that changed on Tuesday’s opening shift."
+    },
+    {
       "id": "m-questions-01",
       "role": "manager",
       "expected": "questions",
