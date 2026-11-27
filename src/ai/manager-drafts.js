@@ -1,3 +1,7 @@
+import {
+  matchesRecordName,
+  matchesShiftTitle,
+} from '../../public/record-matching.js';
 // Manager drafts prepared from chat (CS-068). Read-only: these build what the
 // manager reviews; saving goes through the existing batch save or the
 // Schedule edit form, with their usual checks.
@@ -119,21 +123,13 @@ export function copyWeekDraft(db, business, { source, target }, now) {
  */
 export function dutyShift(db, business, { from, title, worker }, now) {
   const { timezone } = business;
-  const word = title?.trim().toLowerCase();
-  const person = worker?.trim().toLowerCase();
   const matches = visibleShifts(db, business)
-    .filter((shift) => {
-      const name = nameOf(db, shift.assignedWorkerId).toLowerCase();
-      return (
+    .filter(
+      (shift) =>
         localDate(shift.startsAt, timezone) === from &&
-        (!word ||
-          shift.title
-            .toLowerCase()
-            .split(/\s+/)
-            .some((part) => part.startsWith(word))) &&
-        (!person || name === person || name.split(/\s+/).includes(person))
-      );
-    })
+        matchesShiftTitle(shift.title, title) &&
+        matchesRecordName(nameOf(db, shift.assignedWorkerId), worker),
+    )
     .sort(
       (a, b) =>
         a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id),

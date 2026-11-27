@@ -2,7 +2,7 @@
 // a shift. The chat only prepares each one. The manager reviews and saves it
 // on Team, in the batch review or in the Schedule edit form, which keep their
 // own checks. No paid AI call is made.
-import { coworkerLookupDate } from './ai-chat-routing.js';
+import { recordDate } from './record-matching.js';
 import { sendEditToSchedule } from './ai-shift-edit.js';
 import {
   checkedMeta,
@@ -12,7 +12,6 @@ import {
 } from './ai-response-card.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
-import { withMonth } from './ai-follow-through.js';
 
 export const DUTY_DATE_QUESTION =
   'Which date’s shift should I add it to? Say a day such as Friday or December 5.';
@@ -158,7 +157,7 @@ function weekIn(part, today, previous) {
     return plusDays(afterNext ? base : (previous ?? base), afterNext ? 14 : 7);
   }
   if (!dated) return null;
-  const day = coworkerLookupDate(withMonth(rest, today), today);
+  const day = recordDate(rest, today);
   return day ? monday(day) : undefined;
 }
 
@@ -270,9 +269,9 @@ export function dutyText(text) {
   return { duty: '', rest: text };
 }
 
-/** Title word and employee from "Friday's opening shift", "Jamie Lee's Friday shift". */
+/** Shift title and employee from "Friday's opening shift", "Jamie Lee's Friday shift". */
 export function dutyShiftWords(rest) {
-  const match = /((?:[\p{L}'’-]+\s+){1,4})shifts?\b/iu.exec(rest);
+  const match = /((?:[\p{L}'’-]+\s+)+)shifts?\b/iu.exec(rest);
   if (!match) return { title: null, worker: null };
   let words = [];
   let worker = null;
@@ -290,7 +289,7 @@ export function dutyShiftWords(rest) {
     }
     if (!DATE_WORD.test(word)) words.push(word);
   }
-  return { title: words.at(-1)?.toLowerCase() ?? null, worker };
+  return { title: words.join(' ').toLowerCase() || null, worker };
 }
 
 /** The lookup to run for a duty request, or the question to ask instead. */
@@ -299,7 +298,7 @@ export function dutyQuery(text, today) {
   if (!duty) return { question: DUTY_TEXT_QUESTION };
   if (duty.length > MAX_DUTY)
     return { question: `Shorten the duty to ${MAX_DUTY} characters or fewer.` };
-  const from = coworkerLookupDate(rest, today);
+  const from = recordDate(rest, today);
   if (!from) return { question: DUTY_DATE_QUESTION, duty };
   const { title, worker } = dutyShiftWords(rest);
   return {

@@ -1,3 +1,7 @@
+import {
+  matchesRecordName,
+  matchesShiftTitle,
+} from '../../public/record-matching.js';
 // Replacement suggestions for managers in chat (CS-066): who is available
 // for the whole shift (the availability and conflict rule cover invitations
 // use, coverEligibility), ranked by scheduled hours that week. Each also says
@@ -68,20 +72,13 @@ export function replacementSuggestions(
   { from, title, worker },
   now,
 ) {
-  const word = title?.trim().toLowerCase();
-  const person = worker?.trim().toLowerCase();
   const shifts = db.shifts
     .filter(
       (shift) =>
         shift.businessId === business.id &&
         localDate(shift.startsAt, business.timezone) === from &&
-        (!word || shift.title.toLowerCase().includes(word)) &&
-        (!person ||
-          nameOf(db, shift.assignedWorkerId)
-            .toLowerCase()
-            .split(/\s+/)
-            .some((part) => part === person) ||
-          nameOf(db, shift.assignedWorkerId).toLowerCase() === person),
+        matchesShiftTitle(shift.title, title) &&
+        matchesRecordName(nameOf(db, shift.assignedWorkerId), worker),
     )
     .sort(
       (a, b) =>

@@ -1,6 +1,6 @@
 // Replacement suggestions in chat (CS-066): reads the shift from a manager's
 // question and shows who could take it. Read-only: nothing is sent or saved.
-import { coworkerLookupDate } from './ai-chat-routing.js';
+import { recordDate } from './record-matching.js';
 import { historyTitle } from './ai-manager-insights.js';
 import { checkedMeta, localDate, responseHeader } from './ai-response-card.js';
 import { element } from './shift-card.js';
@@ -97,8 +97,8 @@ export function replacementContext(messages) {
  * shift. The employee and title otherwise come from the question in `text`.
  */
 export function replacementQuery(text, today, reply = null, priorDate = null) {
-  const replyDate = reply && coworkerLookupDate(reply, today);
-  const day = replyDate || coworkerLookupDate(priorDate ?? text, today);
+  const replyDate = reply && recordDate(reply, today);
+  const day = replyDate || recordDate(priorDate ?? text, today);
   if (!day) return { question: DATE_QUESTION };
   const title =
     reply && !replyDate ? replyTitle(reply) : historyTitle(text) || null;

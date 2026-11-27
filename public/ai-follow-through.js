@@ -10,26 +10,15 @@ import {
   matchingClaims,
   matchingTimeOff,
 } from './ai-claim-status.js';
+import {
+  matchesRecordName,
+  matchesShiftTitle,
+  withMonth,
+} from './record-matching.js';
+export { withMonth } from './record-matching.js';
 import { nameAt } from './ai-replacements.js';
 import { requestJSON } from './request.js';
 import { timeOffRange } from './time-off.js';
-
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-const MONTH_WORD =
-  /\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b|\b20\d{2}-\d{2}-\d{2}\b/i;
 
 function localDay(value, timezone) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -41,23 +30,6 @@ function localDay(value, timezone) {
   return ['year', 'month', 'day']
     .map((key) => parts.find((part) => part.type === key).value)
     .join('-');
-}
-
-// "the 24th" with no month means the next 24th, this month or next.
-export function withMonth(text, today) {
-  if (MONTH_WORD.test(text)) return text;
-  return text.replace(
-    /\b(?:the )?(\d{1,2})(?:st|nd|rd|th)\b/i,
-    (whole, number) => {
-      const day = Number(number);
-      if (day < 1 || day > 31) return whole;
-      const month =
-        Number(today.slice(5, 7)) -
-        1 +
-        (day < Number(today.slice(8, 10)) ? 1 : 0);
-      return `${MONTHS[month % 12]} ${day}`;
-    },
-  );
 }
 
 // The coworker the message names: "Alex asked me", "Jamie's invite",
@@ -92,15 +64,8 @@ export function namedCoworker(text) {
 
 // Narrows to records whose coworker has that name; never falls back to others.
 function byPerson(records, text, person) {
-  const wanted = namedCoworker(text)?.toLocaleLowerCase();
-  if (!wanted) return records;
-  return records.filter((record) => {
-    const name = (person(record) || '').toLocaleLowerCase();
-    return (
-      name === wanted ||
-      (!wanted.includes(' ') && name.split(/\s+/).includes(wanted))
-    );
-  });
+  const wanted = namedCoworker(text);
+  return records.filter((record) => matchesRecordName(person(record), wanted));
 }
 
 // Words that place a shift in time rather than name it.
@@ -136,7 +101,6 @@ function byShiftWords(records, text, timezone) {
   const words = shiftWords(text);
   if (!words.length) return records;
   return records.filter(({ shift }) => {
-    const title = shift.title.toLowerCase();
     const hour = Number(
       new Intl.DateTimeFormat('en-US', {
         timeZone: timezone,
@@ -146,7 +110,7 @@ function byShiftWords(records, text, timezone) {
     );
     return words.every(
       (word) =>
-        title.split(/\s+/).some((part) => part.startsWith(word)) ||
+        matchesShiftTitle(shift.title, word) ||
         (DAY_PARTS[word] &&
           hour >= DAY_PARTS[word][0] &&
           hour < DAY_PARTS[word][1]),
