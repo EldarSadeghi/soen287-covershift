@@ -229,3 +229,42 @@ test('fix: cancelling a shift is blocked, cancelling rules or requests is not', 
     false,
   );
 });
+
+test('fix: a shift cancellation stays blocked whatever reason follows (Codex review)', () => {
+  const reasons = [
+    'Cancel my shift because my availability changed',
+    'cancel my shift since I have time off',
+    'cancel my shift as my leave was approved',
+    'please cancel my Friday shift due to a rule change',
+    'cancel Jamie\u2019s Friday shift since her availability changed',
+  ];
+  for (const text of reasons) {
+    for (const manager of [false, true]) {
+      assert.equal(
+        requestsUnsupportedAction(text, manager),
+        true,
+        `${text} (${manager ? 'manager' : 'employee'})`,
+      );
+      assert.equal(routeChat(text, manager, null), 'clarification', text);
+      assert.equal(
+        chatClarification(text, manager),
+        UNSUPPORTED_ACTION_MESSAGE,
+        text,
+      );
+    }
+  }
+  // Only what is being cancelled matters: rules, claims and requests are not blocked here.
+  for (const text of [
+    'cancel the saved availability rule for Friday',
+    'cancel my availability for the closing shift',
+    'cancel my claim for Friday\u2019s shift',
+    'cancel my cover request for the Saturday shift',
+    'cancel my time off request for the shift on Friday',
+  ]) {
+    assert.equal(requestsUnsupportedAction(text, false), false, text);
+  }
+  assert.equal(
+    routeChat('cancel the saved availability rule for Friday', false, null),
+    'rules',
+  );
+});

@@ -8,7 +8,7 @@ Issue [#147](https://github.com/EldarSadeghi/soen287-covershift/issues/147). Fol
 
 ## What changed
 
-- **Routing snapshot.** `tests/routing-snapshot.test.js` and `scripts/routing-snapshot.mjs` record what every routing function returns for 279 phrases (the 247 evaluation messages plus edge cases), for both roles, and 144 multi-turn follow-ups.
+- **Routing snapshot.** `tests/routing-snapshot.test.js` and `scripts/routing-snapshot.mjs` record what every routing function returns for 288 phrases (the 247 evaluation messages plus edge cases), for both roles, and 144 multi-turn follow-ups.
 - **Split.** `public/ai-chat-routing.js` went from 847 to 392 lines and is now the coordinator. Patterns moved to seven modules in `public/routing/`. The longest routing line went from 351 to 198 characters: long patterns are built from named, commented parts with `anyOf`. **The snapshot was identical after the split** (279 phrases, 144 follow-ups).
 - **Served modules.** The seven modules were added to the server's file list, and `tests/served-modules.test.js` follows every import from each page's entry script. Removing one entry made it fail ("/routing/dates.js is imported but not served"), so it catches this mistake.
 - **Group tests.** `tests/routing-groups.test.js` has must-match and must-not-match examples for each module.
@@ -23,10 +23,19 @@ Issue [#147](https://github.com/EldarSadeghi/soen287-covershift/issues/147). Fol
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed (syntax and format) |
-| `npm test` | 498 / 498 passed (11 new) |
+| `npm test` | 499 / 499 passed (12 new) |
 | `npm run ai:acceptance` | 25 / 25 scenarios, 217 checks |
 | `npm run ai:eval` (offline) | 206 / 247 local, 59 classifier candidates (was 61), 0 write-capable wrong routes, exit 0 |
 | Live evaluation (2 runs, user-approved) | Run 1: 246 / 247; run 2: 247 / 247; all targets met in both, exit 0 |
+
+## Review fix: cancellations with a reason (Codex review of PR #148)
+
+The first version of the "cancel … shift" block skipped the block when words like *availability* or *time off* appeared anywhere in the message, so "cancel my availability rule" stayed a rules command. That made "Cancel my shift because my availability changed" route to saved availability rules, while `main` blocked it.
+
+- The exception now looks only at the words **between "cancel" and "shift"**: "cancel my **shift** because my availability changed" is blocked whatever reason follows, while "cancel my **claim** for Friday's shift", "cancel my **cover request** for the Saturday shift" and "cancel the saved availability **rule**" are not.
+- Tests cover cancellations with reasons (availability changed, time off, leave approved, rule change) for both roles, plus rule, claim and request look-alikes.
+- The snapshot gained these 9 phrases (288 in total) and no existing phrase changed. An employee writing "cancel Jamie's Friday shift since her availability changed", which went to rules on `main` too, is now blocked as well.
+- No live run was needed: only local blocking changed, and the offline evaluation is unchanged (59 classifier candidates, 0 write-capable wrong routes).
 
 ## Browser check
 

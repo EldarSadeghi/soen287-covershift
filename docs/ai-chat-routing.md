@@ -30,7 +30,7 @@ Unsupported commands are checked before all of these, in every part of a message
 
 ## Changing routing safely
 
-- `tests/routing-snapshot.test.js` compares what every routing function returns for 279 phrases (both roles) and 144 follow-ups with `tests/fixtures/routing-snapshot.json`. A pure refactor must leave it unchanged.
+- `tests/routing-snapshot.test.js` compares what every routing function returns for 288 phrases (both roles) and 144 follow-ups with `tests/fixtures/routing-snapshot.json`. A pure refactor must leave it unchanged.
 - For a deliberate change, run `node scripts/routing-snapshot.mjs` to list the phrases that changed, check each one, then `node scripts/routing-snapshot.mjs --write` and review the fixture diff.
 - `tests/routing-groups.test.js` holds must-match and must-not-match examples per group.
 - The server serves public files from an explicit list in `src/app.js`. `tests/served-modules.test.js` follows every import from each page's entry script and fails if a module is not served.

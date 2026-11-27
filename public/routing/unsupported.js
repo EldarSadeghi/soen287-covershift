@@ -9,8 +9,10 @@ const UNSUPPORTED_ACTION = anyOf(
     /(?:approve|reject|decline|delete|fire|publish|send|swap)\b/,
     /assign me\b/,
     /clock me (?:in|out)\b/,
-    // "cancel my shift", "cancel Jamie's Friday shift" (not rules or requests).
-    /cancel\b(?![^.!?]*\b(?:rules?|availability|requests?|claims?|invitations?|time[ -]off|leave)\b)[^.!?]*\bshifts?\b/,
+    // "cancel my shift", "cancel Jamie's Friday shift", whatever reason follows.
+    // Only the words between "cancel" and "shift" are checked, so cancelling a
+    // rule, claim or request about a shift is not blocked here.
+    /cancel\b(?:(?!\b(?:rules?|availability|requests?|claims?|invitations?|time[ -]off|leave)\b)[^.!?])*?\bshifts?\b/,
     /request (?:time[ -]off|leave)\b/,
     /make \w+ (?:a |an )?(?:manager|admin)\b/,
     /give me admin\b/,
