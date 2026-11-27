@@ -10,7 +10,7 @@ Install Node.js 24 or newer (includes npm), clone the shared repository when its
 npm start
 ```
 
-Open http://127.0.0.1:3000. No third-party dependencies or installation step are needed. For automatic restarts during development, use `npm run dev`.
+Open http://127.0.0.1:3000. The server has no runtime dependencies. Run `npm ci` before running the development checks to install the pinned formatter. For automatic restarts during development, use `npm run dev`.
 
 Optional: copy `.env.example` to `.env` and change the port if 3000 is occupied. Keep `.env` out of Git. Stop the server with Ctrl+C.
 
@@ -39,7 +39,7 @@ Run `npm run ai:acceptance` for 19 offline fictional conversation scenarios and 
 
 ## Checks
 
-Run `npm run check` to check JavaScript syntax and `npm test` for automated verification. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths and private data paths should return 404. Authenticated pages use saved business records; /demo uses separate presentation data.
+Run `npm run check` to check JavaScript syntax and formatting in the chat modules and `npm test` for automated verification. Start the app and verify navigation for both roles, direct-link refresh, keyboard focus, and a phone-width layout. The page, CSS, and JavaScript should load; unknown paths and private data paths should return 404. Authenticated pages use saved business records; /demo uses separate presentation data.
 
 ## JSON storage (CS-003)
 

@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env src/server.js",
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
-    "check": "node scripts/check.js",
+    "check": "node scripts/check.js && npm run format:check",
     "test": "node --test",
     "data:seed": "node --env-file-if-exists=.env scripts/data.js seed",
     "data:inspect": "node --env-file-if-exists=.env scripts/data.js inspect",
@@ -21,6 +21,10 @@
     "ai:acceptance": "node scripts/ai-acceptance.js",
     "ai:live-check": "node scripts/ai-live-check.js",
     "ai:eval": "node --env-file-if-exists=.env scripts/ai-eval.js",
-    "ai:routing-report": "node --env-file-if-exists=.env scripts/ai-routing-report.js"
+    "ai:routing-report": "node --env-file-if-exists=.env scripts/ai-routing-report.js",
+    "format:check": "prettier --check public/ai-shift-draft.js \"public/ai-chat-{routing,send,provider,view,cards}.js\" tests/ai-intent-patterns.test.js"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
   }
 }
