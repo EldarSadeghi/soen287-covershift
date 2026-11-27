@@ -1,3 +1,58 @@
+// Chat routing coordinator. Patterns live in ./routing/ by topic; this file
+// decides the order they are checked in and how follow-up replies continue an
+// earlier question. Every function other modules import is exported here, so
+// importers never depend on the internal layout. Behaviour is locked by
+// tests/routing-snapshot.test.js.
+import { anyOf, chatRequests, normalizedMessage } from './routing/text.js';
+import {
+  followUpMonth,
+  followUpPrefix,
+  isStatusDateFollowUp,
+  requestStatusTopics,
+  statusRoute,
+} from './routing/status.js';
+import {
+  employeePatterns,
+  employeeRequestRoute,
+  employeeTaskRoute,
+  clarificationReplyRoute,
+  OPENING_CLARIFICATION,
+} from './routing/employee.js';
+import {
+  managerChangeRoute,
+  managerLookupRoute,
+  managerPatterns,
+  teamAvailabilityRoute,
+} from './routing/manager.js';
+import {
+  questionsRoute,
+  sharedPatterns,
+  summaryRoute,
+} from './routing/shared.js';
+import {
+  requestsUnsupportedAction,
+  UNSUPPORTED_ACTION_MESSAGE,
+} from './routing/unsupported.js';
+
+export { isStatusDateFollowUp } from './routing/status.js';
+export {
+  availabilityNeedsHours,
+  availabilityRuleCommand,
+  clarificationReplyRoute,
+  coworkersFreeOnDate,
+  isDutiesQuestion,
+  matchingAvailabilityRules,
+  OPENING_CLARIFICATION,
+  openingReference,
+} from './routing/employee.js';
+export { requestsShiftBatch } from './routing/manager.js';
+export { workingSummaryWeek } from './routing/shared.js';
+export {
+  requestsUnsupportedAction,
+  UNSUPPORTED_ACTION_MESSAGE,
+} from './routing/unsupported.js';
+export { coworkerLookupDate, historyPeriod } from './routing/dates.js';
+
 export const CHAT_ENDPOINTS = {
   timeOffDraft: '/api/worker/ai-time-off-draft',
   coverDraft: '/api/worker/ai-cover-draft',
@@ -7,13 +62,6 @@ export const CHAT_ENDPOINTS = {
   availability: '/api/worker/ai-availability-draft',
   questions: '/api/ai-schedule-question',
 };
-
-const normalizedMessage = (text) =>
-  text
-    .trim()
-    .toLowerCase()
-    .replace(/[’‘]/g, "'")
-    .replace(/^(?:(?:please[,\s]+)|(?:(?:could|would|can) you\s+))+/, '');
 
 export const MIXED_INTENT_QUESTION = 'Which should I handle first:';
 
@@ -52,243 +100,30 @@ const taskLabels = {
   rules: 'check saved rules',
 };
 
-const patterns = {
-  negation: {
-    command: /^(?:do not|don't|never)\b/,
-  },
-  employeeLookups: {
-    history:
-      /^(?:which shifts (?:did|have) i (?:pick(?:ed)? up|giv(?:e|en) away)|how many (?:shifts|claims) (?:did|have) i (?:pick(?:ed)? up|giv(?:e|en) away)|(?:show|list|check) (?:me )?(?:my )?coverage history|what happened (?:with|to) my coverage requests?(?=.*\b(?:last|this|in|during|between)\b))\b/,
-    updates:
-      /^(?:(?:any|show (?:me )?(?:my )?|check (?:my )?)\s*(?:new |recent )?updates(?: for me)?|what(?:'s| is) new(?: for me)?|did anything change(?: for me)?)[.!?]*$/,
-    duties:
-      /^(?:(?:what(?:'s| are| is)|show|list|tell me)\b.*\b(?:my|shift) (?:duties|tasks)\b|(?:what (?:do i have|am i supposed|do i need) to do|what (?:tasks|duties) (?:do i have|are assigned to me))\b.*\b(?:shift|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)/,
-  },
-  employeeDrafts: {
-    timeOffDraft:
-      /^(?:request (?:time[ -]off|leave)\b|(?:i (?:need|want|would like)(?: to take)?|can i take|could i take|i'd like)\b[^.!?]*\boff\b)/,
-    coverDraft:
-      /^(?:swap my shift\b|request cover (?:for|on) my\b|ask .+ to cover my\b|(?:can|could|would) .+ (?:take|cover) my\b)/,
-    correction:
-      /^(?:actually|instead|make it|add .* too|full day|all day|from|until|\d{1,2}(?::\d{2})?\s*[ap]m)\b/,
-  },
-  timeOffStatus: {
-    lead: /^(?:did|has|was|is|what|check|show)\b/,
-    subject: /\bmy\b[^.!?]*\b(?:time[ -]off|leave request)\b/,
-    decision:
-      /\b(?:approv(?:e|ed|al)|declin(?:e|ed)|reject(?:ed)?|cancelled|canceled|pending|status|decision|go through)\b/,
-  },
-  coverStatus: {
-    lead: /^(?:did|has|was|is|what|check|show)\b/,
-    subject:
-      /\b(?:my (?:cover (?:requests?|invitations?)|requests? (?:for|to) cover)|(?:cover (?:requests?|invitations?)) i sent)\b/,
-    decision:
-      /\b(?:accept(?:ed)?|approv(?:e|ed|al)|declin(?:e|ed)|reject(?:ed)?|cancelled|canceled|pending|expired|status|respond(?:ed)?|decision|what happened)\b/,
-  },
-  claimStatus: {
-    lead: /^(?:did|has|was|is|what(?:'s| is)|check|show)\b/,
-    subject: /\bmy\b[^.!?]*\bclaim\b/,
-    decision:
-      /\b(?:approved|approval|declined|rejected|cancelled|canceled|pending|status|decision|go through)\b/,
-  },
-  summary: {
-    lead: /^(?:show|list|summari[sz]e|give me|what|which|do i|did my|is anyone|pending approvals|how many|check|(?:my |team )?(?:working week|attention summary|weekly summary))\b/,
-    manager:
-      /\b(?:attention summary|what needs (?:my )?attention|weekly summary|pending approvals|claims awaiting approval|waiting for my approval|needs? cover|unresolved coverage|open (?:coverage|requests for cover))\b/,
-    employee:
-      /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/,
-  },
-  shiftEdit: {
-    relativeTimeChange:
-      /^(?:could|can|would) the (?:existing|scheduled|saved) shift\b[^.!?]*\b(?:start|end)\b[^.!?]*\b(?:earlier|later)[.!?]*$/,
-    command:
-      /^(?:move|change|reschedule|push|rename|reassign|extend|shorten|edit)\b/,
-    subject: /\bshifts?\b/,
-    followUp:
-      /^(?:actually|instead|make it|start|end|move it|change it|rename it|from|until|at|[0-9])\b/,
-  },
-  draft: {
-    giveShift:
-      /^give [\p{L}][\p{L}'-]*(?: [\p{L}][\p{L}'-]*){0,3} (?:a|an) (?:new )?shift(?=$|[.!?]| (?:on|for|this|next|today|tomorrow)\b)/u,
-    command:
-      /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/,
-  },
-  managerLookups: {
-    teamTimeOff:
-      /^(?:(?:who(?:'s| is)|which (?:staff|employees|workers) (?:are|is)) (?:off|on (?:leave|vacation))|(?:show|list|check) (?:me )?(?:(?:team(?:'s)?|pending|approved) )?(?:time[ -]off|leave requests?))\b/,
-    coverageStatus:
-      /^(?:(?:what(?:'s| is) (?:the )?|check |show (?:me )?)?(?:shift )?coverage status|(?:is|was) .+ covered|who (?:claimed|is covering|covered)\b.*|which (?:shifts|requests) (?:are|were) (?:covered|claimed))\b/,
-    publicationStatus:
-      /^(?:(?:what(?:'s| is) (?:the )?|check |show (?:me )?)?(?:schedule )?publication status|(?:is|was|has) .*(?:schedule|period).*\bpublished|when is .*(?:schedule|publication).*due|how many shifts (?:are|remain) unpublished)\b/,
-  },
-  teamAvailability: {
-    question:
-      /^(?:is|are|was|were|who(?:'s|s)?|which|whether|anyone|anybody|can you check|check|show|tell me|do we have)\b/,
-    availability: /\b(?:availability|available|free)\b/,
-    canWork: /^(?:who (?:can|could) work|(?:can|could) [^.!?]+ work)\b/,
-    schedule: /\b(?:scheduled|working|on the rota)\b/,
-    change:
-      /\b(?:approve|delete|cancel|assign|request|send|change|save|publish)\b/,
-  },
-  coworkers: {
-    people: /\b(?:co[ -]?workers?|colleagues?|teammates?)\b/,
-    availability:
-      /\b(?:available|availability|availbility|free|can work|could work)\b/,
-    question:
-      /(?:^who(?:'s| is)|^is (?:anyone|anybody|someone|somebody)) (?:free|available)\b|^who (?:can|could) (?:cover|fill in)\b|^(?:can|could) (?:anyone|somebody|someone|any (?:co[ -]?worker|teammate)) cover\b/,
-  },
-  alternatives: {
-    question:
-      /^(?:what else(?: is available)?|(?:any|what) other (?:shifts|openings)|(?:(?:show|find|suggest)(?: me)? )?(?:eligible )?alternatives)[.!?]*$/,
-  },
-  explanation: {
-    referenceLead: /^(?:why|how come|explain)\b/,
-    reasonLead: /^(?:why|how come|explain|what (?:blocked|prevented))\b/,
-    subject:
-      /\b(?:match(?:ed|ing)?|conflicts?|overlap|coverage|requests?|claim(?:ed)?|pending|shifts?|openings?|approval|eligible|eligibility)\b/,
-  },
-  rules: {
-    view: /^(?:(?:show|view|list|open|check) (?:me )?)?(?:my )?(?:saved (?:availability(?: rules?)?|rules)|availability rules)[.?!]*$/,
-  },
-  availability: {
-    statement: /^i can (?:take|pick up)\b.*\bshifts?\b/,
-    request:
-      /\b(?:put|mark|set) me down as available\b|\b(?:save|draft|set|record|confirm)\b.*\bavailability\b|\bavailability (?:rule|draft)\b|\b(?:i can take|i can pick up|limit|maximum)\b.*\bshifts?\b/,
-  },
-  search: {
-    request:
-      /^anything (?:i can|to) pick up\b|\b(?:open shifts?|openings?|unfilled shifts?|unclaimed shifts?|coverage shifts?)\b|\b(?:find|look for|search for|pick up)\b.*\bshifts?\b/,
-  },
-  questions: {
-    employeeLead:
-      /^(?:when am i on next|what time do i start (?:today|tomorrow))\b/,
-    lead: /^(?:when|what|which|how many|how long|who|show|list|tell me|am i|do i|give me|pull up|check|remind me)\b/,
-    subject:
-      /\b(?:schedules?|roster|rota|shifts?|hours|working|work|come in|clock in|on duty|on the rota)\b/,
-    possessive: /\b(?:my|team'?s?) (?:schedule|hours|next shift)\b/,
-  },
-};
-
+// The route for one request on its own, or null. The order matters where
+// wordings overlap, so it is spelled out here step by step.
 function explicitRoute(text, manager) {
   const message = normalizedMessage(text);
-  if (patterns.negation.command.test(message)) return null;
-  if (
-    !manager &&
-    patterns.timeOffStatus.lead.test(message) &&
-    patterns.timeOffStatus.subject.test(message) &&
-    patterns.timeOffStatus.decision.test(message)
-  )
-    return 'timeOffStatus';
-  if (
-    !manager &&
-    patterns.coverStatus.lead.test(message) &&
-    patterns.coverStatus.subject.test(message) &&
-    patterns.coverStatus.decision.test(message)
-  )
-    return 'coverStatus';
-  if (
-    !manager &&
-    patterns.claimStatus.lead.test(message) &&
-    patterns.claimStatus.subject.test(message) &&
-    patterns.claimStatus.decision.test(message)
-  )
-    return 'claimStatus';
-  if (manager) {
-    for (const [intent, pattern] of Object.entries(patterns.managerLookups)) {
-      if (pattern.test(message)) return intent;
-    }
-  }
-  if (!manager) {
-    if (patterns.employeeDrafts.timeOffDraft.test(message))
-      return 'timeOffDraft';
-    if (patterns.employeeDrafts.coverDraft.test(message)) return 'coverDraft';
-    if (patterns.employeeLookups.history.test(message)) return 'history';
-    if (patterns.employeeLookups.updates.test(message)) return 'updates';
-    if (isDutiesQuestion(text)) return 'questions';
-  }
-  if (patterns.summary.lead.test(message)) {
-    const summary = manager
-      ? patterns.summary.manager
-      : patterns.summary.employee;
-    if (summary.test(message)) return 'summary';
-  }
-  if (
-    manager &&
-    (patterns.shiftEdit.relativeTimeChange.test(message) ||
-      (patterns.shiftEdit.command.test(message) &&
-        patterns.shiftEdit.subject.test(message)))
-  ) {
-    return 'shiftEdit';
-  }
-  if (manager && requestsShiftBatch(message)) return 'draft';
-  if (
-    manager &&
-    (patterns.draft.command.test(message) ||
-      patterns.draft.giveShift.test(message))
-  )
-    return 'draft';
-  const team = patterns.teamAvailability;
-  if (
-    manager &&
-    ((team.question.test(message) && team.availability.test(message)) ||
-      team.canWork.test(message)) &&
-    !team.schedule.test(message) &&
-    !team.change.test(message)
-  ) {
-    return 'teamAvailability';
-  }
-  if (!manager) {
-    if (
-      (patterns.coworkers.people.test(message) &&
-        patterns.coworkers.availability.test(message)) ||
-      patterns.coworkers.question.test(message)
-    )
-      return 'coworkers';
-    if (patterns.alternatives.question.test(message)) return 'alternatives';
-    if (
-      patterns.explanation.referenceLead.test(message) &&
-      openingReference(message, [], null) === null
-    )
-      return 'explanation';
-    if (
-      patterns.explanation.reasonLead.test(message) &&
-      patterns.explanation.subject.test(message)
-    )
-      return 'explanation';
-    if (availabilityRuleCommand(text) || patterns.rules.view.test(message))
-      return 'rules';
-    // "I can pick up up to 2 shifts on Saturday" states availability, even though
-    // it also contains the search phrase "pick up ... shifts".
-    if (patterns.availability.statement.test(message)) return 'availability';
-    if (patterns.search.request.test(message)) return 'search';
-    if (patterns.availability.request.test(message)) return 'availability';
-  }
-  if (!manager && patterns.questions.employeeLead.test(message))
-    return 'questions';
-  if (
-    (patterns.questions.lead.test(message) &&
-      patterns.questions.subject.test(message)) ||
-    patterns.questions.possessive.test(message)
-  )
-    return 'questions';
-  return null;
-}
-
-// Splits a message into the separate requests it contains.
-function chatRequests(text) {
-  // Keep quoted shift or rule names intact, even if they contain a conjunction.
-  const clauses = text.split(
-    /("[^"]*"|“[^”]*”|[!?;]+|\n+|\.(?=\s+[a-z])(?<![ap]\.m\.)|\band(?: then| also)?\b|\bthen\b)/i,
+  if (sharedPatterns.negation.test(message)) return null;
+  return (
+    // 1. Employee status lookups ("did my claim get approved?").
+    (!manager && statusRoute(message)) ||
+    // 2. Manager lookups (team time off, coverage, publication).
+    (manager && managerLookupRoute(message)) ||
+    // 3. Employee drafts, history, updates and duties.
+    (!manager && employeeRequestRoute(message, text)) ||
+    // 4. Working-week or attention summaries.
+    summaryRoute(message, manager) ||
+    // 5. Manager edits to existing shifts, then new-shift drafts.
+    (manager && managerChangeRoute(message)) ||
+    // 6. Manager team availability.
+    (manager && teamAvailabilityRoute(message)) ||
+    // 7. Employee coworkers, explanations, rules, availability and search.
+    (!manager && employeeTaskRoute(message, text)) ||
+    // 8. Schedule questions, last because their wording is the broadest.
+    questionsRoute(message, manager) ||
+    null
   );
-  const requests = [''];
-  for (const part of clauses) {
-    if (/^(?:[.!?;]+|\n+|and(?: then| also)?|then)$/i.test(part))
-      requests.push('');
-    else requests[requests.length - 1] += part;
-  }
-  return requests
-    .map((request) => request.trim().replace(/^also\s+/i, ''))
-    .filter(Boolean);
 }
 
 function mixedRoutes(text, manager) {
@@ -301,69 +136,37 @@ function mixedRoutes(text, manager) {
   ];
 }
 
-// Commands the chat cannot carry out: approvals, deletions, account changes,
-// instruction overrides. A message containing one is never routed to a task,
-// even if another part of it would be ("create a shift and approve Sam's claim").
-const UNSUPPORTED_ACTION =
-  /^(?:ignore\b.*\b(?:instructions?|rules|prompt)\b|(?:approve|reject|decline|delete|fire|publish|send|swap)\b|assign me\b|clock me (?:in|out)\b|cancel my shift\b|request (?:time[ -]off|leave)\b|make \w+ (?:a |an )?(?:manager|admin)\b|give me admin\b)/;
-
-export const UNSUPPORTED_ACTION_MESSAGE =
-  'I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.';
-
-export function requestsUnsupportedAction(text, manager = false) {
-  return chatRequests(text).some((request) => {
-    const message = normalizedMessage(request);
-    if (
-      !manager &&
-      /^(?:request (?:time[ -]off|leave)|swap my shift)\b/.test(message)
-    )
-      return false;
-    return UNSUPPORTED_ACTION.test(message);
-  });
-}
-
-export function requestsShiftBatch(text) {
-  const message = normalizedMessage(text);
-  if (
-    !/^(?:draft|create|schedule|add|assign|put together|make|help me (?:draft|create|schedule))\b/.test(
-      message,
-    )
-  )
-    return false;
-  return (
-    /^(?:draft|create|schedule|add|assign|put together|make) (?:these )?shifts\b/.test(
-      message,
-    ) ||
-    /\b(?:batch|multiple|several|two|three|four|five|six|\d+)\s+(?:dated\s+)?shifts\b|\b(?:batch of|shifts for)\b/.test(
-      message,
-    ) ||
-    /\bfor\b[\s\S]*(?:;|\band\b|\n)[\s\S]*\bfor\b/.test(message)
-  );
-}
-
-const requestStatusTopics = new Set([
-  'claimStatus',
-  'coverStatus',
-  'timeOffStatus',
-]);
-const followUpPrefix = '(?:(?:what|how) about |and )?(?:on |for )?';
-const followUpWeekday =
-  '(?:this )?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)';
-const followUpMonth =
-  '(?:january|february|march|april|may|june|july|august|september|october|november|december)';
-const followUpMonthDay =
-  '(?:[0-9]{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,? 20[0-9]{2})?';
-const statusFollowUpDate = new RegExp(
-  `^${followUpPrefix}(?:today|tomorrow|${followUpWeekday}|20[0-9]{2}-[0-9]{2}-[0-9]{2}|${followUpMonth} ${followUpMonthDay})[.!?]*$`,
+// A short reply that edits the draft or search in progress.
+const draftEdit = anyOf(
+  [
+    'only',
+    'just',
+    'instead',
+    'actually',
+    'move',
+    'change',
+    'make it',
+    'rename',
+    'remove',
+    'leave it',
+    'extend',
+    'shorten',
+    'start',
+    'end',
+    'from',
+    'until',
+    'after',
+    'before',
+    'all day',
+    'noon',
+    'midnight',
+    'today',
+    'tomorrow',
+    '(?:mon|tues|wednes|thurs|fri|satur|sun)day',
+    '\\d+',
+  ],
+  { before: '^', flags: 'i' },
 );
-
-export function isStatusDateFollowUp(text) {
-  return statusFollowUpDate.test(normalizedMessage(text));
-}
-
-export function isDutiesQuestion(text) {
-  return patterns.employeeLookups.duties.test(normalizedMessage(text));
-}
 
 export function routeChat(text, manager, current) {
   if (
@@ -394,46 +197,33 @@ export function routeChat(text, manager, current) {
   if (
     manager &&
     current === 'shiftEdit' &&
-    patterns.shiftEdit.followUp.test(message)
+    managerPatterns.shiftEdit.followUp.test(message)
   )
     return current;
   if (
     !manager &&
     EMPLOYEE_DRAFTS.includes(current) &&
-    patterns.employeeDrafts.correction.test(message)
+    employeePatterns.drafts.correction.test(message)
   )
     return current;
   const editable = manager
     ? current === 'draft'
     : ['search', 'availability'].includes(current);
-  if (
-    editable &&
-    /^(?:only|just|instead|actually|move|change|make it|rename|remove|leave it|extend|shorten|start|end|from|until|after|before|all day|noon|midnight|today|tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|\d+)/i.test(
-      message,
-    )
-  )
-    return current;
+  if (editable && draftEdit.test(message)) return current;
   return 'clarification';
 }
 
-export function workingSummaryWeek(text) {
-  const message = normalizedMessage(text);
-  const weeks = [...message.matchAll(/\b(this|next) week\b/g)].map(
-    (match) => match[1],
-  );
-  if (
-    new Set(weeks).size > 1 ||
-    /\b(?:today|tomorrow|yesterday|weekend|(?:last|previous) week|(?:this|next|last) month|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december)\b|\d{1,4}[-/]\d|\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|several) (?:days?|weeks?|months?)\b/.test(
-      message,
-    )
-  )
-    return null;
-  return weeks[0] || 'this';
-}
+// Managers have no open-shift search; point them to coverage and availability.
+const managerOpenShifts =
+  /^(?:find|show|list|search for|look for|any|are there any)\b[^.!?]*\b(?:open shifts?|openings?)\b/;
+export const MANAGER_OPEN_SHIFTS_MESSAGE =
+  'Open-shift search is for employees. I can show which shifts still need cover (“which shifts need cover this week?”) or check team availability for a date.';
 
 export function chatClarification(text, manager) {
   if (requestsUnsupportedAction(text, manager))
     return UNSUPPORTED_ACTION_MESSAGE;
+  if (manager && managerOpenShifts.test(normalizedMessage(text)))
+    return MANAGER_OPEN_SHIFTS_MESSAGE;
   const routes = mixedRoutes(text, manager);
   if (routes.length > 1) {
     const choices = routes.map((route) => taskLabels[route]).join(' or ');
@@ -510,7 +300,7 @@ export function resolveChatTarget({
     plainReply(false) &&
     (isStatusDateFollowUp(text) ||
       (/^Full day/i.test(previous.text) &&
-        patterns.employeeDrafts.correction.test(normalizedMessage(text))) ||
+        employeePatterns.drafts.correction.test(normalizedMessage(text))) ||
       (/^(?:Which shift|What time)/i.test(previous.text) &&
         /^[\p{L}\p{N}][\p{L}\p{N} :'-]{0,79}[.!?]?$/u.test(text.trim())) ||
       (/^Which coworker/i.test(previous.text) &&
@@ -599,249 +389,4 @@ export function needsIntentFallback(text, manager) {
     !/^(?:do not|don't|never)\b/i.test(text.trim()) &&
     /[a-z]{2}/i.test(text)
   );
-}
-
-export function clarificationReplyRoute(text, question) {
-  const answer = normalizedMessage(text).replace(/[.?!]+$/, '');
-  if (question?.startsWith('Should I find an open shift')) {
-    if (
-      /^(?:find|search)(?: it| for me| for (?:an? )?open shifts?)?$/.test(
-        answer,
-      )
-    )
-      return 'search';
-    if (/^(?:save|draft|set)(?: it| (?:my )?availability)?$/.test(answer))
-      return 'availability';
-  }
-  if (
-    question?.startsWith('What date and exact time') &&
-    /\b(?:today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|20\d{2}-\d{2}-\d{2})\b/.test(
-      answer,
-    ) &&
-    /\b(?:\d{1,2}:\d{2}|\d{1,2}\s*[ap]m|noon|midnight)\b/.test(answer)
-  )
-    return 'search';
-  return null;
-}
-
-export function availabilityNeedsHours(text) {
-  return (
-    /\b(?:put|mark|set) me down as available\b/i.test(text) &&
-    !/\b(?:all day|midnight|noon|\d{1,2}:\d{2}|\d{1,2}\s*[ap]\.?m\.?)\b/i.test(
-      text,
-    )
-  );
-}
-
-export const OPENING_CLARIFICATION = 'Which opening do you mean?';
-
-export function openingReference(text, visibleIds, selectedId) {
-  if (/["“][^"”]+["”]/.test(text)) return undefined;
-  const positions = [
-    'first',
-    'second',
-    'third',
-    'fourth',
-    'fifth',
-    'sixth',
-    'seventh',
-    'eighth',
-    'ninth',
-    'tenth',
-  ];
-  const positionPattern = positions.join('|');
-  const ordinals = [
-    ...text.matchAll(
-      new RegExp(
-        `\\b(${positionPattern})(?=\\s+(?:shift|opening|one|result|or|and)\\b|[.!?]*$)`,
-        'gi',
-      ),
-    ),
-  ];
-  const indices = new Set(
-    ordinals.map((match) => positions.indexOf(match[1].toLowerCase())),
-  );
-  if (indices.size > 1) return null;
-  if (indices.size === 1) return visibleIds[[...indices][0]] || null;
-  if (/\b(?:this|that) (?:shift|opening|one|result|request)\b/i.test(text))
-    return selectedId || (visibleIds.length === 1 ? visibleIds[0] : null);
-  return undefined;
-}
-
-export function availabilityRuleCommand(text) {
-  const command = text
-    .trim()
-    .replace(/^(?:(?:please[,\s]+)|(?:(?:could|would|can) you\s+))+/i, '');
-  const match = /^(pause|resume|cancel)\s+(.+?)[.!?]*$/i.exec(command);
-  if (!match) return null;
-  const [, action, target] = match;
-  if (!/\b(?:rule|availability)\b/i.test(target)) return null;
-  const selector = target
-    .replace(
-      /^(?:(?:the|my|saved|availability|rule|for|on|titled|named)\b\s*)+/i,
-      '',
-    )
-    .replace(
-      /\s+(?:saved availability(?: rule)?|availability(?: rule)?|rule)\s*$/i,
-      '',
-    )
-    .trim()
-    .replace(/^["“](.*)["”]$/, '$1');
-  return { action: action.toLowerCase(), selector };
-}
-
-export function matchingAvailabilityRules(rules, selector) {
-  const requested = selector.toLocaleLowerCase();
-  return rules.filter((rule) => {
-    if (!['active', 'paused'].includes(rule.status)) return false;
-    if (!requested) return true;
-    const date = new Intl.DateTimeFormat('en-CA', {
-      timeZone: rule.timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date(rule.startsAt));
-    const isoDate = ['year', 'month', 'day']
-      .map((field) => date.find((part) => part.type === field).value)
-      .join('-');
-    const weekday = new Intl.DateTimeFormat('en-US', {
-      timeZone: rule.timezone,
-      weekday: 'long',
-    })
-      .format(new Date(rule.startsAt))
-      .toLowerCase();
-    return (
-      requested === isoDate ||
-      requested === weekday ||
-      requested === rule.title.toLocaleLowerCase()
-    );
-  });
-}
-
-export function coworkerLookupDate(text, today) {
-  if (
-    /\b(?:this|next|last) week\b|\b(?:next|last) (?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(
-      text,
-    )
-  )
-    return null;
-  const tokens = [
-    ...text.matchAll(
-      /\b(?:(20\d{2}-\d{2}-\d{2})|(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}(?:st|nd|rd|th)?|first|second|third)(?:,?\s+(20\d{2}))?|(today|tomorrow)|(this\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday))\b/gi,
-    ),
-  ];
-  if (tokens.length !== 1) return null;
-  const [
-    ,
-    iso,
-    monthName,
-    dayNumber,
-    explicitYear,
-    relative,
-    thisWeek,
-    weekday,
-  ] = tokens[0];
-  const anchor = new Date(`${today}T12:00:00Z`);
-  let date = iso;
-  if (monthName) {
-    const month = new Date(`${monthName} 1, 2000 UTC`).getUTCMonth() + 1;
-    const day =
-      { first: 1, second: 2, third: 3 }[dayNumber.toLowerCase()] ||
-      Number.parseInt(dayNumber, 10);
-    const suffix = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const year = Number(today.slice(0, 4));
-    date = `${explicitYear || year + Number(suffix < today.slice(5))}-${suffix}`;
-  } else if (relative) {
-    anchor.setUTCDate(
-      anchor.getUTCDate() + Number(relative.toLowerCase() === 'tomorrow'),
-    );
-    date = anchor.toISOString().slice(0, 10);
-  } else if (weekday) {
-    const weekdays = [
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-      'sunday',
-    ];
-    const difference =
-      weekdays.indexOf(weekday.toLowerCase()) - ((anchor.getUTCDay() + 6) % 7);
-    const offset = thisWeek ? difference : (difference + 7) % 7 || 7;
-    anchor.setUTCDate(anchor.getUTCDate() + offset);
-    date = anchor.toISOString().slice(0, 10);
-  }
-  const instant = new Date(`${date}T00:00:00Z`);
-  return Number.isFinite(instant.getTime()) &&
-    instant.toISOString().slice(0, 10) === date
-    ? date
-    : null;
-}
-
-export function coworkersFreeOnDate(data, date) {
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: data.timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const dayAt = (instant) => {
-    const parts = formatter.formatToParts(instant);
-    return ['year', 'month', 'day']
-      .map((key) => parts.find((part) => part.type === key).value)
-      .join('-');
-  };
-  return data.workers
-    .map(({ name, windows }) => ({
-      name,
-      windows: windows.filter(
-        (window) =>
-          dayAt(Date.parse(window.startsAt)) <= date &&
-          dayAt(Date.parse(window.endsAt) - 1) >= date,
-      ),
-    }))
-    .filter((worker) => worker.windows.length > 0);
-}
-
-const monthNames =
-  'january february march april may june july august september october november december'.split(
-    ' ',
-  );
-const month = new RegExp(
-  `\\b(${monthNames.join('|')})(?:\\s+(20\\d{2}))?\\b`,
-  'gi',
-);
-
-export function historyPeriod(text, today) {
-  const exactDay = today && coworkerLookupDate(text, today);
-  const named = [...text.matchAll(month)];
-  const relative = [
-    ...text.matchAll(/\b(?:last month|this year|last 30 days)\b/gi),
-  ];
-  if (
-    relative.length + named.length > 1 ||
-    /\b(?:between|since|through|until)\b/i.test(text)
-  )
-    return null;
-  if (relative.length) return relative[0][0].toLowerCase().replaceAll(' ', '-');
-  if (exactDay) return exactDay;
-  if (named.length) {
-    const [, name, year] = named[0];
-    // An invalid specific date is not interpreted as the whole month.
-    if (/^\s+\d/.test(text.slice(named[0].index + named[0][0].length)))
-      return null;
-    const number = String(monthNames.indexOf(name.toLowerCase()) + 1).padStart(
-      2,
-      '0',
-    );
-    return year ? year + '-' + number : 'month-' + number;
-  }
-  if (
-    /\b(?:last|next|this|past|previous)\s+(?:\d+\s+)?(?:days?|weeks?|months?|years?)\b|\b(?:between|since|through|until)\b|\b20\d{2}(?:-\d{2}-\d{2})?\b/i.test(
-      text,
-    )
-  )
-    return null;
-  return 'last-30-days';
 }
