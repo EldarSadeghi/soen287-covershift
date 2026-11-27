@@ -1208,6 +1208,84 @@
       "message": "Where are we short-staffed over the coming days?"
     },
     {
+      "id": "m-replacements-01",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Who can cover Jamie’s Friday shift?"
+    },
+    {
+      "id": "m-replacements-02",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "who could replace Sam on Saturday"
+    },
+    {
+      "id": "m-replacements-03",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Find a replacement for the December 5 closing shift."
+    },
+    {
+      "id": "m-replacements-04",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "who can take the opening shift tomorrow?"
+    },
+    {
+      "id": "m-replacements-05",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Is there anyone who can cover the Sunday close?"
+    },
+    {
+      "id": "m-replacements-06",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "can anyone fill in for Taylor on Monday"
+    },
+    {
+      "id": "m-replacements-07",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Suggest someone to cover Alex tomorrow."
+    },
+    {
+      "id": "m-replacements-08",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Who should cover Morgan’s Wednesday shift?"
+    },
+    {
+      "id": "m-replacements-09",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "who can I ask to take the Thursday delivery shift"
+    },
+    {
+      "id": "m-replacements-10",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Show me replacement options for Friday’s opening."
+    },
+    {
+      "id": "m-replacements-11",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Who is free to take Jamie’s shift on December 9?"
+    },
+    {
+      "id": "m-replacements-12",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "Jamie called in sick tomorrow, who could step in?"
+    },
+    {
+      "id": "m-replacements-13",
+      "role": "manager",
+      "expected": "replacements",
+      "message": "I need someone to stand in for Sam on the 12th"
+    },
+    {
       "id": "m-shiftHistory-01",
       "role": "manager",
       "expected": "shiftHistory",

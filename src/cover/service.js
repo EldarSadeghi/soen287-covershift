@@ -13,13 +13,22 @@ function account(db,id){const a=coverageAccount(db,id);if(a.user.deactivation)th
 function recipient(db,user,id){const r=db.users.find(u=>u.id===id&&u.businessId===user.businessId&&u.role==='worker'&&u.passwordHash&&!u.deactivation&&u.id!==user.id);if(!r)throw new HttpError(404,'Coworker not found. Refresh availability.');return r;}
 function pendingFor(db,shift,now){return (db.coverInvitations||[]).some(r=>r.shiftId===shift.id&&r.status==='pending'&&!inviteInvalidReason(db,r,now));}
 function optionRevision(db,shift,id,now){return coverDigest([shift,id,coverageShiftRevision(db,shift),(db.availabilityWindows||[]).filter(r=>r.workerId===id),db.shifts.filter(s=>s.assignedWorkerId===id),db.coverageRequests.filter(r=>r.claimantId===id),(db.timeOffRequests||[]).filter(r=>r.workerId===id),db.users.find(u=>u.id===id),db.businesses.find(b=>b.id===shift.businessId)]);}
+// Why the assignee can't invite this coworker to cover the shift right now,
+// or null when they can. Shared by sending invitations and by the manager's
+// replacement suggestions (CS-066), so the two never disagree.
+export function invitationBlocker(db,shift,recipientId,now){
+  const business=db.businesses.find(b=>b.id===shift.businessId),h=availabilityHorizon(business.timezone,now);
+  if(shift.startsAt<h.startsAt||shift.endsAt>h.endsAt||Date.parse(shift.startsAt)<=now)return 'window';
+  if(coverEligibility(db,recipientId,shift,now))return 'ineligible';
+  if(pendingFor(db,shift,now)||db.coverageRequests.some(c=>c.shiftId===shift.id&&c.status==='pending'))return 'pending';
+  const earlier=(db.coverInvitations||[]).filter(r=>r.shiftId===shift.id&&r.recipientId===recipientId&&r.shiftSnapshot.revision===coverShiftFingerprint(shift)).map(r=>coverDisplayStatus(db,r,now)).filter(status=>status!=='cancelled');
+  if(earlier.includes('declined'))return 'declined';
+  if(earlier.length)return 'invited';
+  return null;
+}
 function eligible(db,user,shift,to,now){
-  const business=db.businesses.find(b=>b.id===user.businessId),h=availabilityHorizon(business.timezone,now);
-  if(!shift||shift.businessId!==user.businessId||shift.assignedWorkerId!==user.id||shift.startsAt<h.startsAt||shift.endsAt>h.endsAt||Date.parse(shift.startsAt)<=now)return false;
-  if(coverEligibility(db,to.id,shift,now)||pendingFor(db,shift,now))return false;
-  if(db.coverageRequests.some(c=>c.shiftId===shift.id&&c.status==='pending'))return false;
-  if((db.coverInvitations||[]).some(r=>r.shiftId===shift.id&&r.recipientId===to.id&&r.shiftSnapshot.revision===coverShiftFingerprint(shift)&&coverDisplayStatus(db,r,now)!=='cancelled'))return false;
-  return true;
+  if(!shift||shift.businessId!==user.businessId||shift.assignedWorkerId!==user.id)return false;
+  return invitationBlocker(db,shift,to.id,now)===null;
 }
 export async function coverOptions(store,userId,recipientId,clock=Date.now){
   const db=await store.read(),{user,business}=account(db,userId),to=recipient(db,user,recipientId),now=clock();

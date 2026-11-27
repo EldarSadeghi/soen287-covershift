@@ -75,6 +75,7 @@ export const MANAGER_LOOKUPS = [
   'teamHours',
   'coverageGaps',
   'shiftHistory',
+  'replacements',
 ];
 
 export const EMPLOYEE_DRAFTS = ['timeOffDraft', 'coverDraft'];
@@ -107,6 +108,7 @@ const taskLabels = {
   explanation: 'explain a match or request',
   rules: 'check saved rules',
   help: 'answer a question about using CoverShift',
+  replacements: 'suggest who could cover a shift',
 };
 
 // The route for one request on its own, or null. The order matters where
@@ -369,6 +371,15 @@ export function resolveChatTarget({
             part.replace(/\s+(morning|afternoon|evening)(?=[.!?]*$)/i, ''),
           ),
       );
+  // "Which shift should I check?" after several shifts matched (CS-066): a
+  // short reply naming the shift continues the same lookup.
+  const shiftChoiceReply =
+    manager &&
+    previousTopic === 'replacements' &&
+    /^Which shift/.test(previous.text) &&
+    unrouted &&
+    plainReply(true) &&
+    /^[\p{L}\p{N}][\p{L}\p{N} '’.-]{0,59}[.!?]?$/u.test(text.trim());
   const answerRoute =
     !manager &&
     previousTopic === 'clarification' &&
@@ -381,6 +392,7 @@ export function resolveChatTarget({
     (historyReply && 'history') ||
     (editReply && 'shiftEdit') ||
     (teamDateReply && previousTopic) ||
+    (shiftChoiceReply && previousTopic) ||
     (coworkerDateReply && 'coworkers') ||
     answerRoute ||
     routed;

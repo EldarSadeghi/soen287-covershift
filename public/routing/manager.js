@@ -7,6 +7,19 @@ const statusOpener = "(?:what(?:'s| is) (?:the )?|check |show (?:me )?)?";
 export const managerPatterns = {
   // Checked in this order.
   lookups: {
+    // "Who can cover Jamie's Friday shift?", "find a replacement for Sam"
+    // (CS-066). Checked first: these ask who could take a specific shift.
+    replacements: anyOf(
+      [
+        /who(?:'s| is)? (?:can|could|would|might|is able to|is available to|is free to|(?:free|available) to|should) (?:cover|replace|take over|take|fill in for|sub(?:stitute)? for|stand in for|step in for|work instead of)\s+(?!me\b|it\b|that\b|for me\b)\S/,
+        /(?:is there )?(?:any ?one|anybody|someone|somebody) (?:who |that )?(?:can|could|would be able to|is (?:free|available) to) (?:cover|replace|take over|take|fill in for|sub for)\s+(?!me\b|it\b|that\b|for me\b)\S/,
+        /(?:can|could) (?:any ?one|anybody|someone|somebody) (?:cover|replace|take over|take|fill in for|sub for)\s+(?!me\b|it\b|that\b|for me\b)\S/,
+        /(?:find|suggest|recommend|get|need|show|list) (?:me )?(?:a |an |some |possible )?(?:replacements?|cover|subs?|substitutes?|stand-?ins?|someone to (?:cover|take|replace)|people who (?:can|could) (?:cover|take))\b/,
+        /(?:replacements?|subs?|substitutes?|cover) (?:options|suggestions|candidates)\b/,
+        /who (?:can|could) (?:i )?(?:get|ask|use) to (?:cover|take|replace|fill in for)\b/,
+      ],
+      { before: '^', after: '' },
+    ),
     // "Who's off next week?", "show pending time-off requests"
     teamTimeOff: anyOf(
       [

@@ -17,6 +17,7 @@ import {
   routeChat,
   workingSummaryWeek,
 } from './ai-chat-routing.js';
+import { replacementContext } from './ai-replacements.js';
 import { requestJSON } from './request.js';
 
 export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
@@ -343,8 +344,12 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       const continuing =
         previousTopic === target &&
         routed === 'clarification' &&
-        /^Which date/.test(previous.text) &&
+        /^Which (?:date|shift)/.test(previous.text) &&
         earlier;
+      const replacement =
+        continuing && target === 'replacements'
+          ? replacementContext(chat.value.messages)
+          : null;
       say('user', text);
       appendTurn('I’ll check the saved records.');
       const query = continuing ? earlier + ' ' + text : text;
@@ -352,7 +357,12 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         await showTeamAvailability(query, continuing ? earlier : text);
       } else {
         // A date reply replaces the earlier dates; the rest of the question stays.
-        await showManagerLookup(target, query, continuing ? text : null);
+        await showManagerLookup(
+          target,
+          replacement?.question ?? query,
+          continuing ? text : null,
+          replacement?.dateReply,
+        );
       }
       return;
     }
