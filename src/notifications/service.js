@@ -40,13 +40,14 @@ function presentation(db,user,n,r,shift,status,groupKey){
  const eventMessage={sent:'Invitation sent',accepted:'Coworker accepted the invitation',claimed:'Coverage claim submitted',approved:'Manager approved the claim',rejected:'Manager rejected the claim',declined:'Coworker declined the invitation',cancelled:'Request cancelled',expired:'Invitation expired'}[n.action];
  return {groupKey,headline,summary,eventMessage,startsAt:shift?.startsAt||r.shiftSnapshot.startsAt,endsAt:shift?.endsAt||r.shiftSnapshot.endsAt,timezone:db.businesses.find(b=>b.id===user.businessId).timezone};
 }
-export async function listNotifications(store,userId,before=null,now=Date.now()) {
+export async function listNotifications(store,userId,before=null,now=Date.now(),{unreadOnly=false}={}) {
   const db=await store.read(),user=account(db,userId);
   const own=[...(db.notifications||[]),...(db.coverNotifications||[]),...(db.scheduleNotifications||[])].filter(n=>n.userId===user.id && n.businessId===user.businessId).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id));
-  const offset=before===null ? 0 : own.findIndex(n=>n.id===before)+1;
+  const selected=unreadOnly?own.filter(n=>n.readAt===null):own;
+  const offset=before===null ? 0 : selected.findIndex(n=>n.id===before)+1;
   if (before!==null && offset===0) throw new HttpError(400,'Refresh notifications to start again.');
-  const page=own.slice(offset,offset+20);
-  return {unreadCount:own.filter(n=>n.readAt===null).length, next:offset+page.length<own.length?page.at(-1).id:null,notifications:page.map(n=>{
+  const page=selected.slice(offset,offset+20);
+  return {unreadCount:own.filter(n=>n.readAt===null).length, next:offset+page.length<selected.length?page.at(-1).id:null,notifications:page.map(n=>{
     if(n.publicationId){const r=db.schedulePublications.find(r=>r.id===n.publicationId),p=db.schedulePeriods.find(p=>p.id===r.periodId);return {id:n.id,groupKey:'schedule:'+p.id,headline:'Schedule published',title:p.startsOn+' – '+p.endsOn,summary:'Your team schedule was published or updated. Review your assigned shifts.',message:'Review your published schedule.',eventMessage:'Manager published schedule',currentStatus:'published',createdAt:n.createdAt,readAt:n.readAt,timezone:p.timezone,href:'/workspace/worker/shifts',linkLabel:'View schedule ↗'};}
     if(n.invitationId){const r=db.coverInvitations.find(r=>r.id===n.invitationId);const message={sent:'A coworker asked you to cover a shift. Review it and accept or decline.',accepted:'Your coworker accepted. Manager approval is still required.',declined:'Your coworker declined your cover invitation.',cancelled:'The sender cancelled this cover invitation.',expired:'This cover invitation is no longer available. No shift was transferred.'}[n.action];const shift=db.shifts.find(s=>s.id===r.shiftId);const status=coverDisplayStatus(db,r,now);const view=presentation(db,user,n,r,shift,status==='pending'?'invited':status,r.requestId?'coverage:'+r.requestId:'invitation:'+r.id);return {...view,id:n.id,title:r.shiftSnapshot.title,message,createdAt:n.createdAt,readAt:n.readAt,currentStatus:coverDisplayStatus(db,r,now),href:`/workspace/${user.role}/cover?invitation=${r.id}`};}
     const r=db.coverageRequests.find(r=>r.id===n.requestId),shift=db.shifts.find(s=>s.id===r.shiftId);

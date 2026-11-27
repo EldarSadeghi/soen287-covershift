@@ -2,6 +2,7 @@ import { sendProviderMessage } from './ai-chat-provider.js';
 import {
   MIXED_INTENT_QUESTION,
   MANAGER_LOOKUPS,
+  EMPLOYEE_LOOKUPS,
   OPENING_CLARIFICATION,
   GENERIC_CLARIFICATION_PREFIX,
   availabilityNeedsHours,
@@ -40,6 +41,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     showCoworkerAvailability,
     showTeamAvailability,
     showManagerLookup,
+    showEmployeeLookup,
   } = cards;
   // The last two complete turns, each with a user and an
   // assistant, each at most 1,500 characters, at most 4,500 bytes in total).
@@ -76,6 +78,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
             'search',
             'availability',
             'coworkers',
+            ...EMPLOYEE_LOOKUPS,
             'claimStatus',
             'coverStatus',
             'timeOffStatus',
@@ -269,6 +272,12 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         if (choice !== undefined) await lookup.loadChoice(choice);
         else await lookup.load(text);
       }
+      return;
+    }
+    if (EMPLOYEE_LOOKUPS.includes(target)) {
+      say('user', text);
+      appendTurn('I’ll check your saved records.');
+      await showEmployeeLookup(target, text);
       return;
     }
     if (target === 'summary') {

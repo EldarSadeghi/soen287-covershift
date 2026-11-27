@@ -2,14 +2,14 @@ import { HttpError } from '../auth/errors.js';
 import { aiConfigured, responsesBody, structuredResponse } from './structured-response.js';
 import { validateChatInput } from './shift-draft.js';
 
-const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus'];
+const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates'];
 const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
 // the evaluation measures generalisation rather than memorised answers.
 const roleGuide = {
   worker: `The sender is an EMPLOYEE.
-questions = their own assigned shifts, start times or hours ("when am I in next", "what's my rota on the 9th").
+questions = their own assigned shifts, saved shift duties, start times or hours ("when am I in next", "what's my rota on the 9th").
 search = open shifts they could pick up ("anything spare on Tuesday evening").
 availability = draft or save NEW availability for automatic requests ("I'm happy to work Sunday 1-5, add that").
 coworkers = whether coworkers are free or could cover ("anyone around to swap in for me on the 3rd").
@@ -17,6 +17,8 @@ summary = their working-week or coverage overview ("overview of my upcoming work
 claimStatus = status of a shift THEY claimed ("any news on the opening I claimed").
 coverStatus = status of a cover request THEY sent to a coworker ("did my swap ask get a reply").
 timeOffStatus = status of THEIR time-off request ("did my holiday request get the ok").
+history = past coverage outcomes for their own shifts, including counts over a period ("how much cover did I take over in October").
+updates = recent notifications or changes affecting them ("anything come through for me lately").
 Viewing, pausing or cancelling SAVED availability rules is not availability: return clarification.`,
   manager: `The sender is a MANAGER.
 questions = the team's or one employee's assigned shifts or hours ("who's in on the 9th", "is Sam on this weekend").

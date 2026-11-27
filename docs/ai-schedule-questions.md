@@ -32,3 +32,15 @@ The manager chat can read team availability, approved and pending time off, cove
 When chat needs a date, reply with a business-local date such as “Friday” or “December 3.” The data reads use manager-only GET routes and consume zero AI allowance. Unmatched phrasing may use the intent classifier once. A read-only intent does not receive an intent pass.
 
 See [CS-059 acceptance evidence](acceptance/cs059/USER-STORIES.md) for the test baseline and browser results.
+
+## Employee duties, coverage history, and updates
+
+Ask “What are my duties on Thursday?” or “What do I have to do on my next shift?” An employee’s schedule answer shows the saved duties under each assigned shift, up to ten. Duty questions use the same schedule interpretation and account scope as other schedule questions.
+
+“Which shifts did I pick up last month?” summarizes the employee’s own coverage records by the shift’s business-local date. Ask for last month, a named month, or this year. A month name without a year uses its most recent occurrence, including the current month. When a message omits a period, the lookup uses the last 30 calendar days. For an unclear period, reply to the clarification with a month or another supported period.
+
+“Any updates for me?” shows the five most recent unread notifications, or the five most recent notifications once everything is read. Opening the chat card leaves the bell count intact. Each update links to the related workspace page.
+
+Coverage history and updates use employee-only read endpoints. Their answers require no provider call. The intent classifier may handle unfamiliar wording, and these read-only routes receive no intent pass.
+
+[Acceptance checks and browser evidence](acceptance/cs061/USER-STORIES.md)
