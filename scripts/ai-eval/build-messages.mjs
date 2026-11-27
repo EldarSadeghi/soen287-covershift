@@ -148,6 +148,18 @@ const groups = {
     ],
   },
   manager: {
+    shiftEdit: [
+      "Move Jamie's Friday shift to 10 AM.",
+      "Change Alex's Thursday shift title to Inventory.",
+      "Reschedule Jamie Lee's morning shift to 11 AM.",
+      "Push the Saturday service shift to 3 PM.",
+      "Rename Sam's Friday shift to Closing service.",
+      "Reassign the Friday opening shift to Taylor.",
+      "Extend Alex's booked shift until 8 PM.",
+      "Shorten the evening shift to end at 9 PM.",
+      "Edit the opening shift for Jamie on December 7.",
+      "Could the existing shift for Jamie start an hour later?",
+    ],
     teamAvailability: [
       'Is Alex Morgan available on December 3?',
       'Who is free on Friday?',
@@ -198,6 +210,8 @@ const groups = {
       'who opens on monday',
       'Which staff are on the rota on December 10?',
       'Who is working on the evening shift tomorrow?',
+      'Who is working Jamie’s Friday shift?',
+      'Show the existing shift times for Friday.',
     ],
     draft: [
       'Create a shift for Jamie Lee on Dec 5 from 9 AM to 1 PM called Opening service',
@@ -213,6 +227,7 @@ const groups = {
       'can you add sam to the friday evening shift 4 to 9pm',
       'new shift for taylor thursday 6am-10am bakery prep',
       'creat a shift for jamie tmrw 9-5',
+      'Create a new afternoon shift for Jamie on Friday.',
     ],
     summary: [
       'What needs my attention?',
@@ -241,6 +256,8 @@ const groups = {
       'thanks',
       'find open shifts',
       'do not create any shifts',
+      'Delete Jamie’s Friday shift.',
+      'Move Jamie’s Friday shift and publish the schedule.',
     ],
   },
 };

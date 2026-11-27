@@ -8,7 +8,7 @@ import { HttpError } from '../auth/errors.js';
 // user IDs or names. Each month is capped, so the log cannot grow without bound.
 export const ROUTES = new Set([
   'questions', 'search', 'availability', 'coworkers', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus',
-  'explanation', 'rules', 'alternatives', 'draft', 'clarification',
+  'explanation', 'rules', 'alternatives', 'draft', 'shiftEdit', 'clarification',
 ]);
 export const DECIDERS = new Set(['local', 'follow-up', 'classifier', 'unsupported', 'local-clarification']);
 const MAX_PER_MONTH = 20000;

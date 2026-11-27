@@ -6,7 +6,7 @@ export function businessLocal(instant, timezone) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(instant)).map(part => [part.type, part.value]));
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
-export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
+export function managedShiftCard(shift, timezone, csrfToken, onChanged, review = null) {
   const wrapper = element('div', 'managed-shift');
   wrapper.append(shiftCard(shift, timezone, { workerName: shift.assignedWorker.name }));
   if(shift.draft)wrapper.prepend(element('p','draft-label','Private draft · unpublished'));
@@ -19,7 +19,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   actions.append(editButton, deleteButton); wrapper.append(actions);
   const editor = element('section', 'shift-editor'); editor.hidden = true; wrapper.append(editor);
   editor.setAttribute('role', 'group'); editor.setAttribute('aria-label', `Manage shift ${shift.title}`);
-  let busy = false; let uncertain = false; let trigger;
+  let busy = false; let uncertain = false; let trigger; let editReview = null;
   editor.addEventListener('keydown', event => { if (event.key === 'Escape' && !busy) { event.preventDefault(); reset(); } });
   const reset = () => { editor.replaceChildren(); editor.hidden = true; editButton.disabled = uncertain; deleteButton.disabled = uncertain; (uncertain ? document.querySelector('#refresh-dashboard') : trigger)?.focus(); };
   function message(text) { const error = editor.querySelector('.manage-error'); error.textContent = text; error.hidden = false; error.focus(); }
@@ -32,7 +32,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
   async function mutate(action, values, submit, cancel, markErrors = () => {}) {
     busy = true; submit.disabled = true; cancel.disabled = true; submit.textContent = action === 'edit' ? 'Saving changes…' : 'Deleting…';
     try {
-      const response = await requestJSON(`/api/manager/shifts/${encodeURIComponent(shift.id)}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ ...values, revision: shift.revision }) });
+      const response = await requestJSON(`/api/manager/shifts/${encodeURIComponent(shift.id)}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ ...values, revision: action === 'edit' && editReview ? editReview.revision : shift.revision }) });
       if (response.status === 401) { location.replace('/login?expired=1'); return; }
       const result = response.data;
       if (!response.ok) { markErrors(result.fields || {}); message(result.message || 'The change could not be saved. Try again.'); return; }
@@ -40,8 +40,9 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
     } catch { uncertain = true; message('We couldn’t confirm the result. Your entries are kept. Cancel and refresh the schedule to check the saved shift before trying again.'); }
     finally { busy = false; submit.disabled = uncertain; cancel.disabled = false; submit.textContent = action === 'edit' ? 'Save changes' : 'Delete this shift'; }
   }
-  editButton.addEventListener('click', async () => {
+  async function openEdit(candidate = null) {
     if (!start(editButton)) return;
+    editReview = candidate;
     editor.append(element('h3', '', 'Edit shift'), element('p', 'section-note', `All times are in ${timezone}. Use Ends next day for overnight shifts.`)); errorBox();
     const state = element('p', 'section-note', 'Loading your workers…'); state.setAttribute('role', 'status'); editor.append(state);
     const cancel = cancelButton(); editor.append(cancel); cancel.focus();
@@ -61,7 +62,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
         const input = element(type === 'select' ? 'select' : 'input'); input.id = `edit-${shift.id}-${key}`; input.name = key; input.required = true; caption.htmlFor = input.id;
         if (type === 'select') { input.append(new Option('Choose a worker', '')); for (const worker of workers.filter(worker=>worker.status !== 'inactive')) input.append(new Option(worker.name, worker.id)); }
         else { input.type = type; if (type === 'text') input.maxLength = 100; else { input.min = '2000-01-01T00:00'; input.max = '2099-12-31T23:59'; } }
-        input.value = value; inputs[key] = input; const error = element('p', 'field-error'); error.id = `${input.id}-error`; error.hidden = true; input.setAttribute('aria-describedby', error.id); field.append(caption, input, error); grid.append(field);
+        input.value = editReview?.draft[key] ?? value; inputs[key] = input; const error = element('p', 'field-error'); error.id = `${input.id}-error`; error.hidden = true; input.setAttribute('aria-describedby', error.id); field.append(caption, input, error); grid.append(field);
       }
       let planner;
       function markErrors(errors) {
@@ -87,7 +88,9 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged) {
       });
       editor.append(form);planner=mountWeekPlanner({startInput:inputs.startLocal,endInput:inputs.endLocal,timezone});inputs.title.focus();
     } catch { if (state.isConnected) { state.textContent = 'We couldn’t load the workers. Cancel and choose Edit shift to retry.'; message('Your shift has not changed. Please retry.'); } }
-  });
+  }
+  editButton.addEventListener('click', () => void openEdit());
+  if (review) queueMicrotask(() => { if (wrapper.isConnected) void openEdit(review); });
   deleteButton.addEventListener('click', () => {
     if (!start(deleteButton)) return;
     const title = element('h3', '', 'Delete this shift?'); editor.append(title); errorBox();

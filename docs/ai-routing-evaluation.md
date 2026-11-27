@@ -39,3 +39,7 @@ The classifier can return only its own intents, so labels that only the local ru
 ## CS-059 manager lookups
 
 The evaluation retains all 181 existing prompt IDs and adds 21 manager prompts covering availability, time off, coverage, publication and schedule look-alikes. The offline run covers 202 prompts with 54 classifier candidates and zero incorrect routes into write-capable features. For the approved live run, use `npm run ai:eval -- --live --max-calls 54`. Compare the 181 existing prompts with the previous live run by ID. The existing cohort must score at least 98.8%, in addition to the overall 95% accuracy, 5% maximum unhelpful generic reply rate and zero incorrect write-capable routes.
+
+## CS-060 shift edit drafts
+
+The evaluator treats `shiftEdit` as write-capable because its proposal can be reviewed and saved through Schedule. The offline run contains 217 messages, including 15 new edit and look-alike prompts. It produced zero incorrect write-capable routes, with 55 prompts eligible for the classifier. For an approved live run, use `npm run ai:eval -- --live --max-calls 55`. Compare the original 202 prompts by ID with CS-059’s 200/202 live baseline.

@@ -8,6 +8,7 @@ import {buildDemoFixtures} from '../../src/demo/fixtures.js';
 import {createAppServer} from '../../src/app.js';
 import {SessionStore} from '../../src/auth/sessions.js';
 import {AiAllowance} from '../../src/ai/allowance.js';
+import {createAiShiftEditor} from '../../src/ai/shift-edit.js';
 import {createAiShiftDrafter} from '../../src/ai/shift-draft.js';
 import {createAiShiftSearcher} from '../../src/ai/shift-search.js';
 import {createAiAvailabilityDrafter} from '../../src/ai/availability-draft.js';
@@ -71,7 +72,7 @@ export async function createAcceptanceContext(checks, options = {}) {
       timeoutMs: options.liveKey ? 11000 : options.preview ? 3000 : 200,
     };
     const sessions=new SessionStore();
-    server=createAppServer({store,sessions,shiftClock:()=>FIXED_NOW,...(options.disabled?{}:{aiDraft:createAiShiftDrafter(aiOptions),aiSearch:createAiShiftSearcher(aiOptions),aiAvailability:createAiAvailabilityDrafter(aiOptions),aiSchedule:createAiScheduleAnswerer(aiOptions),aiIntent:createAiIntentClassifier(aiOptions)})});
+    server=createAppServer({store,sessions,shiftClock:()=>FIXED_NOW,...(options.disabled?{}:{aiDraft:createAiShiftDrafter(aiOptions),aiEdit:createAiShiftEditor(aiOptions),aiSearch:createAiShiftSearcher(aiOptions),aiAvailability:createAiAvailabilityDrafter(aiOptions),aiSchedule:createAiScheduleAnswerer(aiOptions),aiIntent:createAiIntentClassifier(aiOptions)})});
     await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(options.port ?? 0,'127.0.0.1',resolve);});
     const base=`http://127.0.0.1:${server.address().port}`,identities=new Map();
     async function identity(user) {

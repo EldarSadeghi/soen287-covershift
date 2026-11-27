@@ -71,7 +71,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       'questions',
       'summary',
       ...(manager
-        ? ['draft', ...MANAGER_LOOKUPS]
+        ? ['draft', 'shiftEdit', ...MANAGER_LOOKUPS]
         : [
             'search',
             'availability',
@@ -202,7 +202,11 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       manager &&
       target === 'draft' &&
       (requestsShiftBatch(text) || wasClarifyingBatch);
-    const sameTopic = flow.mode === target;
+    const freshEdit =
+      target === 'shiftEdit' &&
+      !chat.value.editSelection &&
+      (routeChat(text, manager, null) === 'shiftEdit' || askedClassifier);
+    const sameTopic = flow.mode === target && !freshEdit;
     const inScope = chat.value.messages.slice(-8);
     let history = [];
     if (
@@ -403,6 +407,8 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     if (!sameTopic) {
       Object.assign(chat.value, {
         suggestion: null,
+        shiftEdit: null,
+        editSelection: null,
         pending: null,
         completion: null,
         uncertainDraftId: null,

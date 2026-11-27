@@ -87,3 +87,13 @@ Definite validation failures remain unsaved/editable. Uncertain save responses s
 Verification: 149 passing tests (eight new completion cases) plus syntax checks; browser edited title/worker/hours, persistence/navigation, unrelated Keep/manual save, rejection, committed-but-response-timed-out single save, and reset during late save. Updated user-story report: [all 14 stories pass within the checked scenarios](acceptance/cs031a/USER-STORIES.md). Current screenshots and logs: `cs031a-us05-evidence/`. Awaiting user review; no push/merge.
 
 CS-031A, including US05, was subsequently approved and merged in PR #45 on 2026-11-21. The dated local-review entries above preserve that increment’s review history.
+
+## Changes to existing shifts
+
+Managers can ask chat to move, retime, rename or reassign an existing shift. For example, “Move Jamie’s Friday shift to 10 AM” preserves the shift’s duration. Chat shows the saved values and the proposal. A follow-up such as “Actually make it 11 AM” refines the proposal for the same selected shift.
+
+The provider extracts the employee, date, optional title or time, and requested fields. The server resolves those details against the manager’s own schedule, including unpublished drafts. Shift IDs and revisions are retained in the app handoff. If more than one shift matches, the card shows up to five choices. Started shifts and shifts with linked coverage are locked, and assignment conflicts are checked before a preview is shown.
+
+**Review change** opens the existing Schedule editor with the proposed values and the original duties. **Save changes** submits the captured revision through the usual Schedule endpoint. A stale revision returns the standard conflict message. Workspaces with publication enabled stage the change privately until publication.
+
+[Acceptance checks and browser evidence](acceptance/cs060/USER-STORIES.md)
