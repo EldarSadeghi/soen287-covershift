@@ -2,8 +2,8 @@ import { HttpError } from '../auth/errors.js';
 import { aiConfigured, responsesBody, structuredResponse } from './structured-response.js';
 import { validateChatInput } from './shift-draft.js';
 
-const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft'];
-const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory'];
+const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft', 'help'];
+const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'help'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
 // the evaluation measures generalisation rather than memorised answers.
@@ -21,6 +21,7 @@ timeOffDraft = prepare a NEW request to be absent ("I'd like to put in for leave
 coverDraft = prepare a NEW invitation asking a coworker to take an assigned shift ("could Priya fill in for me on the Sunday close"). A question about who might be free is coworkers. Questions about existing requests are status.
 history = past coverage outcomes for their own shifts, including counts over a period ("how much cover did I take over in October").
 updates = recent notifications or changes affecting them ("anything come through for me lately").
+help = how to use CoverShift itself, why the app doesn't allow something, or what a status word means ("where in the app do I hand off a shift", "what's the deal with requests that say declined"). Questions about their own records are not help.
 Viewing, pausing or cancelling SAVED availability rules is not availability: return clarification.`,
   manager: `The sender is a MANAGER.
 questions = the team's or one employee's assigned shifts or hours ("who's in on the 9th", "is Sam on this weekend").
@@ -33,7 +34,8 @@ draft = prepare a new shift for an employee, even with missing details ("pop Ale
 summary = what needs the manager's attention: pending approvals, unfilled coverage ("anything I need to sign off").
 teamHours = comparing scheduled hours across employees: most, fewest, under or over a number, near overtime ("is anybody getting too many hours", "who's light on hours in a fortnight").
 coverageGaps = upcoming shifts that are not safely staffed, including ones clashing with time off ("where am I short-handed next week").
-shiftHistory = what happened to a specific shift over time: requests, claims, approvals ("walk me through the Sunday brunch shift's changes").`,
+shiftHistory = what happened to a specific shift over time: requests, claims, approvals ("walk me through the Sunday brunch shift's changes").
+help = how to use CoverShift itself, why the app doesn't allow something, or what a status word means ("which screen lets me bring on a new hire", "what's the point of the publish step"). Questions about the team's records are not help.`,
 };
 
 function instructionsFor(role) {

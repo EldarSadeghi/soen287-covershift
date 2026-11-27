@@ -68,6 +68,41 @@ const EXTRA = [
 ];
 
 // CS-065 manager insights and their look-alikes.
+// CS-064 help questions, blocked commands and look-alikes that must keep
+// their own routes.
+const HELP = [
+  'how do I request time off?',
+  'how do I give away my shift?',
+  'how do I publish the schedule?',
+  'how do I add an employee?',
+  'hey, can you tell me how to add a new employee?',
+  'how do I approve time off?',
+  'how do I deactivate an employee',
+  'how do I accept a cover invitation',
+  'how do I cancel my claim',
+  'how can I set my availability',
+  'why can\u2019t I approve this time off?',
+  'why can\u2019t I edit this shift?',
+  'why won\u2019t it let me publish',
+  'why can\u2019t I approve this claim',
+  'what does pending mean?',
+  'what is awaiting approval?',
+  'what does expired mean',
+  'what is open for cover',
+  'what does published mean',
+  'what is an availability rule',
+  'what can you do?',
+  'approve Jamie\u2019s time off',
+  'decline Sam\u2019s claim',
+  'clock me out',
+  'swap my shift',
+  'how many hours is Jamie working this week',
+  'what is pending this week',
+  'how can I see my schedule',
+  'why can\u2019t I claim this shift?',
+  'tell me how to add a shift for Jamie on Friday 9-5',
+];
+
 const INSIGHTS = [
   'who has the most hours this week?',
   'who is working the fewest hours next week',
@@ -225,6 +260,7 @@ export async function buildSnapshot() {
       ...messages.map((row) => row.message),
       ...EXTRA,
       ...INSIGHTS,
+      ...HELP,
       ...auditPrompts,
     ]),
   ];

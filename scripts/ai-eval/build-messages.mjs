@@ -146,6 +146,17 @@ const groups = {
       'any other shifts?',
       'show me alternatives',
     ],
+    help: [
+      'How do I ask for time off?',
+      'how do I get someone to cover my shift',
+      'How do I swap shifts with a coworker?',
+      'how do i withdraw my time off request',
+      'why can\u2019t I get cover?',
+      'What does pending mean?',
+      'what does it mean when my claim says expired',
+      'What can you do?',
+      'Where can I respond to a cover invite?',
+    ],
     clarification: [
       'hello',
       'help',
@@ -297,6 +308,18 @@ const groups = {
       'show unresolved coverage',
       'anything waiting on me?',
     ],
+    help: [
+      'How do I add a new employee?',
+      'how do I publish next week\u2019s schedule',
+      'Why can\u2019t I edit Friday\u2019s opening shift?',
+      'why won\u2019t it let me approve this time off',
+      'What does awaiting approval mean?',
+      'what is an availability rule?',
+      'How do I deactivate someone who left?',
+      'what can I ask you',
+      'Where do I approve cover claims?',
+      'Explain what “open for cover” means',
+    ],
     clarification: [
       'hello',
       'approve all pending claims',
@@ -347,6 +370,12 @@ followUps.forEach(([role, expected, message, currentTopic, history], index) => {
 });
 // CS-062 changes this existing supported outcome while keeping the case ID stable.
 messages.find(({ id }) => id === 'e-clarification-10').expected = 'timeOffDraft';
+// CS-064 answers "help" with the help card, for both roles; IDs stay stable.
+for (const id of ['e-clarification-02', 'm-clarification-10']) {
+  const item = messages.find((message) => message.id === id);
+  if (item.message !== 'help') throw new Error(`${id} is not "help"`);
+  item.expected = 'help';
+}
 const target = new URL('./messages.json', import.meta.url);
 writeFileSync(target, `${JSON.stringify({ version: 1, messages }, null, 2)}\n`);
 console.log(`Wrote ${messages.length} labelled messages.`);

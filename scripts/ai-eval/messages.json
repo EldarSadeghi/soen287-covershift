@@ -686,6 +686,60 @@
       "message": "show me alternatives"
     },
     {
+      "id": "e-help-01",
+      "role": "employee",
+      "expected": "help",
+      "message": "How do I ask for time off?"
+    },
+    {
+      "id": "e-help-02",
+      "role": "employee",
+      "expected": "help",
+      "message": "how do I get someone to cover my shift"
+    },
+    {
+      "id": "e-help-03",
+      "role": "employee",
+      "expected": "help",
+      "message": "How do I swap shifts with a coworker?"
+    },
+    {
+      "id": "e-help-04",
+      "role": "employee",
+      "expected": "help",
+      "message": "how do i withdraw my time off request"
+    },
+    {
+      "id": "e-help-05",
+      "role": "employee",
+      "expected": "help",
+      "message": "why can’t I get cover?"
+    },
+    {
+      "id": "e-help-06",
+      "role": "employee",
+      "expected": "help",
+      "message": "What does pending mean?"
+    },
+    {
+      "id": "e-help-07",
+      "role": "employee",
+      "expected": "help",
+      "message": "what does it mean when my claim says expired"
+    },
+    {
+      "id": "e-help-08",
+      "role": "employee",
+      "expected": "help",
+      "message": "What can you do?"
+    },
+    {
+      "id": "e-help-09",
+      "role": "employee",
+      "expected": "help",
+      "message": "Where can I respond to a cover invite?"
+    },
+    {
       "id": "e-clarification-01",
       "role": "employee",
       "expected": "clarification",
@@ -694,7 +748,7 @@
     {
       "id": "e-clarification-02",
       "role": "employee",
-      "expected": "clarification",
+      "expected": "help",
       "message": "help"
     },
     {
@@ -1406,6 +1460,66 @@
       "message": "anything waiting on me?"
     },
     {
+      "id": "m-help-01",
+      "role": "manager",
+      "expected": "help",
+      "message": "How do I add a new employee?"
+    },
+    {
+      "id": "m-help-02",
+      "role": "manager",
+      "expected": "help",
+      "message": "how do I publish next week’s schedule"
+    },
+    {
+      "id": "m-help-03",
+      "role": "manager",
+      "expected": "help",
+      "message": "Why can’t I edit Friday’s opening shift?"
+    },
+    {
+      "id": "m-help-04",
+      "role": "manager",
+      "expected": "help",
+      "message": "why won’t it let me approve this time off"
+    },
+    {
+      "id": "m-help-05",
+      "role": "manager",
+      "expected": "help",
+      "message": "What does awaiting approval mean?"
+    },
+    {
+      "id": "m-help-06",
+      "role": "manager",
+      "expected": "help",
+      "message": "what is an availability rule?"
+    },
+    {
+      "id": "m-help-07",
+      "role": "manager",
+      "expected": "help",
+      "message": "How do I deactivate someone who left?"
+    },
+    {
+      "id": "m-help-08",
+      "role": "manager",
+      "expected": "help",
+      "message": "what can I ask you"
+    },
+    {
+      "id": "m-help-09",
+      "role": "manager",
+      "expected": "help",
+      "message": "Where do I approve cover claims?"
+    },
+    {
+      "id": "m-help-10",
+      "role": "manager",
+      "expected": "help",
+      "message": "Explain what “open for cover” means"
+    },
+    {
       "id": "m-clarification-01",
       "role": "manager",
       "expected": "clarification",
@@ -1462,7 +1576,7 @@
     {
       "id": "m-clarification-10",
       "role": "manager",
-      "expected": "clarification",
+      "expected": "help",
       "message": "help"
     },
     {

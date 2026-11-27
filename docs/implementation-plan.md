@@ -77,7 +77,8 @@ CS-048 adds 19 deterministic tests. Browser review on port 3056 confirmed “Who
 | CS-061 | Employee lookups in chat | Done | [#143](https://github.com/EldarSadeghi/soen287-covershift/issues/143) | [#144](https://github.com/EldarSadeghi/soen287-covershift/pull/144) | Merged |
 | CS-062 | Employee drafts for time off and cover requests in chat | Done | [#145](https://github.com/EldarSadeghi/soen287-covershift/issues/145) | New | #146 |
 | CS-063 | Routing cleanup and remaining routing fixes | Done | [#147](https://github.com/EldarSadeghi/soen287-covershift/issues/147) | New | Merged in PR #148 |
-| CS-065 | Manager insights in chat: hours, coverage gaps, shift history | Your review | [#149](https://github.com/EldarSadeghi/soen287-covershift/issues/149) | New | — |
+| CS-065 | Manager insights in chat: hours, coverage gaps, shift history | Done | [#149](https://github.com/EldarSadeghi/soen287-covershift/issues/149) | New | Merged in PR #150 |
+| CS-064 | Help and safe fallback for any chat request | Your review | [#151](https://github.com/EldarSadeghi/soen287-covershift/issues/151) | New | — |
 | CS-043 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
 CS-001–037, CS-040–042 and CS-044 are complete. CS-045 is the conversation quality follow-up before CS-038 and CS-039. CS-043 final deployment remains last. Each increment requires local user review and explicit merge approval. Stable issue numbers preserve historical task mappings.

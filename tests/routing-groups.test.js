@@ -170,7 +170,9 @@ import {
   routeChat,
   MANAGER_OPEN_SHIFTS_MESSAGE,
 } from '../public/ai-chat-routing.js';
-import { UNSUPPORTED_ACTION_MESSAGE } from '../public/routing/unsupported.js';
+// A blocked command's reply: what chat can't do and where to do it instead.
+const BLOCKED_REPLY =
+  /^I can’t (?:delete|cancel)\b.*\b(?:Schedule|My shifts)\.$/;
 
 test('fix: common "schedule" misspellings are schedule questions for both roles', () => {
   for (const text of [
@@ -216,11 +218,7 @@ test('fix: cancelling a shift is blocked, cancelling rules or requests is not', 
     ['please cancel the Saturday shift', true],
   ]) {
     assert.equal(routeChat(text, manager, null), 'clarification', text);
-    assert.equal(
-      chatClarification(text, manager),
-      UNSUPPORTED_ACTION_MESSAGE,
-      text,
-    );
+    assert.match(chatClarification(text, manager), BLOCKED_REPLY, text);
   }
   assert.equal(
     routeChat('cancel the saved availability rule for Friday', false, null),
@@ -255,11 +253,7 @@ test('fix: a shift cancellation stays blocked whatever reason follows (Codex rev
         `${text} (${manager ? 'manager' : 'employee'})`,
       );
       assert.equal(routeChat(text, manager, null), 'clarification', text);
-      assert.equal(
-        chatClarification(text, manager),
-        UNSUPPORTED_ACTION_MESSAGE,
-        text,
-      );
+      assert.match(chatClarification(text, manager), BLOCKED_REPLY, text);
     }
   }
   // Only what is being cancelled matters: rules, claims and requests are not blocked here.
