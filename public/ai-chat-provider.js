@@ -39,11 +39,13 @@ export async function sendProviderMessage(
       ? null
       : flow.mode === 'draft'
         ? chat.value.suggestion?.draft
-        : flow.mode === 'availability'
-          ? chat.value.availabilityDraft
-          : flow.mode === 'search'
-            ? chat.value.criteria
-            : null;
+        : flow.mode === 'shiftEdit'
+          ? chat.value.editSelection || chat.value.shiftEdit
+          : flow.mode === 'availability'
+            ? chat.value.availabilityDraft
+            : flow.mode === 'search'
+              ? chat.value.criteria
+              : null;
   const body = JSON.stringify({
     description: text,
     history,
@@ -62,6 +64,7 @@ export async function sendProviderMessage(
   send.disabled = true;
   send.textContent = 'Thinking…';
   if (manager) {
+    chat.value.editSelection = null;
     chat.value.batch = null;
     chat.value.batchClarifying = false;
     chat.value.pending = null;
@@ -161,9 +164,11 @@ export async function sendProviderMessage(
       !(
         flow.mode === 'questions'
           ? ['schedule_answer', 'clarification']
-          : manager
-            ? [batch ? 'batch' : 'draft', 'clarification']
-            : ['matches', 'availability', 'clarification']
+          : flow.mode === 'shiftEdit'
+            ? ['shiftEdit', 'editChoices', 'editBlocked', 'clarification']
+            : manager
+              ? [batch ? 'batch' : 'draft', 'clarification']
+              : ['matches', 'availability', 'clarification']
       ).includes(data.kind)
     )
       throw new Error('AI could not prepare a reply.');

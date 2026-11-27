@@ -1,4 +1,5 @@
 export const CHAT_ENDPOINTS = {
+  shiftEdit: '/api/manager/ai-shift-edit',
   draft: '/api/manager/ai-shift-draft',
   search: '/api/worker/ai-shift-search',
   availability: '/api/worker/ai-availability-draft',
@@ -23,6 +24,7 @@ export const MANAGER_LOOKUPS = [
 
 const taskLabels = {
   draft: 'draft a shift',
+  shiftEdit: 'prepare a change to an existing shift',
   search: 'find open shifts',
   availability: 'draft availability',
   questions: 'check the schedule',
@@ -69,6 +71,13 @@ const patterns = {
       /\b(?:attention summary|what needs (?:my )?attention|weekly summary|pending approvals|claims awaiting approval|waiting for my approval|needs? cover|unresolved coverage|open (?:coverage|requests for cover))\b/,
     employee:
       /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/,
+  },
+  shiftEdit: {
+    command:
+      /^(?:move|change|reschedule|push|rename|reassign|extend|shorten|edit)\b/,
+    subject: /\bshifts?\b/,
+    followUp:
+      /^(?:actually|instead|make it|start|end|move it|change it|rename it|from|until|at|[0-9])\b/,
   },
   draft: {
     giveShift:
@@ -166,6 +175,13 @@ function explicitRoute(text, manager) {
       ? patterns.summary.manager
       : patterns.summary.employee;
     if (summary.test(message)) return 'summary';
+  }
+  if (
+    manager &&
+    patterns.shiftEdit.command.test(message) &&
+    patterns.shiftEdit.subject.test(message)
+  ) {
+    return 'shiftEdit';
   }
   if (manager && requestsShiftBatch(message)) return 'draft';
   if (
@@ -325,6 +341,12 @@ export function routeChat(text, manager, current) {
     /^(?:(?:what|how) about )?(?:this|next) week[.!?]*$/.test(message)
   )
     return 'summary';
+  if (
+    manager &&
+    current === 'shiftEdit' &&
+    patterns.shiftEdit.followUp.test(message)
+  )
+    return current;
   const editable = manager
     ? current === 'draft'
     : ['search', 'availability'].includes(current);
@@ -423,6 +445,16 @@ export function resolveChatTarget({
     /^Which date/.test(previous.text) &&
     unroutedForEmployee &&
     plainReply(false);
+  const editReply =
+    manager &&
+    previousTopic === 'shiftEdit' &&
+    unrouted &&
+    /^(?:Which|What)\b/.test(previous.text) &&
+    plainReply(true) &&
+    (/^[\p{L}][\p{L}'-]*(?: [\p{L}][\p{L}'-]*){0,3}[.!?]*$/u.test(
+      normalizedMessage(text),
+    ) ||
+      isStatusDateFollowUp(text));
   const teamDateReply =
     manager &&
     MANAGER_LOOKUPS.includes(previousTopic) &&
@@ -444,6 +476,7 @@ export function resolveChatTarget({
   const target =
     (batchReply && 'draft') ||
     (explanationReply && 'explanation') ||
+    (editReply && 'shiftEdit') ||
     (teamDateReply && previousTopic) ||
     (coworkerDateReply && 'coworkers') ||
     answerRoute ||

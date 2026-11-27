@@ -317,4 +317,22 @@ export const scenarios=[
   c.check('no-extra-use','Only the attempted classification is counted; the fallback makes no further AI call.',[await c.usage(),c.calls.length],[{calls:1,turns:1},1]);
   c.check('read-only','The failure writes no business data.',await c.bytes(),before);
 }},
+{id:'CS060-C01',title:'Prepare an edit, save through Schedule, reject a stale review',async run(c){
+  const message="Move Jamie's Friday shift to 10 AM";
+  const endpoint='/api/manager/ai-shift-edit';
+  c.check('session','The edit preview requires sign-in.',(await c.http(null,endpoint,{description:message})).status,401);
+  c.check('manager','Employees cannot prepare manager edits.',(await c.http('worker_jamie',endpoint,{description:message})).status,403);
+  c.check('csrf','A manager preview requires the session security token.',(await c.http('manager_morgan',endpoint,{description:message},{headers:{'X-CSRF-Token':'invalid'}})).status,403);
+  c.check('origin','A manager preview rejects a foreign origin.',(await c.http('manager_morgan',endpoint,{description:message},{headers:{Origin:'https://invalid.example'}})).status,403);
+  const before=await c.bytes();
+  c.expect({task:'shift_edit',message,reply:{kind:'edit',question:'',employee:'w1',date:c.dates.friday,shiftTitle:'',shiftTime:'',timing:'move',title:'',worker:'',startLocal:c.dates.friday+'T10:00',endLocal:''}});
+  const preview=await c.http('manager_morgan',endpoint,{description:message});
+  c.check('proposal','The server selects the saved shift and preserves its duration.',[preview.status,preview.data.kind,preview.data.id,preview.data.draft?.endLocal],[200,'shiftEdit',c.ids.assignedFriday,c.dates.friday+'T14:00']);
+  c.check('no-shift-id','The provider request contains no structured shift ID or revision.',JSON.stringify(c.calls[0].input).includes(c.ids.assignedFriday),false);
+  c.check('read-only','A chat preview makes no change to stored business data.',await c.bytes(),before);
+  const save='/api/manager/shifts/'+preview.data.id+'/edit';
+  const payload={...preview.data.draft,revision:preview.data.revision};
+  c.check('schedule-saved','The existing Schedule endpoint saves the reviewed change.',(await c.http('manager_morgan',save,payload)).status,200);
+  c.check('stale','A second save with the preview revision is rejected.',(await c.http('manager_morgan',save,payload)).status,409);
+}},
 ];

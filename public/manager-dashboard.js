@@ -1,3 +1,4 @@
+import { takeShiftEditHandoff } from './ai-shift-edit.js';
 import {mountSchedulePublication} from './schedule-publication.js';
 import { requestJSON } from './request.js';
 import { reviewActions } from './review-claim.js';
@@ -45,6 +46,8 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
   const timezone = document.querySelector('#manager-timezone');
   const updated = document.querySelector('#dashboard-updated');
   let loading = false;let refreshPublication=null;
+  let editReview = page === 'schedule' && new URLSearchParams(location.search).get('review') === 'shift-edit'
+    ? takeShiftEditHandoff(account) : null;
   if (page === 'schedule') {
     const publication=element('section');content.before(publication);refreshPublication=await mountSchedulePublication(publication,csrfToken,()=>load());
     const creator = element('div'); content.before(creator);
@@ -71,7 +74,7 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
       summary.hidden = false;
       const shifts = page === 'overview' ? result.shifts.slice(0, 3) : result.shifts;
       const claims = page === 'overview' ? result.pendingClaims.slice(0, 3) : result.pendingClaims;
-      const shiftPanel = () => panel('Upcoming & current shifts', shifts.length ? shifts.map(shift => page === 'schedule' ? managedShiftCard(shift, result.timezone, csrfToken, async message => { await load(); const result = document.querySelector('#manage-result'); result.textContent = message; result.hidden = false; result.focus(); }) : shiftCard(shift, result.timezone, { workerName: shift.assignedWorker.name })) : [empty('A clear schedule.', 'There are no upcoming or current shifts saved for your business.')], page === 'overview' ? link('View schedule →', '/workspace/manager/schedule') : null);
+      const shiftPanel = () => panel('Upcoming & current shifts', shifts.length ? shifts.map(shift => page === 'schedule' ? managedShiftCard(shift, result.timezone, csrfToken, async message => { await load(); const result = document.querySelector('#manage-result'); result.textContent = message; result.hidden = false; result.focus(); }, editReview?.id === shift.id ? editReview : null) : shiftCard(shift, result.timezone, { workerName: shift.assignedWorker.name })) : [empty('A clear schedule.', 'There are no upcoming or current shifts saved for your business.')], page === 'overview' ? link('View schedule →', '/workspace/manager/schedule') : null);
       const expiredNote = () => { const note = element('section', 'panel'); note.append(element('h2', '', 'Expired coverage'), element('p', 'section-note', `${result.summary.expiredCoverage} unresolved coverage request${result.summary.expiredCoverage === 1 ? '' : 's'} expired when the shift started. These are kept in History and do not count as awaiting approval.`), link('View expired coverage →', '/workspace/manager/history?status=expired')); return note; };
       const claimPanel = () => panel('Pending coverage claims', claims.length ? claims.map(claim => claimCard(claim, result.timezone, page === 'approvals', csrfToken, async message => { await load(); const result = document.querySelector('#manage-result'); result.textContent = message; result.hidden = false; result.focus(); })) : [empty('Nothing waiting on you.', 'There are no future coverage claims waiting for a decision.')], page === 'overview' ? link('View approvals →', '/workspace/manager/approvals') : null);
       if (page === 'overview') {
@@ -83,7 +86,15 @@ export async function mountManagerDashboard(main, page, account, csrfToken) {
         const note = element('section', 'manager-next-note');
         note.append(element('h2', '', 'Your people, all in one place.'), element('p', '', 'Add workers and help them set up their login.'), link('View team page →', '/workspace/manager/team')); content.append(note); if (result.summary.expiredCoverage) content.append(expiredNote());
       } else if (page === 'schedule') {
-        content.replaceChildren(shiftPanel()); content.append(element('p', 'section-note', 'Future shifts without linked coverage requests can be edited or deleted. Started shifts and shifts with coverage history are locked.'));
+        content.replaceChildren(shiftPanel());
+        if (editReview && !shifts.some(shift => shift.id === editReview.id)) {
+          const result = document.querySelector('#manage-result');
+          result.textContent = 'This shift is no longer available. Refresh Schedule before editing.';
+          result.hidden = false;
+          result.focus();
+        }
+        editReview = null;
+        content.append(element('p', 'section-note', 'Future shifts without linked coverage requests can be edited or deleted. Started shifts and shifts with coverage history are locked.'));
       } else {
         content.replaceChildren(claimPanel()); if (result.summary.expiredCoverage) content.append(expiredNote()); content.append(element('p', 'section-note', 'Approval transfers assignment after fresh conflict checks. Rejection keeps the original assignment and reopens coverage. Refresh to check for changes.'));
       }

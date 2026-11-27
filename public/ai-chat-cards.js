@@ -1,3 +1,4 @@
+import { sendEditToSchedule, showShiftEdit } from './ai-shift-edit.js';
 import {
   managerLookupQuery,
   renderManagerLookup,
@@ -458,6 +459,34 @@ export function createChatCards({
   }
 
   function renderProviderReply(data, batch, appendTurn) {
+    if (flow.mode === 'shiftEdit' && data.kind !== 'clarification') {
+      const initialRequest = view.composer.value.trim();
+      chat.value.shiftEdit =
+        data.kind === 'shiftEdit'
+          ? { id: data.id, revision: data.revision, draft: data.draft }
+          : null;
+      const reply = showShiftEdit(
+        card,
+        data,
+        () => {
+          if (flow.busy || chat.value.shiftEdit?.draft !== data.draft) return;
+          if (!sendEditToSchedule(account, data))
+            notice('Open Schedule to edit this shift manually.');
+        },
+        (choice) => {
+          if (flow.busy) return;
+          chat.value.editSelection = {
+            id: choice.id,
+            revision: choice.revision,
+          };
+          view.composer.value = initialRequest;
+          view.form.requestSubmit();
+        },
+      );
+      appendTurn(reply);
+      chat.save();
+      return reply;
+    }
     const reply =
       data.kind === 'clarification'
         ? data.question

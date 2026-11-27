@@ -4,7 +4,7 @@ import { createHash, randomBytes } from 'node:crypto';
 // The pass lets the very next paid request for the same message skip a second
 // reservation. It is single-use, short-lived and bound to the user, the paid
 // intent and the exact message text, so it cannot be replayed or reused.
-export const PAID_INTENTS = new Set(['draft', 'search', 'availability', 'questions']);
+export const PAID_INTENTS = new Set(['draft', 'shiftEdit', 'search', 'availability', 'questions']);
 
 const PASS_LIFETIME_MS = 60_000;
 const MAX_PASSES = 1000;

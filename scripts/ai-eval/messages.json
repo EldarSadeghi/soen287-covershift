@@ -698,6 +698,66 @@
       "message": "show me the manager's salary"
     },
     {
+      "id": "m-shiftEdit-01",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Move Jamie's Friday shift to 10 AM."
+    },
+    {
+      "id": "m-shiftEdit-02",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Change Alex's Thursday shift title to Inventory."
+    },
+    {
+      "id": "m-shiftEdit-03",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Reschedule Jamie Lee's morning shift to 11 AM."
+    },
+    {
+      "id": "m-shiftEdit-04",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Push the Saturday service shift to 3 PM."
+    },
+    {
+      "id": "m-shiftEdit-05",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Rename Sam's Friday shift to Closing service."
+    },
+    {
+      "id": "m-shiftEdit-06",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Reassign the Friday opening shift to Taylor."
+    },
+    {
+      "id": "m-shiftEdit-07",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Extend Alex's booked shift until 8 PM."
+    },
+    {
+      "id": "m-shiftEdit-08",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Shorten the evening shift to end at 9 PM."
+    },
+    {
+      "id": "m-shiftEdit-09",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Edit the opening shift for Jamie on December 7."
+    },
+    {
+      "id": "m-shiftEdit-10",
+      "role": "manager",
+      "expected": "shiftEdit",
+      "message": "Could the existing shift for Jamie start an hour later?"
+    },
+    {
       "id": "m-teamAvailability-01",
       "role": "manager",
       "expected": "teamAvailability",
@@ -944,6 +1004,18 @@
       "message": "Who is working on the evening shift tomorrow?"
     },
     {
+      "id": "m-questions-15",
+      "role": "manager",
+      "expected": "questions",
+      "message": "Who is working Jamie’s Friday shift?"
+    },
+    {
+      "id": "m-questions-16",
+      "role": "manager",
+      "expected": "questions",
+      "message": "Show the existing shift times for Friday."
+    },
+    {
       "id": "m-draft-01",
       "role": "manager",
       "expected": "draft",
@@ -1020,6 +1092,12 @@
       "role": "manager",
       "expected": "draft",
       "message": "creat a shift for jamie tmrw 9-5"
+    },
+    {
+      "id": "m-draft-14",
+      "role": "manager",
+      "expected": "draft",
+      "message": "Create a new afternoon shift for Jamie on Friday."
     },
     {
       "id": "m-summary-01",
@@ -1164,6 +1242,18 @@
       "role": "manager",
       "expected": "clarification",
       "message": "do not create any shifts"
+    },
+    {
+      "id": "m-clarification-17",
+      "role": "manager",
+      "expected": "clarification",
+      "message": "Delete Jamie’s Friday shift."
+    },
+    {
+      "id": "m-clarification-18",
+      "role": "manager",
+      "expected": "clarification",
+      "message": "Move Jamie’s Friday shift and publish the schedule."
     },
     {
       "id": "e-followup-01",

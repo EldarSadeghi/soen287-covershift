@@ -53,6 +53,7 @@ const assets = new Map([
   ['/ai-chat-provider.js', ['ai-chat-provider.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-send.js', ['ai-chat-send.js', 'text/javascript; charset=utf-8']],
   ['/ai-manager-lookups.js', ['ai-manager-lookups.js', 'text/javascript; charset=utf-8']],
+  ['/ai-shift-edit.js', ['ai-shift-edit.js', 'text/javascript; charset=utf-8']],
   ['/ai-team-availability.js', ['ai-team-availability.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-cards.js', ['ai-chat-cards.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-draft.js', ['ai-shift-draft.js', 'text/javascript; charset=utf-8']],
@@ -127,7 +128,7 @@ async function readJson(request) {
 const home = role => `/workspace/${role}/${role === 'manager' ? 'overview' : 'shifts'}`;
 const pages = { manager: ['overview', 'schedule', 'approvals', 'team', 'history', 'time-off', 'availability', 'cover'], worker: ['shifts', 'open', 'requests', 'history', 'time-off', 'availability', 'cover'] };
 
-export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null, intentPasses = createIntentPasses(), aiAllowance = null, routingLog = null }) {
+export function createAppServer({ store, signup = registerManager, login = authenticate, sessions = new SessionStore(), publicOrigin = null, limitSignup = createSignupLimiter(), limitLogin = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' }), shiftClock = Date.now, setupClock = Date.now, setupHash, aiDraft = null, aiEdit = null, aiSearch = null, aiAvailability = null, aiSchedule = null, aiIntent = null, intentPasses = createIntentPasses(), aiAllowance = null, routingLog = null }) {
   const availabilityWindowStore=store; // General windows do not participate in automatic claims.
   store = withAvailabilityMatching(store, shiftClock);
   const limitLoginEmail = createSignupLimiter({ limit: 10, message: 'Too many sign-in attempts. Please wait 10 minutes before trying again.' });
@@ -445,7 +446,7 @@ export function createAppServer({ store, signup = registerManager, login = authe
         }
         return;
       }
-      if (pathname === '/api/manager/ai-shift-draft') {
+      if (pathname === '/api/manager/ai-shift-draft' || pathname === '/api/manager/ai-shift-edit') {
         requireMethod(request, response, 'POST');
         protectMutation(request, publicOrigin);
         const account = await requireAccount(store, sessions, request.headers.cookie, 'manager');
@@ -455,9 +456,11 @@ export function createAppServer({ store, signup = registerManager, login = authe
         if (new URL(request.url, 'http://localhost').search) {
           throw new HttpError(400, 'Drafting uses your signed-in business.');
         }
-        const { input, options } = await readAiChat(request, account.user.id, 'draft');
-        if (!aiDraft) throw new HttpError(503, 'AI drafting is not configured. Use the manual shift form.');
-        sendJson(response, 200, await aiDraft(store, account.user.id, input, shiftClock, options));
+        const editing = pathname === '/api/manager/ai-shift-edit';
+        const { input, options } = await readAiChat(request, account.user.id, editing ? 'shiftEdit' : 'draft');
+        const handler = editing ? aiEdit : aiDraft;
+        if (!handler) throw new HttpError(503, 'AI drafting is not configured. Use the manual shift form.');
+        sendJson(response, 200, await handler(store, account.user.id, input, shiftClock, options));
         return;
       }
       if (pathname === '/api/manager/shift-batches') {
