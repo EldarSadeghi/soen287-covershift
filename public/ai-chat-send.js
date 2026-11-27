@@ -43,6 +43,9 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     showTeamAvailability,
     showManagerLookup,
     showEmployeeLookup,
+    showHelp,
+    showBlocked,
+    showCapabilities,
   } = cards;
   // The last two complete turns, each with a user and an
   // assistant, each at most 1,500 characters, at most 4,500 bytes in total).
@@ -389,21 +392,32 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       );
       return;
     }
+    if (target === 'help') {
+      // Fixed help text (CS-064): no request is sent and nothing is saved.
+      say('user', text);
+      appendTurn(showHelp(text));
+      return;
+    }
     if (target === 'clarification') {
       chat.value.refinementPending = true;
       chat.value.batch = null;
       chat.value.batchClarifying = false;
       chat.value.pending = null;
       document.dispatchEvent(new Event('ai:cancel-review'));
-      employeeRequests?.reset({
-        keepSearch: !manager && flow.mode === 'search',
-      });
+      const keepSearch = !manager && flow.mode === 'search';
+      employeeRequests?.reset({ keepSearch });
       availability?.reset();
       showSuggestion(null);
       say('user', text);
       const reply = chatClarification(text, manager);
       appendTurn(reply);
-      if (reply.startsWith(GENERIC_CLARIFICATION_PREFIX)) showQuickReplies();
+      // Blocked commands link the page to use instead; the generic question
+      // also lists what the chat can do (CS-064).
+      if (reply.startsWith(GENERIC_CLARIFICATION_PREFIX)) {
+        showQuickReplies();
+        // Kept search results stay visible instead of the list.
+        if (!keepSearch) showCapabilities();
+      } else showBlocked(text);
       notice('Reply below to continue.');
       return;
     }

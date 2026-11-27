@@ -140,6 +140,7 @@ const assets = new Map([
     '/routing/unsupported.js',
     ['routing/unsupported.js', 'text/javascript; charset=utf-8'],
   ],
+  ['/routing/help.js', ['routing/help.js', 'text/javascript; charset=utf-8']],
   ['/routing/dates.js', ['routing/dates.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-state.js', ['ai-chat-state.js', 'text/javascript; charset=utf-8']],
   [
@@ -168,6 +169,7 @@ const assets = new Map([
     '/ai-manager-insights.js',
     ['ai-manager-insights.js', 'text/javascript; charset=utf-8'],
   ],
+  ['/ai-help.js', ['ai-help.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-edit.js', ['ai-shift-edit.js', 'text/javascript; charset=utf-8']],
   [
     '/ai-team-availability.js',

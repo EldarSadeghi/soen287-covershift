@@ -93,7 +93,7 @@
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t request time off from chat. Employees request it, and you review it on Time off.",
         "unsupported": true
       },
       "batch": false,
@@ -228,7 +228,7 @@
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t swap shifts from chat. Change assignments on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -3080,6 +3080,249 @@
         null
       ]
     },
+    "How do I ask for time off?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I get someone to cover my shift": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "How do I swap shifts with a coworker?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do i withdraw my time off request": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "why can’t I get cover?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "What does pending mean?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what does it mean when my claim says expired": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "What can you do?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Where can I respond to a cover invite?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
     "hello": {
       "employee": {
         "route": "clarification",
@@ -3109,13 +3352,13 @@
     },
     "help": {
       "employee": {
-        "route": "clarification",
+        "route": "help",
         "fallback": true,
         "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
         "unsupported": false
       },
       "manager": {
-        "route": "clarification",
+        "route": "help",
         "fallback": true,
         "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
         "unsupported": false
@@ -3219,13 +3462,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -3273,13 +3516,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t approve or decline claims from chat. Review them on Approvals.",
         "unsupported": true
       },
       "batch": false,
@@ -3333,7 +3576,7 @@
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t request time off from chat. Employees request it, and you review it on Time off.",
         "unsupported": true
       },
       "batch": false,
@@ -3354,13 +3597,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t swap shifts. Request cover on My shifts instead.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t swap shifts from chat. Change assignments on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -3597,13 +3840,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "CoverShift doesn’t track clock-ins or clock-outs, so I can’t do that.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "CoverShift doesn’t track clock-ins or clock-outs, so I can’t do that.",
         "unsupported": true
       },
       "batch": false,
@@ -6320,17 +6563,287 @@
         null
       ]
     },
+    "How do I add a new employee?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I publish next week’s schedule": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "next",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": null,
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Why can’t I edit Friday’s opening shift?": {
+      "employee": {
+        "route": "explanation",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "why won’t it let me approve this time off": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "What does awaiting approval mean?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what is an availability rule?": {
+      "employee": {
+        "route": "availability",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "How do I deactivate someone who left?": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what can I ask you": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Where do I approve cover claims?": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Explain what “open for cover” means": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
     "approve all pending claims": {
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t approve or decline claims from chat. Review them on Approvals.",
         "unsupported": true
       },
       "batch": false,
@@ -6351,13 +6864,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -6384,7 +6897,7 @@
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t remove employees from chat. Deactivate them on Team.",
         "unsupported": true
       },
       "batch": false,
@@ -6513,13 +7026,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t approve or decline claims from chat. Review them on Approvals.",
         "unsupported": true
       },
       "batch": false,
@@ -6567,13 +7080,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t publish the schedule. Your manager publishes it; your shifts are on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t publish from chat. Review and publish the schedule on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -6702,13 +7215,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -6729,13 +7242,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t publish the schedule. Your manager publishes it; your shifts are on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t publish from chat. Review and publish the schedule on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -7062,13 +7575,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -7116,13 +7629,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -7146,13 +7659,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -7173,13 +7686,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -7200,13 +7713,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -7230,13 +7743,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -7911,13 +8424,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t request time off from chat. Employees request it, and you review it on Time off.",
         "unsupported": true
       },
       "batch": false,
@@ -7938,13 +8451,13 @@
       "employee": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t cancel shifts. To get out of one, request cover on My shifts.",
         "unsupported": true
       },
       "manager": {
         "route": "clarification",
         "fallback": false,
-        "clarification": "I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.",
+        "clarification": "I can’t delete or cancel shifts from chat. Change them on Schedule.",
         "unsupported": true
       },
       "batch": false,
@@ -8684,6 +9197,789 @@
       "ruleCommand": null,
       "coworkerDate": "2026-12-15",
       "historyPeriod": "2026-12-15",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I request time off?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I give away my shift?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I publish the schedule?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I add an employee?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "hey, can you tell me how to add a new employee?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I approve time off?": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I deactivate an employee": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I accept a cover invitation": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how do I cancel my claim": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how can I set my availability": {
+      "employee": {
+        "route": "availability",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "why can’t I approve this time off?": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "why can’t I edit this shift?": {
+      "employee": {
+        "route": "explanation",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "b",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "why won’t it let me publish": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "why can’t I approve this claim": {
+      "employee": {
+        "route": "explanation",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what does pending mean?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what is awaiting approval?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what does expired mean": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what is open for cover": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what does published mean": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what is an availability rule": {
+      "employee": {
+        "route": "availability",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what can you do?": {
+      "employee": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "help",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "approve Jamie’s time off": {
+      "employee": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "I can’t approve time off. Your manager reviews requests; you can follow yours on Time off.",
+        "unsupported": true
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "I can’t approve or decline time off from chat. Review it on Time off.",
+        "unsupported": true
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "decline Sam’s claim": {
+      "employee": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "I can’t approve or decline from chat. Your manager approves claims; answer coworkers’ invitations on Cover requests.",
+        "unsupported": true
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "I can’t approve or decline claims from chat. Review them on Approvals.",
+        "unsupported": true
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "clock me out": {
+      "employee": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "CoverShift doesn’t track clock-ins or clock-outs, so I can’t do that.",
+        "unsupported": true
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "CoverShift doesn’t track clock-ins or clock-outs, so I can’t do that.",
+        "unsupported": true
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "swap my shift": {
+      "employee": {
+        "route": "coverDraft",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "I can’t swap shifts from chat. Change assignments on Schedule.",
+        "unsupported": true
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "what is pending this week": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": null,
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "how can I see my schedule": {
+      "employee": {
+        "route": "questions",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "questions",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "why can’t I claim this shift?": {
+      "employee": {
+        "route": "explanation",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "b",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "tell me how to add a shift for Jamie on Friday 9-5": {
+      "employee": {
+        "route": "questions",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "draft",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
       "opening": "undefined",
       "replyRoute": [
         null,

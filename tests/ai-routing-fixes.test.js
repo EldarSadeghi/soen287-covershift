@@ -39,7 +39,8 @@ test('unsupported commands are never routed to a task, even alongside a supporte
   for (const [text, isManager] of cases) {
     assert.equal(requestsUnsupportedAction(text), true, text);
     assert.equal(routeChat(text, isManager, null), 'clarification', text);
-    assert.equal(chatClarification(text, isManager), UNSUPPORTED_ACTION_MESSAGE, text);
+    // Blocked: a specific reply naming the page to use, or the general one.
+    assert.match(chatClarification(text, isManager), /^(?:I can’t|CoverShift doesn’t track)\b/, text);
     assert.equal(needsIntentFallback(text, isManager), false, `${text} must not reach the classifier`);
   }
 });
@@ -78,7 +79,7 @@ test('the classifier is told who is asking and gets role-specific examples', asy
   assert.match(seen.worker.instructions, /sender is an EMPLOYEE/);
   assert.match(seen.worker.instructions, /SAVED availability rules is not availability/);
   assert.deepEqual(JSON.parse(seen.worker.input), { conversation: [], request: 'any spare hours' }, 'only the request and earlier turns are sent, never workspace data');
-  assert.deepEqual(seen.manager.text.format.schema.properties.intent.enum, ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'clarification']);
+  assert.deepEqual(seen.manager.text.format.schema.properties.intent.enum, ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'help', 'clarification']);
 });
 
 test('classifier examples are not copied from the evaluation set', async () => {

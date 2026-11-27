@@ -10,8 +10,11 @@ import {
   historyPeriod,
   isDutiesQuestion,
   isStatusDateFollowUp,
+  blockedActionAnswer,
+  helpTopic,
 } from './ai-chat-routing.js';
 import { sendEditToSchedule, showShiftEdit } from './ai-shift-edit.js';
+import { CAPABILITIES, renderBlocked, renderHelp } from './ai-help.js';
 import {
   managerLookupQuery,
   renderManagerLookup,
@@ -361,6 +364,28 @@ export function createChatCards({
     }
   }
 
+  // Help answers (CS-064) are fixed text: shown at once, nothing loaded.
+  function showCard(render) {
+    const reply = render();
+    card.hidden = false;
+    revealResponse(card);
+    return reply;
+  }
+  // The help topic for the question; the capabilities list when the
+  // classifier chose help for a wording the catalog doesn't match.
+  function showHelp(text) {
+    return showCard(() =>
+      renderHelp(card, helpTopic(text, manager) ?? CAPABILITIES, manager),
+    );
+  }
+  function showBlocked(text) {
+    const answer = blockedActionAnswer(text, manager);
+    return answer ? showCard(() => renderBlocked(card, answer, manager)) : null;
+  }
+  function showCapabilities() {
+    return showCard(() => renderHelp(card, CAPABILITIES, manager));
+  }
+
   async function showManagerLookup(kind, text, dateReply = null) {
     const endpoint = '/api/manager/chat-lookup';
     card.hidden = true;
@@ -600,6 +625,9 @@ export function createChatCards({
     showTeamAvailability,
     showManagerLookup,
     showEmployeeLookup,
+    showHelp,
+    showBlocked,
+    showCapabilities,
     renderProviderReply,
   };
 }

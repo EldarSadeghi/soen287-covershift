@@ -33,6 +33,7 @@ import {
   requestsUnsupportedAction,
   UNSUPPORTED_ACTION_MESSAGE,
 } from './routing/unsupported.js';
+import { blockedActionHelp, helpRoute } from './routing/help.js';
 
 export { isStatusDateFollowUp } from './routing/status.js';
 export {
@@ -52,6 +53,7 @@ export {
   UNSUPPORTED_ACTION_MESSAGE,
 } from './routing/unsupported.js';
 export { coworkerLookupDate, historyPeriod } from './routing/dates.js';
+export { HELP_PAGES, helpTopic } from './routing/help.js';
 
 export const CHAT_ENDPOINTS = {
   timeOffDraft: '/api/worker/ai-time-off-draft',
@@ -104,6 +106,7 @@ const taskLabels = {
   alternatives: 'find alternatives',
   explanation: 'explain a match or request',
   rules: 'check saved rules',
+  help: 'answer a question about using CoverShift',
 };
 
 // The route for one request on its own, or null. The order matters where
@@ -126,8 +129,10 @@ function explicitRoute(text, manager) {
     (manager && teamAvailabilityRoute(message)) ||
     // 7. Employee coworkers, explanations, rules, availability and search.
     (!manager && employeeTaskRoute(message, text)) ||
-    // 8. Schedule questions, last because their wording is the broadest.
+    // 8. Schedule questions, last of the tasks because their wording is broadest.
     questionsRoute(message, manager) ||
+    // 9. Help about CoverShift itself, only for what no task claimed.
+    helpRoute(message, manager) ||
     null
   );
 }
@@ -225,9 +230,23 @@ const managerOpenShifts =
 export const MANAGER_OPEN_SHIFTS_MESSAGE =
   'Open-shift search is for employees. I can show which shifts still need cover (“which shifts need cover this week?”) or check team availability for a date.';
 
+/**
+ * For a message with a command chat never carries out: the specific reply and
+ * page to use instead ({ message, page }), or null if none fits (instruction
+ * overrides, role changes); the generic unsupported message is used then.
+ */
+export function blockedActionAnswer(text, manager) {
+  const request = chatRequests(text).find((part) =>
+    requestsUnsupportedAction(part, manager),
+  );
+  return request ? blockedActionHelp(request, manager) : null;
+}
+
 export function chatClarification(text, manager) {
   if (requestsUnsupportedAction(text, manager))
-    return UNSUPPORTED_ACTION_MESSAGE;
+    return (
+      blockedActionAnswer(text, manager)?.message ?? UNSUPPORTED_ACTION_MESSAGE
+    );
   if (manager && managerOpenShifts.test(normalizedMessage(text)))
     return MANAGER_OPEN_SHIFTS_MESSAGE;
   const routes = mixedRoutes(text, manager);
