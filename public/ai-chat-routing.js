@@ -85,6 +85,8 @@ const patterns = {
       /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/,
   },
   shiftEdit: {
+    relativeTimeChange:
+      /^(?:could|can|would) the (?:existing|scheduled|saved) shift\b[^.!?]*\b(?:start|end)\b[^.!?]*\b(?:earlier|later)[.!?]*$/,
     command:
       /^(?:move|change|reschedule|push|rename|reassign|extend|shorten|edit)\b/,
     subject: /\bshifts?\b/,
@@ -195,8 +197,9 @@ function explicitRoute(text, manager) {
   }
   if (
     manager &&
-    patterns.shiftEdit.command.test(message) &&
-    patterns.shiftEdit.subject.test(message)
+    (patterns.shiftEdit.relativeTimeChange.test(message) ||
+      (patterns.shiftEdit.command.test(message) &&
+        patterns.shiftEdit.subject.test(message)))
   ) {
     return 'shiftEdit';
   }

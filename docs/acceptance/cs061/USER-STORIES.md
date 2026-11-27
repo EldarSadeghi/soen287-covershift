@@ -18,9 +18,9 @@ Recorded on main at `dea0b04`. All 478 tests and 23 offline scenarios passed (18
 
 ## Verification
 
-- 481 tests and 23 offline scenarios passed.
-- Offline routing matched 194/232 labels. Fifteen prompts were added without changing the 217 prior prompts. Zero incorrect write-capable routes and zero provider calls.
-- Live evaluation awaits approval. The offline run identified 57 classifier candidates.
+- 482 tests and 23 offline scenarios passed.
+- Offline routing matched 195/232 labels. Fifteen prompts were added without changing the 217 prior prompts. Zero incorrect write-capable routes and zero provider calls.
+- The first live run passed all 15 new prompts and found one new incorrect route into shift creation. The existing-shift request now routes locally to edit review. A live rerun for the remaining 56 classifier candidates awaits approval.
 
 ## Browser evidence
 

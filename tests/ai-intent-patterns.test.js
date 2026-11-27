@@ -39,3 +39,22 @@ test('give-a-shift rule stays manager-only and keeps unsupported actions blocked
     'clarification',
   );
 });
+
+test('relative time changes to a saved shift stay separate from creation and schedule questions', () => {
+  const edit = 'Could the existing shift for Jamie start an hour later?';
+  assert.equal(routeChat(edit, true), 'shiftEdit');
+  assert.equal(
+    routeChat('Would the scheduled shift for Jamie end earlier?', true),
+    'shiftEdit',
+  );
+  assert.equal(
+    routeChat('What time does the existing shift for Jamie start?', true),
+    'questions',
+  );
+  assert.equal(
+    routeChat('Create a new shift for Jamie an hour later', true),
+    'draft',
+  );
+  assert.notEqual(routeChat(edit, false), 'shiftEdit');
+  assert.equal(routeChat(edit + ' Delete that shift.', true), 'clarification');
+});
