@@ -746,6 +746,120 @@
       "message": "Could you find out whether anyone has room for more hours on Thursday?"
     },
     {
+      "id": "m-teamAvailability-09",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Can Taylor work Friday morning?"
+    },
+    {
+      "id": "m-teamAvailability-10",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Which employees are available on December 12?"
+    },
+    {
+      "id": "m-teamAvailability-11",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Who could work tomorrow?"
+    },
+    {
+      "id": "m-teamAvailability-12",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Could anyone spare a few hours on December 9?"
+    },
+    {
+      "id": "m-teamTimeOff-01",
+      "role": "manager",
+      "expected": "teamTimeOff",
+      "message": "Who's off tomorrow?"
+    },
+    {
+      "id": "m-teamTimeOff-02",
+      "role": "manager",
+      "expected": "teamTimeOff",
+      "message": "Who is on leave this Friday?"
+    },
+    {
+      "id": "m-teamTimeOff-03",
+      "role": "manager",
+      "expected": "teamTimeOff",
+      "message": "Show pending time-off requests for December 3."
+    },
+    {
+      "id": "m-teamTimeOff-04",
+      "role": "manager",
+      "expected": "teamTimeOff",
+      "message": "List team time off from December 3 through December 5."
+    },
+    {
+      "id": "m-teamTimeOff-05",
+      "role": "manager",
+      "expected": "teamTimeOff",
+      "message": "Has anybody booked a day away from work on December 9?"
+    },
+    {
+      "id": "m-coverageStatus-01",
+      "role": "manager",
+      "expected": "coverageStatus",
+      "message": "Check coverage status for Friday."
+    },
+    {
+      "id": "m-coverageStatus-02",
+      "role": "manager",
+      "expected": "coverageStatus",
+      "message": "Is \"Afternoon coverage\" covered?"
+    },
+    {
+      "id": "m-coverageStatus-03",
+      "role": "manager",
+      "expected": "coverageStatus",
+      "message": "Who claimed the Friday shift?"
+    },
+    {
+      "id": "m-coverageStatus-04",
+      "role": "manager",
+      "expected": "coverageStatus",
+      "message": "Which shifts are covered tomorrow?"
+    },
+    {
+      "id": "m-coverageStatus-05",
+      "role": "manager",
+      "expected": "coverageStatus",
+      "message": "Did someone take over the delivery shift on December 15?"
+    },
+    {
+      "id": "m-publicationStatus-01",
+      "role": "manager",
+      "expected": "publicationStatus",
+      "message": "Has the next schedule been published?"
+    },
+    {
+      "id": "m-publicationStatus-02",
+      "role": "manager",
+      "expected": "publicationStatus",
+      "message": "Show publication status for December 7."
+    },
+    {
+      "id": "m-publicationStatus-03",
+      "role": "manager",
+      "expected": "publicationStatus",
+      "message": "When is the next schedule due?"
+    },
+    {
+      "id": "m-publicationStatus-04",
+      "role": "manager",
+      "expected": "publicationStatus",
+      "message": "How many shifts remain unpublished in the next period?"
+    },
+    {
+      "id": "m-publicationStatus-05",
+      "role": "manager",
+      "expected": "publicationStatus",
+      "message": "Can employees see the upcoming rota yet?"
+    },
+    {
       "id": "m-questions-01",
       "role": "manager",
       "expected": "questions",
@@ -816,6 +930,18 @@
       "role": "manager",
       "expected": "questions",
       "message": "who opens on monday"
+    },
+    {
+      "id": "m-questions-13",
+      "role": "manager",
+      "expected": "questions",
+      "message": "Which staff are on the rota on December 10?"
+    },
+    {
+      "id": "m-questions-14",
+      "role": "manager",
+      "expected": "questions",
+      "message": "Who is working on the evening shift tomorrow?"
     },
     {
       "id": "m-draft-01",

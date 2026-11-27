@@ -51,14 +51,14 @@ test('published summaries scope coverage and use the latest date boundaries with
   const before = await store.read();
   const manager = await workingSummary(store, managerId, 'this', clock);
   const employee = await workingSummary(store, 'worker_jamie', 'this', clock);
-  assert.deepEqual(counts(manager), [1, 2]);
+  assert.deepEqual(counts(manager), [1, 2, 0, 1]);
   assert.doesNotMatch(JSON.stringify(manager), /Other business coverage/);
   assert.deepEqual(counts(employee), [2, 1, 0, 1]);
   assert.doesNotMatch(JSON.stringify(employee), /Weekend service|Afternoon coverage|Private draft|worker_alex/);
   assert.deepEqual([employee.startDate, employee.lastDate, employee.timezone, employee.asOf],
     ['2026-11-23', '2026-11-29', 'America/Toronto', new Date(clock()).toISOString()]);
   assert.deepEqual(counts(await workingSummary(store, 'worker_jamie', 'next', clock)), [0, 0, 0, 0]);
-  assert.deepEqual(counts(await workingSummary(store, managerId, 'this', () => Date.parse('2026-11-27T14:00:00Z'))), [0, 1]);
+  assert.deepEqual(counts(await workingSummary(store, managerId, 'this', () => Date.parse('2026-11-27T14:00:00Z'))), [0, 1, 0, 1]);
   await assert.rejects(workingSummary(store, 'unknown', 'this', clock), { status: 401 });
   await assert.rejects(workingSummary(store, managerId, 'last', clock), { status: 422 });
   assert.deepEqual(await store.read(), before);

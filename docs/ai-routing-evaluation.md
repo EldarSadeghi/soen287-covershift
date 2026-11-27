@@ -35,3 +35,7 @@ Exit codes: 0 when the run passes, 1 when a target is missed, 2 for bad options 
 CS-055 changed the generic target from all generic replies to unhelpful ones. All generic replies are still reported. The CS-054 results in `docs/acceptance/cs054/` use the original definition.
 
 The classifier can return only its own intents, so labels that only the local rules reach (`explanation`, `rules`, `alternatives`) are counted as misses whenever the local rules miss them.
+
+## CS-059 manager lookups
+
+The evaluation retains all 181 existing prompt IDs and adds 21 manager prompts covering availability, time off, coverage, publication and schedule look-alikes. The offline run covers 202 prompts with 54 classifier candidates and zero incorrect routes into write-capable features. For the approved live run, use `npm run ai:eval -- --live --max-calls 54`. Compare the 181 existing prompts with the previous live run by ID. The existing cohort must score at least 98.8%, in addition to the overall 95% accuracy, 5% maximum unhelpful generic reply rate and zero incorrect write-capable routes.

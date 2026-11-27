@@ -18,3 +18,17 @@ Implementation follows the official [Structured Outputs documentation](https://d
 
 
 Backlog update (2026-11-24): former unstarted AI IDs were renumbered into CS-045 and CS-050–055. See the authoritative old-to-new mapping and dependencies in [implementation plan](implementation-plan.md). Completed feature IDs and evidence remain unchanged.
+
+## Manager lookups
+
+The manager chat can read team availability, approved and pending time off, coverage, and schedule publication. Schedule questions about who is working or on the rota continue through the existing schedule-question route.
+
+- Availability uses the Availability page’s rules and shows each matching employee’s status and reason. Ask “Is Alex Morgan available on December 3?” or “Who is free tomorrow afternoon?”
+- Time off shows approved leave and pending requests in the requested local date or date range. The chat response includes names, dates and status. Notes and request history stay on the Time off page.
+- Coverage shows open, claimed and awaiting approval, or covered requests for a date or shift title. Quote a shift title such as “Afternoon coverage” to match it exactly.
+- Publication shows the two-week period, its Monday due date, publication status and unpublished shift changes. “Has the next schedule been published?” checks the same period the Schedule page opens by default.
+- The manager attention summary includes pending time-off requests across the business and the next publication when due or overdue. Coverage counts still use the selected week.
+
+When chat needs a date, reply with a business-local date such as “Friday” or “December 3.” The data reads use manager-only GET routes and consume zero AI allowance. Unmatched phrasing may use the intent classifier once. A read-only intent does not receive an intent pass.
+
+See [CS-059 acceptance evidence](acceptance/cs059/USER-STORIES.md) for the test baseline and browser results.

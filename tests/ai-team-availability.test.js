@@ -103,7 +103,12 @@ test('availability card shows the selected statuses, reasons and read-only link'
   globalThis.document = { createElement: node };
   try {
     const card = node();
-    const reply = renderTeamAvailability(card, { timezone }, date, roster);
+    const reply = renderTeamAvailability(
+      card,
+      { timezone, checkedAt: '2026-11-26T17:00:00Z' },
+      date,
+      roster,
+    );
     assert.match(reply, /Alex Morgan/);
     assert.ok(
       card.children.some(
@@ -111,7 +116,12 @@ test('availability card shows the selected statuses, reasons and read-only link'
       ),
     );
     assert.equal(card.children.at(-1).href, '/workspace/manager/availability');
-    renderTeamAvailability(card, { timezone }, date, [roster[0]]);
+    renderTeamAvailability(
+      card,
+      { timezone, checkedAt: '2026-11-26T17:00:00Z' },
+      date,
+      [roster[0]],
+    );
     assert.ok(
       !card.children.some((child) => child.textContent === 'Jamie Lee'),
     );

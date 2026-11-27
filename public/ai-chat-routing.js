@@ -14,6 +14,13 @@ const normalizedMessage = (text) =>
 
 export const MIXED_INTENT_QUESTION = 'Which should I handle first:';
 
+export const MANAGER_LOOKUPS = [
+  'teamAvailability',
+  'teamTimeOff',
+  'coverageStatus',
+  'publicationStatus',
+];
+
 const taskLabels = {
   draft: 'draft a shift',
   search: 'find open shifts',
@@ -21,6 +28,9 @@ const taskLabels = {
   questions: 'check the schedule',
   summary: 'show a working-week summary',
   teamAvailability: 'check team availability',
+  teamTimeOff: 'check team time off',
+  coverageStatus: 'check shift coverage',
+  publicationStatus: 'check schedule publication',
   coworkers: 'check coworker availability',
   claimStatus: 'check a claim status',
   coverStatus: 'check a cover request',
@@ -61,13 +71,25 @@ const patterns = {
       /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/,
   },
   draft: {
+    giveShift:
+      /^give [\p{L}][\p{L}'-]*(?: [\p{L}][\p{L}'-]*){0,3} (?:a|an) (?:new )?shift(?=$|[.!?]| (?:on|for|this|next|today|tomorrow)\b)/u,
     command:
       /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/,
+  },
+  managerLookups: {
+    teamTimeOff:
+      /^(?:(?:who(?:'s| is)|which (?:staff|employees|workers) (?:are|is)) (?:off|on (?:leave|vacation))|(?:show|list|check) (?:me )?(?:(?:team(?:'s)?|pending|approved) )?(?:time[ -]off|leave requests?))\b/,
+    coverageStatus:
+      /^(?:(?:what(?:'s| is) (?:the )?|check |show (?:me )?)?(?:shift )?coverage status|(?:is|was) .+ covered|who (?:claimed|is covering|covered)\b.*|which (?:shifts|requests) (?:are|were) (?:covered|claimed))\b/,
+    publicationStatus:
+      /^(?:(?:what(?:'s| is) (?:the )?|check |show (?:me )?)?(?:schedule )?publication status|(?:is|was|has) .*(?:schedule|period).*\bpublished|when is .*(?:schedule|publication).*due|how many shifts (?:are|remain) unpublished)\b/,
   },
   teamAvailability: {
     question:
       /^(?:is|are|was|were|who(?:'s|s)?|which|whether|anyone|anybody|can you check|check|show|tell me|do we have)\b/,
     availability: /\b(?:availability|available|free)\b/,
+    canWork: /^(?:who (?:can|could) work|(?:can|could) [^.!?]+ work)\b/,
+    schedule: /\b(?:scheduled|working|on the rota)\b/,
     change:
       /\b(?:approve|delete|cancel|assign|request|send|change|save|publish)\b/,
   },
@@ -134,6 +156,11 @@ function explicitRoute(text, manager) {
     patterns.claimStatus.decision.test(message)
   )
     return 'claimStatus';
+  if (manager) {
+    for (const [intent, pattern] of Object.entries(patterns.managerLookups)) {
+      if (pattern.test(message)) return intent;
+    }
+  }
   if (patterns.summary.lead.test(message)) {
     const summary = manager
       ? patterns.summary.manager
@@ -141,12 +168,18 @@ function explicitRoute(text, manager) {
     if (summary.test(message)) return 'summary';
   }
   if (manager && requestsShiftBatch(message)) return 'draft';
-  if (manager && patterns.draft.command.test(message)) return 'draft';
+  if (
+    manager &&
+    (patterns.draft.command.test(message) ||
+      patterns.draft.giveShift.test(message))
+  )
+    return 'draft';
   const team = patterns.teamAvailability;
   if (
     manager &&
-    team.question.test(message) &&
-    team.availability.test(message) &&
+    ((team.question.test(message) && team.availability.test(message)) ||
+      team.canWork.test(message)) &&
+    !team.schedule.test(message) &&
     !team.change.test(message)
   ) {
     return 'teamAvailability';
@@ -392,13 +425,17 @@ export function resolveChatTarget({
     plainReply(false);
   const teamDateReply =
     manager &&
-    previousTopic === 'teamAvailability' &&
+    MANAGER_LOOKUPS.includes(previousTopic) &&
     /^Which date/.test(previous.text) &&
     unrouted &&
     plainReply(true) &&
-    isStatusDateFollowUp(
-      text.replace(/\s+(morning|afternoon|evening)(?=[.!?]*$)/i, ''),
-    );
+    text
+      .split(/\s+(?:through|to|until)\s+/i)
+      .every((part) =>
+        isStatusDateFollowUp(
+          part.replace(/\s+(morning|afternoon|evening)(?=[.!?]*$)/i, ''),
+        ),
+      );
   const answerRoute =
     !manager &&
     previousTopic === 'clarification' &&
@@ -407,7 +444,7 @@ export function resolveChatTarget({
   const target =
     (batchReply && 'draft') ||
     (explanationReply && 'explanation') ||
-    (teamDateReply && 'teamAvailability') ||
+    (teamDateReply && previousTopic) ||
     (coworkerDateReply && 'coworkers') ||
     answerRoute ||
     routed;

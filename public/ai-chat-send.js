@@ -1,6 +1,7 @@
 import { sendProviderMessage } from './ai-chat-provider.js';
 import {
   MIXED_INTENT_QUESTION,
+  MANAGER_LOOKUPS,
   OPENING_CLARIFICATION,
   GENERIC_CLARIFICATION_PREFIX,
   availabilityNeedsHours,
@@ -38,6 +39,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     loadWorkingSummary,
     showCoworkerAvailability,
     showTeamAvailability,
+    showManagerLookup,
   } = cards;
   // The last two complete turns, each with a user and an
   // assistant, each at most 1,500 characters, at most 4,500 bytes in total).
@@ -69,7 +71,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       'questions',
       'summary',
       ...(manager
-        ? ['draft', 'teamAvailability']
+        ? ['draft', ...MANAGER_LOOKUPS]
         : [
             'search',
             'availability',
@@ -157,7 +159,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     const previous = chat.value.messages.at(-1);
     const previousTopic = previous?.topic;
     const currentTopic =
-      ['summary', 'teamAvailability'].includes(previousTopic) ||
+      ['summary', ...MANAGER_LOOKUPS].includes(previousTopic) ||
       Object.hasOwn(statusLookups, previousTopic)
         ? previousTopic
         : previous && previousTopic !== 'clarification'
@@ -315,7 +317,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       chat.value.criteria = null;
       chat.value.alternateTo = null;
     }
-    if (target === 'teamAvailability') {
+    if (MANAGER_LOOKUPS.includes(target)) {
       const earlier = chat.value.messages.at(-2)?.text;
       const continuing =
         previousTopic === target &&
@@ -323,11 +325,13 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         /^Which date/.test(previous.text) &&
         earlier;
       say('user', text);
-      appendTurn('I’ll check confirmed team availability.');
-      await showTeamAvailability(
-        continuing ? earlier + ' ' + text : text,
-        continuing ? earlier : text,
-      );
+      appendTurn('I’ll check the saved records.');
+      const query = continuing ? earlier + ' ' + text : text;
+      if (target === 'teamAvailability') {
+        await showTeamAvailability(query, continuing ? earlier : text);
+      } else {
+        await showManagerLookup(target, query);
+      }
       return;
     }
     if (target === 'coworkers') {

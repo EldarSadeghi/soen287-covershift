@@ -22,7 +22,7 @@
     "ai:live-check": "node scripts/ai-live-check.js",
     "ai:eval": "node --env-file-if-exists=.env scripts/ai-eval.js",
     "ai:routing-report": "node --env-file-if-exists=.env scripts/ai-routing-report.js",
-    "format:check": "prettier --check public/ai-shift-draft.js \"public/ai-chat-{routing,send,provider,view,cards}.js\" public/ai-team-availability.js tests/ai-intent-patterns.test.js tests/ai-team-availability.test.js"
+    "format:check": "prettier --check public/ai-shift-draft.js \"public/ai-chat-{routing,send,provider,view,cards}.js\" public/ai-team-availability.js public/ai-manager-lookups.js src/ai/manager-lookups.js tests/ai-manager-lookups.test.js tests/ai-intent-patterns.test.js tests/ai-team-availability.test.js"
   },
   "devDependencies": {
     "prettier": "3.6.2"

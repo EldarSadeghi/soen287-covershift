@@ -1,5 +1,5 @@
 import { coworkerLookupDate } from './ai-chat-routing.js';
-import { localDate, responseHeader, responseMeta } from './ai-response-card.js';
+import { localDate, responseHeader, checkedMeta } from './ai-response-card.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
 
@@ -95,7 +95,7 @@ export function selectAvailabilityWorkers(workers, question) {
     return { question: 'Which employee should I check? Give their full name.' };
   if (
     subject ||
-    !/^(?:who|which)\b|\b(?:who['’]?s|whos|anyone|anybody|team availability|staff availability|employee availability|my team|the team)\b/i.test(
+    !/^(?:who|which)\b|\b(?:who['’]?s|whos|anyone|anybody|who (?:can|could) work|team availability|staff availability|employee availability|my team|the team)\b/i.test(
       question,
     )
   ) {
@@ -145,6 +145,6 @@ export function renderTeamAvailability(card, data, date, workers) {
   }
   const link = element('a', 'ai-chat-review', 'Open Availability');
   link.href = '/workspace/manager/availability';
-  card.append(responseMeta(data.timezone), link);
+  card.append(checkedMeta(data.checkedAt, data.timezone), link);
   return reply;
 }

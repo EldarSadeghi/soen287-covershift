@@ -35,7 +35,7 @@ test('refreshed demo supports scripted search, bounded alternatives, private bat
   const options = { apiKey: 'fictional', allowance: { reserve() {} }, fetchImpl: presentationReplies(manifest) };
   const { searchPrompt, batchPrompt, startsOn, summaryWeek } = manifest.presentation;
   const summary = await workingSummary(store, 'manager_morgan', summaryWeek, clock);
-  assert.deepEqual(summary.sections.map(section => section.count), [1, 4]);
+  assert.deepEqual(summary.sections.map(section => section.count), [1, 4, 0, 1]);
   const results = await createAiShiftSearcher(options)(store, 'worker_jamie', { description: searchPrompt }, clock);
   assert.deepEqual(results.requests.map(row => row.shift.title), ['Afternoon coverage', 'Evening coverage', 'Closing coverage']);
   const alternatives = await searchAlternativeShifts(store, 'worker_jamie', { criteria: results.criteria, excludeShiftId: results.requests[1].shift.id }, clock);
