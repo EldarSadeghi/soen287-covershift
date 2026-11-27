@@ -31,12 +31,22 @@ Issue [#151](https://github.com/EldarSadeghi/soen287-covershift/issues/151). The
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed (syntax and format) |
-| `npm test` | 512 / 512 passed (6 new help tests; blocked-reply tests now check the specific wording) |
+| `npm test` | 513 / 513 passed (7 new help tests; blocked-reply tests now check the specific wording) |
 | `npm run ai:acceptance` | 25 / 25 scenarios, 217 checks |
 | `npm run ai:eval` (offline) | 236 / 279 local, 0 write-capable wrong routes; help 21 / 21 local |
 | Evaluation set | 19 new help messages. "help" (`e-clarification-02`, `m-clarification-10`) is relabelled `help` by ID, so no other ID changes |
 | Routing snapshot vs `main` | 404 phrases, 144 follow-ups. Changes are "help" (clarification → help, both roles) and 40 blocked-command replies that now name a page. No other route or reply changed |
 | Live evaluation (user-approved) | 279 / 279 correct, 0 unhelpful generic, 0 write-capable wrong routes; 59 classifier calls, 0 errors; help 21 / 21; all targets met |
+
+## Review clarification (Codex on #151)
+
+"Why can't I claim this shift?" keeps the existing shift-specific explanation, which uses the employee's own records:
+- With the selected opening, the only result shown, or a position ("the second one"), the explanation checks that shift.
+- With a shift title, it looks the shift up from the description.
+- When the shift is unclear, the chat asks "Which opening do you mean?" instead of guessing.
+- Only a question with no shift in it, such as "why can't I pick up extra hours", gets the general rule from the help catalog.
+
+A regression test covers this, next to the existing tests that blocked actions stay blocked and that every help link is a page of the asker's role. No code change was needed.
 
 ## Browser check (fictional demo)
 

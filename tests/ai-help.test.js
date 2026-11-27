@@ -6,6 +6,8 @@ import {
   chatClarification,
   helpTopic,
   needsIntentFallback,
+  OPENING_CLARIFICATION,
+  openingReference,
   requestsUnsupportedAction,
   routeChat,
   UNSUPPORTED_ACTION_MESSAGE,
@@ -103,6 +105,65 @@ test('look-alikes keep their own routes: help only takes what no task claims', (
     ],
   ])
     assert.equal(routeChat(text, manager, null), route, text);
+});
+
+test('a claim question about a specific shift keeps the shift-specific explanation, not generic help', () => {
+  // Codex review on #151: help must not replace an answer grounded in the
+  // employee's own records. These go to the existing explanation route.
+  for (const text of [
+    'Why can’t I claim this shift?',
+    'why can’t I claim that opening',
+    'Why can’t I claim the second one?',
+    'why can’t I claim the Saturday closing shift',
+  ]) {
+    assert.equal(routeChat(text, false, null), 'explanation', text);
+    assert.equal(
+      helpTopic(text, false)?.id,
+      'whyClaim',
+      `${text}: catalog only as a fallback`,
+    );
+  }
+  // Enough context: the selected opening, or the only result shown.
+  assert.equal(
+    openingReference('Why can’t I claim this shift?', ['a', 'b'], 'b'),
+    'b',
+  );
+  assert.equal(
+    openingReference('Why can’t I claim this shift?', ['only'], null),
+    'only',
+  );
+  assert.equal(
+    openingReference('Why can’t I claim the second one?', ['a', 'b'], null),
+    'b',
+  );
+  // Unclear: null, so the chat asks which opening rather than guessing.
+  assert.equal(
+    openingReference('Why can’t I claim this shift?', ['a', 'b'], null),
+    null,
+  );
+  assert.equal(
+    openingReference('Why can’t I claim this shift?', [], null),
+    null,
+  );
+  assert.match(OPENING_CLARIFICATION, /^Which opening do you mean\?$/);
+  // Described by title: the explanation looks it up from the description.
+  assert.equal(
+    openingReference(
+      'why can’t I claim the Saturday closing shift',
+      ['a'],
+      null,
+    ),
+    undefined,
+  );
+  // With no shift in the question at all, the general rule comes from help.
+  assert.equal(
+    routeChat('why can’t I pick up extra hours', false, null),
+    'help',
+  );
+  assert.equal(
+    helpTopic('why can’t I pick up extra hours', false).id,
+    'whyClaim',
+  );
 });
 
 test('every topic has steps and a real page for each role it serves', async () => {
