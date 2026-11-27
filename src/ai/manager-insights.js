@@ -14,7 +14,7 @@ const MAX_PERIOD_DAYS = 31;
 const HOUR = 3600000;
 
 // The period [start, end) as instants for local dates from..through.
-function periodBounds(from, through, timezone) {
+export function periodBounds(from, through, timezone) {
   const days =
     (Date.parse(through + 'T12:00Z') - Date.parse(from + 'T12:00Z')) /
       86400000 +
@@ -34,6 +34,37 @@ function periodBounds(from, through, timezone) {
 const roundHours = (ms) => Math.round((ms / HOUR) * 100) / 100;
 
 /**
+ * Scheduled hours and shift counts per active employee in [start, end),
+ * keyed by employee ID so employees who share a name are never merged.
+ */
+export function hoursByWorker(db, business, start, end) {
+  const totals = new Map();
+  for (const worker of db.users)
+    if (
+      worker.businessId === business.id &&
+      worker.role === 'worker' &&
+      !worker.deactivation
+    )
+      totals.set(worker.id, { worker, ms: 0, shifts: 0 });
+  for (const shift of db.shifts) {
+    const total = totals.get(shift.assignedWorkerId);
+    if (
+      !total ||
+      shift.businessId !== business.id ||
+      Date.parse(shift.startsAt) >= end ||
+      Date.parse(shift.endsAt) <= start
+    )
+      continue;
+    total.ms +=
+      Math.min(end, Date.parse(shift.endsAt)) -
+      Math.max(start, Date.parse(shift.startsAt));
+    total.shifts += 1;
+  }
+  for (const total of totals.values()) total.hours = roundHours(total.ms);
+  return totals;
+}
+
+/**
  * Scheduled hours per active employee in the period, counted like schedule
  * questions: saved shifts clipped to the period, using elapsed time (DST-safe).
  * `focus` picks who the answer is about; every row is still returned.
@@ -42,34 +73,13 @@ export function teamHours(db, business, { from, through, focus, threshold }) {
   const { start, end, days } = periodBounds(from, through, business.timezone);
   if (focus === 'overtime' && days > 7)
     throw new HttpError(422, 'Choose one week to check overtime.');
-  const workers = db.users.filter(
-    (user) =>
-      user.businessId === business.id &&
-      user.role === 'worker' &&
-      !user.deactivation,
-  );
-  const rows = workers
-    .map((worker) => {
-      const shifts = db.shifts.filter(
-        (shift) =>
-          shift.businessId === business.id &&
-          shift.assignedWorkerId === worker.id &&
-          Date.parse(shift.startsAt) < end &&
-          Date.parse(shift.endsAt) > start,
-      );
-      const ms = shifts.reduce(
-        (total, shift) =>
-          total +
-          Math.min(end, Date.parse(shift.endsAt)) -
-          Math.max(start, Date.parse(shift.startsAt)),
-        0,
-      );
-      return {
-        workerName: worker.name,
-        hours: roundHours(ms),
-        shifts: shifts.length,
-      };
-    })
+  const totals = hoursByWorker(db, business, start, end);
+  const rows = [...totals.values()]
+    .map(({ worker, hours, shifts }) => ({
+      workerName: worker.name,
+      hours,
+      shifts,
+    }))
     .sort(
       (a, b) => b.hours - a.hours || a.workerName.localeCompare(b.workerName),
     );

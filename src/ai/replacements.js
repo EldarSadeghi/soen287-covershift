@@ -9,7 +9,7 @@ import { coverEligibility } from '../cover/eligibility.js';
 import { invitationBlocker } from '../cover/service.js';
 import { claimCommitments } from '../requests/claim.js';
 import { addDays, localDate } from '../schedules/publication.js';
-import { teamHours } from './manager-insights.js';
+import { hoursByWorker, periodBounds } from './manager-insights.js';
 
 export const REPLACEMENT_SHIFT_CHOICES = 10;
 
@@ -104,13 +104,9 @@ export function replacementSuggestions(
   const weekday = (new Date(from + 'T12:00Z').getUTCDay() + 6) % 7;
   const weekFrom = addDays(from, -weekday);
   const weekThrough = addDays(weekFrom, 6);
-  const hours = new Map(
-    teamHours(db, business, {
-      from: weekFrom,
-      through: weekThrough,
-      focus: 'all',
-    }).rows.map((row) => [row.workerName, row.hours]),
-  );
+  // Keyed by employee ID, so employees who share a name keep their own hours.
+  const { start, end } = periodBounds(weekFrom, weekThrough, business.timezone);
+  const hours = hoursByWorker(db, business, start, end);
 
   const suggestions = [];
   const excluded = [];
@@ -125,7 +121,7 @@ export function replacementSuggestions(
     const reason = exclusion(db, candidate, shift, business.timezone, now);
     const row = {
       workerName: candidate.name,
-      weekHours: hours.get(candidate.name) ?? 0,
+      weekHours: hours.get(candidate.id)?.hours ?? 0,
     };
     if (reason) excluded.push({ ...row, reason: EXCLUSION_REASONS[reason] });
     else {

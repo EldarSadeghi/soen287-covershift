@@ -10,40 +10,57 @@ export const DATE_QUESTION =
   'Which date’s shift needs cover? Say a day such as Friday or December 5.';
 export const SHIFT_QUESTION = 'Which shift should I check?';
 
-const NOT_NAMES = new Set([
-  'the',
-  'a',
-  'an',
-  'my',
-  'this',
-  'that',
-  'our',
-  'their',
-  'someone',
-  'somebody',
-  'anyone',
-  'anybody',
-  'me',
-  'today',
-  'tomorrow',
-  'tonight',
-]);
+// Words that never start or continue a name: articles, pronouns, date and
+// time words, and shift words ("cover Friday's shift", "the opening shift").
+const NOT_NAME =
+  /^(?:the|a|an|my|this|that|our|their|his|her|its|someone|somebody|anyone|anybody|any ?one|me|us|them|today|tomorrow|tonight|yesterday|next|last|on|at|in|for|from|to|by|with|and|or|shifts?|open(?:ing)?|clos(?:e|ing)|morning|afternoon|evening|night|overnight|brunch|lunch|dinner|delivery|inventory|front|back|kitchen|bar|counter|(?:mon|tues|wednes|thurs|fri|satur|sun)day|january|february|march|april|may|june|july|august|september|october|november|december|\d+(?:st|nd|rd|th)?)$/i;
+const NAME_WORD = /^[\p{L}][\p{L}'’-]*$/u;
+// Verbs whose object is a person ("replace Sam"), not a shift ("take the close").
+const PERSON_VERB =
+  /\b(?:replace|fill in for|sub(?:stitute)? for|stand in for|step in for|instead of|cover for|take over for)\s+(.+)$/i;
+const ANY_VERB =
+  /\b(?:cover|replace|take over|take|fill in for|sub(?:stitute)? for|stand in for|step in for|instead of|cover for)\s+(.+)$/i;
 
-// Day and month names look like names ("cover Friday's shift").
-const DATE_WORD =
-  /^(?:mon|tues|wednes|thurs|fri|satur|sun)day$|^(?:january|february|march|april|may|june|july|august|september|october|november|december)$/i;
+// Words that may follow a person's name when "cover" or "take" has a person
+// as its object: "cover Alex tomorrow", "take alex on Friday".
+const AFTER_NAME =
+  /^(?:on|at|this|next|tomorrow|today|tonight|(?:mon|tues|wednes|thurs|fri|satur|sun)day|january|february|march|april|may|june|july|august|september|october|november|december)$/i;
 
-// The assigned employee named in "cover Jamie's Friday shift", "replace Sam
-// on Saturday" or "fill in for Alex tomorrow". Names start with a capital.
+// Up to two name words from the start of `rest`. Modes: 'possessive' needs
+// the last word to end in 's ("jamie lee's Friday shift"); 'person' follows a
+// verb that takes a person ("replace sam rivera"); 'object' follows "cover"
+// or "take" and needs a date or time next ("cover alex tomorrow").
+function nameAt(rest, mode) {
+  const words = rest.trim().split(/\s+/);
+  const name = [];
+  for (const raw of words.slice(0, 2)) {
+    const word = raw.replace(/[?!.,;:]+$/, '');
+    const owner = /['’]s$/i.test(word);
+    const bare = word.replace(/['’]s$/i, '');
+    if (!NAME_WORD.test(bare) || NOT_NAME.test(bare)) break;
+    name.push(bare);
+    if (owner) return name.join(' ');
+    if (word !== raw) break; // punctuation ends the name
+  }
+  if (mode === 'possessive' || !name.length) return null;
+  if (mode === 'person') return name.join(' ');
+  const next = words[name.length]?.replace(/[?!.,;:]+$/, '');
+  return next === undefined || AFTER_NAME.test(next) ? name.join(' ') : null;
+}
+
+// The assigned employee named in "cover jamie's Friday shift", "replace Sam
+// Rivera on Saturday", "fill in for taylor tomorrow" or "cover Alex
+// tomorrow". Case doesn't matter; full names are kept so the server can
+// match them exactly.
 export function replacementWorker(text) {
-  const match =
-    /\b(?:cover|replace|take over|take|fill in for|sub(?:stitute)? for|stand in for|step in for|instead of|for)\s+([A-Z][\p{L}'-]+)(?:['’]s\b)?/u.exec(
-      text,
-    );
-  const name = match?.[1].replace(/['’]s$/, '');
-  return name && !NOT_NAMES.has(name.toLowerCase()) && !DATE_WORD.test(name)
-    ? name
-    : null;
+  const person = PERSON_VERB.exec(text)?.[1];
+  const any = ANY_VERB.exec(text)?.[1];
+  return (
+    (any && nameAt(any, 'possessive')) ||
+    (person && nameAt(person, 'person')) ||
+    (any && nameAt(any, 'object')) ||
+    null
+  );
 }
 
 // A short reply naming the shift: "the opening one", "Opening service".

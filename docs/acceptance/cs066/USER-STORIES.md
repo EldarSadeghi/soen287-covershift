@@ -27,7 +27,7 @@ Issue [#153](https://github.com/EldarSadeghi/soen287-covershift/issues/153). A m
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed (syntax and format) |
-| `npm test` | 521 / 521 passed (6 new replacement tests and one routing example) |
+| `npm test` | 523 / 523 passed (8 new replacement tests and one routing example) |
 | `npm run ai:acceptance` | 25 / 25 scenarios, 217 checks |
 | `npm run ai:eval` (offline) | 0 write-capable wrong routes; replacements 11 / 13 local (2 paraphrases left to the classifier) |
 | Evaluation set | 13 new labelled messages (292 in total); existing IDs unchanged |
@@ -45,6 +45,16 @@ Issue [#153](https://github.com/EldarSadeghi/soen287-covershift/issues/153). A m
   - Already declined this shift
   - Already invited to this shift
 - **Regression test.** For a pending invitation, a prior decline, a cancelled invitation (which no longer counts) and a shift outside the window, "Can be invited now" appears exactly when the assignee's real invitation options (`coverOptions`) list that shift for that coworker. The existing cover-invitation tests still pass.
+
+## Review fixes (Codex on PR #154)
+
+- **Names are read whatever their case, and full names are kept.** "Who can cover jamie's Friday shift?" used to drop `jamie`. If Friday then had only one shift, belonging to someone else, the chat showed replacements for the wrong shift. Names now come from:
+  - a possessive: "jamie lee's Friday shift";
+  - a verb that takes a person: "replace sam rivera", "fill in for taylor";
+  - "cover" or "take" followed by a date or time: "cover Alex tomorrow".
+
+  Up to two words are kept, in any case. Article, date and shift words ("the", "Friday", "opening", "closing") are never read as names. A named employee with no matching shift gets "No shifts…", never another person's shift.
+- **Hours are keyed by employee ID.** Two employees named Alex Lee with 4 and 0 hours both showed 0. Team hours and the suggestions now share `hoursByWorker`, which totals by employee ID, so same-name employees keep their own hours and ranking. Tests cover both fixes.
 
 ## Browser check (fictional demo, manager Morgan Chen, America/Toronto)
 

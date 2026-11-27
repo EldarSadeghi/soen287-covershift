@@ -6,6 +6,7 @@ import test from 'node:test';
 import { buildDemoFixtures } from '../src/demo/fixtures.js';
 import { JsonStore } from '../src/storage/json-store.js';
 import { managerLookup } from '../src/ai/manager-lookups.js';
+import { teamHours } from '../src/ai/manager-insights.js';
 import { coverOptions } from '../src/cover/service.js';
 import { coverShiftFingerprint } from '../src/cover/lifecycle.js';
 import {
@@ -379,6 +380,99 @@ test('the shift is chosen by date, title and assignee; several are listed, none 
   const many = find({ from: '2026-12-04' });
   assert.equal(many.total, 15);
   assert.equal(many.shifts.length, REPLACEMENT_SHIFT_CHOICES);
+});
+
+test('names are read whatever their case, full names are kept, and a named shift is never swapped (Codex review on #154)', () => {
+  for (const [text, name] of [
+    ['Who can cover jamie’s Friday shift?', 'jamie'],
+    ['Who can cover Jamie Lee’s Friday shift?', 'Jamie Lee'],
+    ['who could replace sam rivera on saturday', 'sam rivera'],
+    ['fill in for taylor tomorrow', 'taylor'],
+    ['suggest someone to cover Alex tomorrow', 'Alex'],
+    ['who can take over for alex tomorrow', 'alex'],
+    ['who can take opening shift tomorrow', null],
+    ['who can cover the opening shift tomorrow', null],
+    ['who can cover closing', null],
+    ['who can cover Friday’s shift', null],
+    ['who can cover for me on Saturday', null],
+  ])
+    assert.equal(replacementWorker(text), name, text);
+
+  // Friday Dec 4 then has only Alex's and Casey's shifts: asking for
+  // jamie's must not fall back to one of them.
+  const db = makeDb();
+  db.shifts = db.shifts.filter((row) => row.id !== 'open');
+  const { params } = replacementQuery(
+    'Who can cover jamie’s Friday shift?',
+    '2026-11-30',
+  );
+  assert.deepEqual([params.from, params.worker], ['2026-12-04', 'jamie']);
+  db.shifts = db.shifts.filter((row) => row.id !== 'c-fri');
+  const result = replacementSuggestions(db, db.businesses[0], params, now);
+  assert.equal(result.status, 'none');
+  // A full lowercase name selects that employee's shift exactly.
+  const full = replacementSuggestions(
+    db,
+    db.businesses[0],
+    { from: '2026-12-04', worker: 'alex morgan' },
+    now,
+  );
+  assert.equal(full.shift.title, 'Closing service');
+});
+
+test('employees who share a name keep their own hours (Codex review on #154)', () => {
+  const db = makeDb();
+  const twin = (id) => ({
+    id,
+    name: 'Alex Lee',
+    role: 'worker',
+    businessId: 'b1',
+    passwordHash: 'h',
+  });
+  db.users.push(twin('lee1'), twin('lee2'));
+  for (const id of ['lee1', 'lee2'])
+    db.availabilityWindows.push({
+      ...db.availabilityWindows[0],
+      id: 'w-' + id,
+      workerId: id,
+    });
+  // lee1 works 4 hours that week; lee2 none.
+  db.shifts.push({
+    id: 'lee1-wed',
+    businessId: 'b1',
+    assignedWorkerId: 'lee1',
+    title: 'Wednesday',
+    startsAt: '2026-12-02T14:00:00.000Z',
+    endsAt: '2026-12-02T18:00:00.000Z',
+  });
+  const { suggestions } = replacementSuggestions(
+    db,
+    db.businesses[0],
+    { from: '2026-12-04', title: 'opening' },
+    now,
+  );
+  const twins = suggestions
+    .filter((row) => row.workerName === 'Alex Lee')
+    .map((row) => row.weekHours);
+  assert.deepEqual(twins.sort(), [0, 4]);
+  assert.equal(suggestions[0].workerName, 'Alex Lee');
+  assert.equal(
+    suggestions[0].weekHours,
+    0,
+    'the twin with no hours ranks first',
+  );
+  const team = teamHours(db, db.businesses[0], {
+    from: '2026-11-30',
+    through: '2026-12-06',
+    focus: 'all',
+  });
+  assert.deepEqual(
+    team.rows
+      .filter((row) => row.workerName === 'Alex Lee')
+      .map((row) => row.hours)
+      .sort(),
+    [0, 4],
+  );
 });
 
 test('the endpoint is manager only, stays in the business, validates its input and never writes', async (t) => {
