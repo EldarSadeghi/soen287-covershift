@@ -7211,6 +7211,438 @@
         null
       ]
     },
+    "Add Sam Rivera as an employee": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "addEmployee",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "add a new worker called Priya Shah": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "addEmployee",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "onboard Dana Kim": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "addEmployee",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "add Morgan Ellis to the team": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "addEmployee",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "hire a new employee": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "addEmployee",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "we just hired Lee Park, can you get them set up": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Copy this week's schedule to next week": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "copyWeek",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": null,
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "copy last week to this week": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "copyWeek",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": null,
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "duplicate this week's shifts into next week": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "copyWeek",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": null,
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "repeat this week next week": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "copyWeek",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": null,
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "can next week look exactly like this week": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": null,
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Add 'restock fridge' to Friday's opening shift": {
+      "employee": {
+        "route": "search",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "shiftDuties",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "add a duty to restock the fridge on Jamie's Friday shift": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "shiftDuties",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "add “wipe tables” to the closing shift on December 5": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "shiftDuties",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-12-05",
+      "historyPeriod": "2026-12-05",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "add a task to Saturday's delivery shift: check the invoices": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "shiftDuties",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-28",
+      "historyPeriod": "2026-11-28",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Sam's Monday shift should also take out the recycling": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-30",
+      "historyPeriod": "2026-11-30",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
     "What needs my attention?": {
       "employee": {
         "route": "clarification",

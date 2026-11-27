@@ -3,6 +3,12 @@ import { formatShiftTime } from './shift-time.js';
 export const CHAT_KEY = 'covershift.ai.chat.v1';
 const draftKeys = ['title', 'assignedWorkerId', 'startLocal', 'endLocal'];
 export const validDraft = draft => draft && typeof draft === 'object' && Object.keys(draft).length === 4 && draftKeys.every(key => typeof draft[key] === 'string') && draft.title.length <= 100 && /^[a-zA-Z0-9_-]{1,80}$/.test(draft.assignedWorkerId) && ['startLocal','endLocal'].every(key => /^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft[key]));
+// A copied week (CS-068) may carry the original shift's duties.
+const validCopy = draft => {
+  if (!draft || typeof draft !== 'object') return false;
+  const { duties, ...fields } = draft;
+  return validDraft(fields) && (duties === undefined || (Array.isArray(duties) && duties.length <= 10 && duties.every(duty => typeof duty === 'string' && duty.length <= 160)));
+};
 const validId = value => typeof value === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(value);
 function savedReceipt(draftId, result) {
   const shift = result?.shift;
@@ -25,7 +31,9 @@ export function createChatState(storage, owner, now = Date.now) {
       const batch = saved.batch;
       if (batch && validId(batch.id) && ['review', 'uncertain', 'saved'].includes(batch.status) &&
           typeof batch.timezone === 'string' && batch.timezone.length <= 100 &&
-          Array.isArray(batch.shifts) && batch.shifts.length >= 2 && batch.shifts.length <= 5 && batch.shifts.every(validDraft) &&
+          Array.isArray(batch.shifts) && (batch.copy === true
+            ? batch.shifts.length >= 1 && batch.shifts.length <= 40 && batch.shifts.every(validCopy)
+            : batch.shifts.length >= 2 && batch.shifts.length <= 5 && batch.shifts.every(validDraft)) &&
           Array.isArray(batch.workers) && batch.workers.length <= 50 && batch.workers.every(worker =>
             validId(worker?.id) && typeof worker.name === 'string' && worker.name.length <= 100)) state.batch = batch;
       if (saved.batchClarifying === true) state.batchClarifying = true;

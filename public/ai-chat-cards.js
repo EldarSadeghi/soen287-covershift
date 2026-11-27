@@ -39,6 +39,16 @@ import {
   workingSummaryMessage,
 } from './ai-working-summary.js';
 import { createBatchReview } from './ai-shift-batch.js';
+import {
+  copyWeekBatch,
+  copyWeeks,
+  dutyQuery,
+  newEmployee,
+  renderDutyShift,
+  renderNewEmployee,
+  sendDutyToSchedule,
+  sendNewEmployeeToTeam,
+} from './ai-manager-drafts.js';
 import { createAvailabilityExplanations } from './ai-availability-explanation.js';
 import {
   localDate,
@@ -447,6 +457,82 @@ export function createChatCards({
     }
   }
 
+  // CS-068: prepares a change for review on Team, in the batch review or on
+  // Schedule. Nothing is saved here and no paid AI call is made.
+  async function showManagerDraft(kind, text) {
+    card.hidden = true;
+    if (kind === 'addEmployee') {
+      const draft = newEmployee(text);
+      outcomeText(
+        renderNewEmployee(card, draft, (reviewed) => {
+          if (!sendNewEmployeeToTeam(account, reviewed))
+            notice(
+              'This browser couldn’t keep the details. Fill in the Team form instead.',
+              true,
+            );
+        }),
+      );
+      card.hidden = false;
+      return;
+    }
+    const endpoint = '/api/manager/chat-lookup';
+    working(true);
+    try {
+      const context = await loadLookupData(endpoint);
+      if (!context) return;
+      if (kind === 'copyWeek') {
+        const weeks = copyWeeks(text, context.today);
+        if (!weeks) {
+          outcomeText(
+            'Which week should I copy, and to which week? For example, “copy this week to next week”.',
+          );
+          return;
+        }
+        const data = await loadLookupData(
+          endpoint +
+            '?' +
+            new URLSearchParams({
+              kind: 'copyWeek',
+              from: weeks.source,
+              through: weeks.target,
+            }),
+        );
+        if (!data) return;
+        const prepared = copyWeekBatch(data);
+        if (prepared.batch) {
+          chat.value.suggestion = null;
+          chat.value.refinementPending = false;
+          batchReview.open(prepared.batch);
+        }
+        outcomeText(prepared.message);
+        return;
+      }
+      const query = dutyQuery(text, context.today);
+      if (query.question) {
+        outcomeText(query.question);
+        return;
+      }
+      const data = await loadLookupData(
+        endpoint + '?' + new URLSearchParams(query.params),
+      );
+      if (!data) return;
+      outcomeText(
+        renderDutyShift(card, data, query.duty, (edit) => {
+          if (!sendDutyToSchedule(account, edit))
+            notice(
+              'This browser couldn’t keep the change. Edit the shift on Schedule instead.',
+              true,
+            );
+        }),
+      );
+      card.hidden = false;
+    } catch (error) {
+      outcomeText(error.message);
+    } finally {
+      working(false);
+    }
+  }
+
   async function showTeamAvailability(text, subject = text) {
     const endpoint = '/api/manager/availability-windows';
     card.hidden = true;
@@ -660,6 +746,7 @@ export function createChatCards({
     showCoworkerAvailability,
     showTeamAvailability,
     showManagerLookup,
+    showManagerDraft,
     showEmployeeLookup,
     showHelp,
     showBlocked,

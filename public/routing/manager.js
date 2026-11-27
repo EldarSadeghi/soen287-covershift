@@ -101,6 +101,38 @@ export const managerPatterns = {
   },
 };
 
+// CS-068: changes the chat prepares for review on an existing page. Checked
+// before shift edits and new-shift drafts.
+export const managerDraftPatterns = {
+  // "Add 'restock fridge' to Friday's opening shift", "add a duty to restock
+  // the fridge on Jamie's Friday shift", "put cleaning on the closing shift's task list"
+  shiftDuties: anyOf([
+    /^(?:add|put|include)\s+(?:a |an |the |another |new )*(?:duty|duties|task|tasks|to-?do)\b.*\bshifts?\b/,
+    /^(?:add|put|include)\s+["“'‘][^"”'’]+["”'’]\s+(?:as (?:a |an )?(?:duty|task) )?(?:to|on|for|onto)\b.*\bshifts?\b/,
+    /^(?:add|put|include)\b.*\b(?:to|on|onto) (?:the )?(?:[\p{L}'’ ]+ )?shift(?:'s)? (?:duties|duty list|tasks|task list|to-?do list)\b/u,
+  ]),
+  // "Copy this week's schedule to next week", "duplicate last week into this week"
+  copyWeek:
+    /^(?:copy|duplicate|repeat|clone|roll over|carry over|reuse)\b.*\b(?:this|last|next|previous|current) week\b(?:.*\b(?:to|into|onto|for|as)\b.*\bweek\b)?/,
+  // "Add Sam Rivera as an employee", "onboard Dana Kim", "add a new worker
+  // called Priya Shah". Never a shift: "add Sam to the Friday shift" is a draft.
+  addEmployee: anyOf(
+    [
+      /(?:add|onboard|hire|set up|create)\s+(?:an? )?new (?:employee|worker|team member|staff member|hire|starter)\b/,
+      /(?:add|onboard|hire|create)\s+(?:an? )?(?:employee|worker|team member|staff member) (?:called|named)\b/,
+      /(?:add|onboard|hire|set up)\s+\p{L}[\p{L}'’-]*(?: \p{L}[\p{L}'’-]*){0,2}\s+(?:as (?:an? )?(?:new )?(?:employee|worker|team member|staff member|hire|starter)|to (?:the|my|our) (?:team|roster|staff))\b/,
+      /onboard\s+\p{L}/,
+    ],
+    { before: '^(?!.*\\b(?:shifts?|schedules?|rotas?)\\b)', flags: 'u' },
+  ),
+};
+
+export function managerDraftRoute(message) {
+  for (const [route, pattern] of Object.entries(managerDraftPatterns))
+    if (pattern.test(message)) return route;
+  return null;
+}
+
 export function managerLookupRoute(message) {
   for (const [route, pattern] of Object.entries(managerPatterns.lookups)) {
     if (pattern.test(message)) return route;

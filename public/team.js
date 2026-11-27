@@ -1,6 +1,7 @@
 import { requestJSON } from './request.js';
 import { removalActions } from './remove-worker.js';
 import { element } from './shift-card.js';
+import { takeNewEmployee } from './ai-manager-drafts.js';
 export async function mountTeam(main, account, csrf) {
   main.innerHTML = '<p class="eyebrow">Your people, all in one place</p><div class="page-heading"><div><h1>Your team.</h1><p class="subtitle">Add your workers. Give everyone a place to start.</p></div><button id="refresh-team" class="logout-button" type="button">Refresh</button></div><p id="team-result" class="shift-created" role="status" tabindex="-1" hidden></p><label class="history-filter">Show employees <select id="team-filter"><option value="active">Active employees</option><option value="inactive">Inactive employees</option><option value="all">All employees</option></select></label><div id="team-error" class="team-message" role="alert" tabindex="-1" hidden></div><section id="setup-link-panel" class="panel team-panel" tabindex="-1" hidden><p class="eyebrow">Next step · share privately</p><h2>Help your worker get started.</h2><p id="setup-person"></p><label for="setup-link">One-time setup link</label><input id="setup-link" readonly><p id="setup-expiry" class="section-note"></p><div class="team-actions"><button id="copy-setup" class="logout-button" type="button">Copy link</button><a id="open-setup" class="text-link" target="_blank" rel="noopener noreferrer">Open setup page ↗</a><button id="dismiss-setup" class="logout-button" type="button">Done</button></div><p class="section-note" id="copy-status" role="status">Share this link with this worker only. No email is sent. For local testing, open it on this computer.</p></section><div class="team-grid"><section class="panel team-panel"><h2>Add a worker</h2><p>They’ll choose their own password using a setup link.</p><form id="add-worker"><div class="team-field"><label for="worker-name">Worker name</label><input id="worker-name" name="name" required minlength="2" maxlength="80" autocomplete="off" placeholder="e.g. Jamie Lee"></div><div class="team-field"><label for="worker-email">Email address</label><input id="worker-email" name="email" type="email" required maxlength="254" autocomplete="off" placeholder="worker@example.com"></div><button class="signup-submit" type="submit">Add worker →</button></form></section><section class="panel team-panel"><div class="panel-header"><h2>Team roster</h2><span id="worker-count" class="badge" role="status" aria-atomic="true"></span></div><p class="section-note">Ready workers can sign in. Others still need to set up a password.</p><div id="worker-list"></div></section></div>';
   const find = id => main.querySelector(`#${id}`);
@@ -68,4 +69,15 @@ export async function mountTeam(main, account, csrf) {
   find('refresh-team').addEventListener('click', event => { clear(); refresh(event); });
   find('team-filter').addEventListener('change',refresh);
   await refresh();
+  // An employee prepared in chat (CS-068): fill in the form for review. The
+  // manager still chooses Add worker; nothing is saved here.
+  if (new URLSearchParams(location.search).get('review') === 'add-employee') {
+    history.replaceState(null, '', location.pathname);
+    const draft = takeNewEmployee(account);
+    if (draft) {
+      find('worker-name').value = draft.name; find('worker-email').value = draft.email;
+      const result = find('team-result'); result.textContent = 'Prepared in chat. Check the name and email, then choose Add worker.'; result.hidden = false;
+      (draft.name ? (draft.email ? addButton : find('worker-email')) : find('worker-name')).focus();
+    }
+  }
 }

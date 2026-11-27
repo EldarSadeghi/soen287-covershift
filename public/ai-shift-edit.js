@@ -46,7 +46,14 @@ export function takeShiftEditHandoff(account) {
       value.draft &&
       ['title', 'assignedWorkerId', 'startLocal', 'endLocal'].every(
         (key) => typeof value.draft[key] === 'string',
-      )
+      ) &&
+      // A duty prepared in chat (CS-068) arrives as the shift's full list.
+      (value.draft.duties === undefined ||
+        (Array.isArray(value.draft.duties) &&
+          value.draft.duties.length <= 10 &&
+          value.draft.duties.every(
+            (duty) => typeof duty === 'string' && duty.length <= 160,
+          )))
     )
       return value;
   } catch {

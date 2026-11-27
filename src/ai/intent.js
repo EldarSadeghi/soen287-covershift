@@ -3,7 +3,7 @@ import { aiConfigured, responsesBody, structuredResponse } from './structured-re
 import { validateChatInput } from './shift-draft.js';
 
 const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft', 'answerInvite', 'cancelCover', 'cancelTimeOff', 'help'];
-const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'replacements', 'help'];
+const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory', 'replacements', 'addEmployee', 'copyWeek', 'shiftDuties', 'help'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
 // the evaluation measures generalisation rather than memorised answers.
@@ -39,6 +39,9 @@ teamHours = comparing scheduled hours across employees: most, fewest, under or o
 coverageGaps = upcoming shifts that are not safely staffed, including ones clashing with time off ("where am I short-handed next week").
 shiftHistory = what happened to a specific shift over time: requests, claims, approvals ("walk me through the Sunday brunch shift's changes").
 replacements = who could take or cover one specific shift instead of the assigned employee ("I need somebody to step in for Priya on the Sunday close").
+addEmployee = add a NEW person to the team or roster ("bring Leila Haddad onto the staff list"). How to do it is help.
+copyWeek = repeat a whole week's shifts in another week ("give me the same rota again the following week").
+shiftDuties = add a duty or task to an existing shift ("the Saturday close also needs the floors mopped, put that on it").
 help = how to use CoverShift itself, why the app doesn't allow something, or what a status word means ("which screen lets me bring on a new hire", "what's the point of the publish step"). Questions about the team's records are not help.`,
 };
 

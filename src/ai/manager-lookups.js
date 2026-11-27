@@ -9,6 +9,7 @@ import { managerBusiness } from '../shifts/create.js';
 import { listTimeOff } from '../time-off/service.js';
 import { coverageGaps, shiftHistory, teamHours } from './manager-insights.js';
 import { replacementSuggestions } from './replacements.js';
+import { copyWeekDraft, dutyShift } from './manager-drafts.js';
 
 const kinds = new Set([
   'teamTimeOff',
@@ -18,6 +19,8 @@ const kinds = new Set([
   'coverageGaps',
   'shiftHistory',
   'replacements',
+  'copyWeek',
+  'shiftDuties',
 ]);
 const HOURS_FOCUS = new Set([
   'most',
@@ -78,7 +81,12 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
     (from && through < from) ||
     (!from && through) ||
     (query.has('title') &&
-      (!['coverageStatus', 'shiftHistory', 'replacements'].includes(kind) ||
+      (![
+        'coverageStatus',
+        'shiftHistory',
+        'replacements',
+        'shiftDuties',
+      ].includes(kind) ||
         !title ||
         title.length > 120))
   ) {
@@ -86,6 +94,30 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
   }
   const metadata = { kind, timezone, asOf, from, through };
 
+  // CS-068: from is the week to copy and through the week to copy it to.
+  if (kind === 'copyWeek') {
+    if (
+      !from ||
+      from === through ||
+      ['title', 'worker', 'focus', 'hours'].some((key) => query.has(key))
+    )
+      throw new HttpError(422, 'Choose a week to copy and a later week.');
+    return {
+      ...metadata,
+      ...copyWeekDraft(db, business, { source: from, target: through }, now),
+    };
+  }
+  if (kind === 'shiftDuties') {
+    const worker = query.get('worker')?.trim();
+    if (!from || from !== through || query.has('focus') || query.has('hours'))
+      throw new HttpError(422, 'Choose the date of the shift.');
+    if (query.has('worker') && (!worker || worker.length > 80))
+      throw new HttpError(422, 'Choose the employee whose shift it is.');
+    return {
+      ...metadata,
+      ...dutyShift(db, business, { from, title, worker }, now),
+    };
+  }
   if (kind === 'replacements') {
     const worker = query.get('worker')?.trim();
     if (!from || from !== through)

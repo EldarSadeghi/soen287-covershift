@@ -88,7 +88,7 @@ function selectedShift(shifts, base) {
   return shift;
 }
 
-function lockReason(db, shift, now) {
+export function lockReason(db, shift, now) {
   const original = db.shifts.find(
     (row) => row.id === shift.id && row.businessId === shift.businessId,
   );

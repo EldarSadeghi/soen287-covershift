@@ -339,6 +339,29 @@ const groups = {
       'creat a shift for jamie tmrw 9-5',
       'Create a new afternoon shift for Jamie on Friday.',
     ],
+    // CS-068: changes prepared for review on an existing page.
+    addEmployee: [
+      'Add Sam Rivera as an employee',
+      'add a new worker called Priya Shah',
+      'onboard Dana Kim',
+      'add Morgan Ellis to the team',
+      'hire a new employee',
+      'we just hired Lee Park, can you get them set up',
+    ],
+    copyWeek: [
+      "Copy this week's schedule to next week",
+      'copy last week to this week',
+      "duplicate this week's shifts into next week",
+      'repeat this week next week',
+      'can next week look exactly like this week',
+    ],
+    shiftDuties: [
+      "Add 'restock fridge' to Friday's opening shift",
+      "add a duty to restock the fridge on Jamie's Friday shift",
+      'add “wipe tables” to the closing shift on December 5',
+      "add a task to Saturday's delivery shift: check the invoices",
+      "Sam's Monday shift should also take out the recycling",
+    ],
     summary: [
       'What needs my attention?',
       'show the attention summary',
