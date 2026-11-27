@@ -2,6 +2,7 @@ import { sendProviderMessage } from './ai-chat-provider.js';
 import {
   MIXED_INTENT_QUESTION,
   MANAGER_LOOKUPS,
+  MANAGER_DRAFTS,
   EMPLOYEE_LOOKUPS,
   EMPLOYEE_DRAFTS,
   OPENING_CLARIFICATION,
@@ -43,6 +44,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     showCoworkerAvailability,
     showTeamAvailability,
     showManagerLookup,
+    showManagerDraft,
     showEmployeeLookup,
     showHelp,
     showBlocked,
@@ -78,7 +80,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       'questions',
       'summary',
       ...(manager
-        ? ['draft', 'shiftEdit', ...MANAGER_LOOKUPS]
+        ? ['draft', 'shiftEdit', ...MANAGER_LOOKUPS, ...MANAGER_DRAFTS]
         : [
             'search',
             'availability',
@@ -341,6 +343,14 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     ) {
       chat.value.criteria = null;
       chat.value.alternateTo = null;
+    }
+    if (manager && MANAGER_DRAFTS.includes(target)) {
+      chat.value.batch = null;
+      chat.value.batchClarifying = false;
+      say('user', text);
+      appendTurn('I’ll prepare that for your review.');
+      await showManagerDraft(target, text);
+      return;
     }
     if (MANAGER_LOOKUPS.includes(target)) {
       const earlier = chat.value.messages.at(-2)?.text;

@@ -73,7 +73,7 @@ export function managedShiftCard(shift, timezone, csrfToken, onChanged, review =
           if (errors[key]) { input.setAttribute('aria-invalid', 'true'); error.textContent = errors[key]; error.hidden = false; }
         }
       }
-      const dutyField=element('div','team-field duty-field'),dutyLabel=element('label','','Shift duties (optional)'),duties=element('textarea');duties.id='edit-'+shift.id+'-duties';duties.rows=4;duties.maxLength=1700;duties.value=(shift.duties||[]).join('\n');dutyLabel.htmlFor=duties.id;const dutyHelp=element('p','section-note','One duty per line. Up to 10 duties, 160 characters each.');dutyField.append(dutyLabel,duties,dutyHelp);
+      const dutyField=element('div','team-field duty-field'),dutyLabel=element('label','','Shift duties (optional)'),duties=element('textarea');duties.id='edit-'+shift.id+'-duties';duties.rows=4;duties.maxLength=1700;duties.value=(editReview?.draft.duties??shift.duties??[]).join('\n');dutyLabel.htmlFor=duties.id;const dutyHelp=element('p','section-note','One duty per line. Up to 10 duties, 160 characters each.');dutyField.append(dutyLabel,duties,dutyHelp);
       const buttons = element('div', 'create-actions'); const submit = element('button', 'solid-link', 'Save changes'); submit.type = 'submit'; buttons.append(submit, cancel);
       form.append(grid,dutyField,buttons); form.addEventListener('submit', event => {
         event.preventDefault(); if (busy) return;

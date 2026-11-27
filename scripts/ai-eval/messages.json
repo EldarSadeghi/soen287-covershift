@@ -1604,6 +1604,102 @@
       "message": "Create a new afternoon shift for Jamie on Friday."
     },
     {
+      "id": "m-addEmployee-01",
+      "role": "manager",
+      "expected": "addEmployee",
+      "message": "Add Sam Rivera as an employee"
+    },
+    {
+      "id": "m-addEmployee-02",
+      "role": "manager",
+      "expected": "addEmployee",
+      "message": "add a new worker called Priya Shah"
+    },
+    {
+      "id": "m-addEmployee-03",
+      "role": "manager",
+      "expected": "addEmployee",
+      "message": "onboard Dana Kim"
+    },
+    {
+      "id": "m-addEmployee-04",
+      "role": "manager",
+      "expected": "addEmployee",
+      "message": "add Morgan Ellis to the team"
+    },
+    {
+      "id": "m-addEmployee-05",
+      "role": "manager",
+      "expected": "addEmployee",
+      "message": "hire a new employee"
+    },
+    {
+      "id": "m-addEmployee-06",
+      "role": "manager",
+      "expected": "addEmployee",
+      "message": "we just hired Lee Park, can you get them set up"
+    },
+    {
+      "id": "m-copyWeek-01",
+      "role": "manager",
+      "expected": "copyWeek",
+      "message": "Copy this week's schedule to next week"
+    },
+    {
+      "id": "m-copyWeek-02",
+      "role": "manager",
+      "expected": "copyWeek",
+      "message": "copy last week to this week"
+    },
+    {
+      "id": "m-copyWeek-03",
+      "role": "manager",
+      "expected": "copyWeek",
+      "message": "duplicate this week's shifts into next week"
+    },
+    {
+      "id": "m-copyWeek-04",
+      "role": "manager",
+      "expected": "copyWeek",
+      "message": "repeat this week next week"
+    },
+    {
+      "id": "m-copyWeek-05",
+      "role": "manager",
+      "expected": "copyWeek",
+      "message": "can next week look exactly like this week"
+    },
+    {
+      "id": "m-shiftDuties-01",
+      "role": "manager",
+      "expected": "shiftDuties",
+      "message": "Add 'restock fridge' to Friday's opening shift"
+    },
+    {
+      "id": "m-shiftDuties-02",
+      "role": "manager",
+      "expected": "shiftDuties",
+      "message": "add a duty to restock the fridge on Jamie's Friday shift"
+    },
+    {
+      "id": "m-shiftDuties-03",
+      "role": "manager",
+      "expected": "shiftDuties",
+      "message": "add “wipe tables” to the closing shift on December 5"
+    },
+    {
+      "id": "m-shiftDuties-04",
+      "role": "manager",
+      "expected": "shiftDuties",
+      "message": "add a task to Saturday's delivery shift: check the invoices"
+    },
+    {
+      "id": "m-shiftDuties-05",
+      "role": "manager",
+      "expected": "shiftDuties",
+      "message": "Sam's Monday shift should also take out the recycling"
+    },
+    {
       "id": "m-summary-01",
       "role": "manager",
       "expected": "summary",

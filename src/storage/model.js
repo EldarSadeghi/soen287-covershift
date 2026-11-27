@@ -246,7 +246,7 @@ export function validateDatabase(db) {
       requireValue(batch && Object.keys(batch).length === 6 && typeof batch.id === 'string' &&
         /^[a-f0-9-]{36}$/.test(batch.id) && manager?.role === 'manager' && businesses.has(batch.businessId) &&
         manager.businessId === batch.businessId && /^[a-f0-9]{64}$/.test(batch.fingerprint) &&
-        Number.isInteger(batch.count) && batch.count >= 2 && batch.count <= 5 &&
+        Number.isInteger(batch.count) && batch.count >= 1 && batch.count <= 40 && // 40: a copied week (CS-068)
         typeof batch.draft === 'boolean', 'invalid shift batch receipt');
       const key = `${batch.managerId}:${batch.id}`;
       requireValue(!seen.has(key), 'duplicate shift batch receipt');

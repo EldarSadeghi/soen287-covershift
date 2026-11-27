@@ -171,6 +171,10 @@ const assets = new Map([
   ],
   ['/ai-help.js', ['ai-help.js', 'text/javascript; charset=utf-8']],
   [
+    '/ai-manager-drafts.js',
+    ['ai-manager-drafts.js', 'text/javascript; charset=utf-8'],
+  ],
+  [
     '/ai-follow-through.js',
     ['ai-follow-through.js', 'text/javascript; charset=utf-8'],
   ],

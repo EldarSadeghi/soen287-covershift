@@ -7,7 +7,7 @@ import { allowedIntents } from '../../src/ai/intent.js';
 // Routes the browser reaches without the classifier (local rules only).
 const LOCAL_ONLY = { employee: ['explanation', 'rules', 'alternatives'], manager: [] };
 // A wrong route into one of these can lead to a saved change after confirmation.
-export const WRITE_CAPABLE = new Set(['draft', 'shiftEdit', 'availability', 'search', 'timeOffDraft', 'coverDraft', 'answerInvite', 'cancelCover', 'cancelTimeOff']);
+export const WRITE_CAPABLE = new Set(['draft', 'shiftEdit', 'availability', 'search', 'timeOffDraft', 'coverDraft', 'answerInvite', 'cancelCover', 'cancelTimeOff', 'addEmployee', 'copyWeek', 'shiftDuties']);
 // CS-055: the generic target counts only unhelpful generic replies (the label
 // was a real route). A generic question is the right answer to "hello".
 export const TARGETS = { accuracy: 0.95, unhelpfulGenericRate: 0.05, writeCapableWrong: 0 };

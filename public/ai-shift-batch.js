@@ -33,7 +33,7 @@ export function createBatchReview({ card, chat, csrfToken, notice, setBusy, onOu
       card.lastElementChild.classList.add('ai-response-secondary');
       return;
     }
-    responseHeader(card, 'Batch draft · Not saved', `Review ${shifts.length} shifts`);
+    responseHeader(card, batch.copy ? 'Week copy · Not saved' : 'Batch draft · Not saved', `Review ${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'}`);
     card.append(element('p', 'ai-response-meta', `Times in ${timezone}. Confirm to save the entire batch.`));
     if (message || batch.warning) card.append(responseNote(message || batch.warning));
     const form = element('form', 'ai-batch-form');
@@ -87,7 +87,7 @@ export function createBatchReview({ card, chat, csrfToken, notice, setBusy, onOu
         cell.append(label);
       }
     }
-    const confirm = element('button', 'ai-chat-review', `Confirm and save ${shifts.length} shifts`);
+    const confirm = element('button', 'ai-chat-review', `Confirm and save ${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'}`);
     confirm.type = 'submit';
     form.append(table, confirm);
     form.addEventListener('submit', event => {
@@ -116,7 +116,7 @@ export function createBatchReview({ card, chat, csrfToken, notice, setBusy, onOu
     try {
       const response = await requestJSON(write ? endpoint : `${endpoint}/${batch.id}`, write ? {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-        body: JSON.stringify({ batchId: batch.id, timezone: batch.timezone, shifts: batch.shifts }),
+        body: JSON.stringify({ batchId: batch.id, timezone: batch.timezone, shifts: batch.shifts, ...(batch.copy && { copy: true }) }),
       } : {});
       if (chat.value.batch !== batch) return;
       if (response.status === 401) { location.assign('/login?expired=1'); return; }
@@ -151,7 +151,7 @@ export function createBatchReview({ card, chat, csrfToken, notice, setBusy, onOu
     show,
     open(data) {
       chat.value.batch = { id: crypto.randomUUID(), status: 'review', shifts: data.shifts,
-        workers: data.workers, timezone: data.timezone, warning: data.warning };
+        workers: data.workers, timezone: data.timezone, warning: data.warning, ...(data.copy && { copy: true }) };
       chat.save();
       show(chat.value.batch);
     },

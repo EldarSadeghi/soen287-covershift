@@ -20,6 +20,7 @@ import {
 } from './routing/employee.js';
 import {
   managerChangeRoute,
+  managerDraftRoute,
   managerLookupRoute,
   managerPatterns,
   teamAvailabilityRoute,
@@ -80,6 +81,9 @@ export const MANAGER_LOOKUPS = [
 
 export const EMPLOYEE_DRAFTS = ['timeOffDraft', 'coverDraft'];
 
+// Manager changes prepared for review on an existing page (CS-068).
+export const MANAGER_DRAFTS = ['addEmployee', 'copyWeek', 'shiftDuties'];
+
 export const EMPLOYEE_LOOKUPS = ['history', 'updates'];
 
 const taskLabels = {
@@ -109,6 +113,9 @@ const taskLabels = {
   rules: 'check saved rules',
   help: 'answer a question about using CoverShift',
   replacements: 'suggest who could cover a shift',
+  addEmployee: 'prepare a new employee',
+  copyWeek: 'copy a week of shifts',
+  shiftDuties: 'add duties to a shift',
   answerInvite: 'answer a cover invitation',
   cancelCover: 'cancel a cover request',
   cancelTimeOff: 'cancel time off',
@@ -128,7 +135,9 @@ function explicitRoute(text, manager) {
     (!manager && employeeRequestRoute(message, text)) ||
     // 4. Working-week or attention summaries.
     summaryRoute(message, manager) ||
-    // 5. Manager edits to existing shifts, then new-shift drafts.
+    // 5. Manager drafts for existing pages (CS-068), edits to existing
+    // shifts, then new-shift drafts.
+    (manager && managerDraftRoute(message)) ||
     (manager && managerChangeRoute(message)) ||
     // 6. Manager team availability.
     (manager && teamAvailabilityRoute(message)) ||
