@@ -38,6 +38,9 @@ test('manager lookup routing keeps scheduling, availability and status separate'
     ["Who's off tomorrow?", 'teamTimeOff'],
     ['Is "Afternoon coverage" covered?', 'coverageStatus'],
     ['Has the next schedule been published?', 'publicationStatus'],
+    ['Who has the most hours this week?', 'teamHours'],
+    ['Any coverage gaps next week?', 'coverageGaps'],
+    ["What happened with Saturday's closing shift?", 'shiftHistory'],
   ];
   for (const [text, intent] of cases)
     assert.equal(routeChat(text, true), intent);

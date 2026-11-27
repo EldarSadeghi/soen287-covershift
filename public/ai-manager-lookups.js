@@ -2,6 +2,11 @@ import { coworkerLookupDate } from './ai-chat-routing.js';
 import { checkedMeta, localDate, responseHeader } from './ai-response-card.js';
 import { element } from './shift-card.js';
 import { formatShiftTime } from './shift-time.js';
+import {
+  INSIGHT_KINDS,
+  insightQuery,
+  renderInsight,
+} from './ai-manager-insights.js';
 
 const views = {
   teamTimeOff: [
@@ -25,6 +30,7 @@ const status = {
 };
 
 export function managerLookupQuery(kind, text, today) {
+  if (INSIGHT_KINDS.includes(kind)) return insightQuery(kind, text, today);
   const params = { kind };
   const quoted = text.match(/["“]([^"”]+)["”]/);
   const named = /^\s*(?:is|was) (.+?) covered\b/i
@@ -80,6 +86,7 @@ export function managerLookupQuery(kind, text, today) {
 }
 
 export function renderManagerLookup(card, data) {
+  if (INSIGHT_KINDS.includes(data.kind)) return renderInsight(card, data);
   const [label, page, linkLabel, empty] = views[data.kind];
   const dateRange = data.from
     ? [data.from, ...(data.through !== data.from ? [data.through] : [])]

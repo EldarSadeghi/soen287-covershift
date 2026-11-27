@@ -3,7 +3,7 @@ import { aiConfigured, responsesBody, structuredResponse } from './structured-re
 import { validateChatInput } from './shift-draft.js';
 
 const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus', 'history', 'updates', 'timeOffDraft', 'coverDraft'];
-const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit'];
+const manager = ['questions', 'draft', 'summary', 'teamAvailability', 'teamTimeOff', 'coverageStatus', 'publicationStatus', 'shiftEdit', 'teamHours', 'coverageGaps', 'shiftHistory'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
 // the evaluation measures generalisation rather than memorised answers.
@@ -30,7 +30,10 @@ coverageStatus = the status of existing shift coverage or a claimant ("did the s
 publicationStatus = whether a schedule period is published or due ("are the upcoming two weeks visible to staff").
 shiftEdit = prepare changes to a shift that already exists ("rename Dani’s Monday opening to Front counter", "push Leila’s booked afternoon shift back half an hour"). Keep read-only schedule and coverage questions in their own intents. Deletion is unsupported.
 draft = prepare a new shift for an employee, even with missing details ("pop Alex on the Wednesday close").
-summary = what needs the manager's attention: pending approvals, unfilled coverage ("anything I need to sign off").`,
+summary = what needs the manager's attention: pending approvals, unfilled coverage ("anything I need to sign off").
+teamHours = comparing scheduled hours across employees: most, fewest, under or over a number, near overtime ("is anybody getting too many hours", "who's light on hours in a fortnight").
+coverageGaps = upcoming shifts that are not safely staffed, including ones clashing with time off ("where am I short-handed next week").
+shiftHistory = what happened to a specific shift over time: requests, claims, approvals ("walk me through the Sunday brunch shift's changes").`,
 };
 
 function instructionsFor(role) {

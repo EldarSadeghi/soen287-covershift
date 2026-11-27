@@ -164,6 +164,10 @@ const assets = new Map([
     '/ai-manager-lookups.js',
     ['ai-manager-lookups.js', 'text/javascript; charset=utf-8'],
   ],
+  [
+    '/ai-manager-insights.js',
+    ['ai-manager-insights.js', 'text/javascript; charset=utf-8'],
+  ],
   ['/ai-shift-edit.js', ['ai-shift-edit.js', 'text/javascript; charset=utf-8']],
   [
     '/ai-team-availability.js',

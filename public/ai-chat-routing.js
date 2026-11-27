@@ -70,6 +70,9 @@ export const MANAGER_LOOKUPS = [
   'teamTimeOff',
   'coverageStatus',
   'publicationStatus',
+  'teamHours',
+  'coverageGaps',
+  'shiftHistory',
 ];
 
 export const EMPLOYEE_DRAFTS = ['timeOffDraft', 'coverDraft'];
@@ -87,6 +90,9 @@ const taskLabels = {
   teamTimeOff: 'check team time off',
   coverageStatus: 'check shift coverage',
   publicationStatus: 'check schedule publication',
+  teamHours: 'compare team hours',
+  coverageGaps: 'find coverage gaps',
+  shiftHistory: 'show a shift\u2019s history',
   history: 'check coverage history',
   updates: 'check recent updates',
   coworkers: 'check coworker availability',

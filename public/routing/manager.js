@@ -35,6 +35,31 @@ export const managerPatterns = {
       ],
       { before: '^', after: '\\b' },
     ),
+    // CS-065. "Who has the most hours?", "who's under 20 hours?", "who's close
+    // to overtime?". A total for the team or one person stays a schedule question.
+    teamHours: anyOf(
+      [
+        "who(?:'s| is| has| works| is working)? (?:got )?(?:the )?(?:most|fewest|least|lowest|highest) (?:scheduled )?hours",
+        "who(?:'s| is| has)? (?:got )?(?:scheduled )?(?:under|over|more than|less than|fewer than|below|above) \\d+ (?:scheduled )?hours",
+        '(?:which|what) (?:staff|employees|workers|people) (?:are|is|have|has) (?:under|over|more than|less than|fewer than|below|above) \\d+ hours',
+        "(?:who(?:'s| is)?|is any(?:one|body)) (?:close to|near|nearing|approaching|at|over) overtime",
+        "(?:show|list|compare|check|give me) (?:me )?(?:the )?(?:team(?:'s)? |staff )?hours (?:by|per|for each) (?:employee|person|worker|staff member)",
+        'hours (?:by|per) (?:employee|person|worker)',
+        // "Who is getting too many shifts?", "who's given too few hours?"
+        "who(?:'s| is)? (?:being )?(?:given|getting|assigned|scheduled for) too (?:few|many|little|much) (?:shifts|hours)",
+      ],
+      { before: '^', after: '\\b' },
+    ),
+    // "Any coverage gaps next week?", "uncovered shifts", "shifts affected by
+    // time off". "Which shifts (still) need cover?" stays the attention summary,
+    // as the release audit expects.
+    coverageGaps: anyOf([
+      /^(?:(?:any|are there any|show|list|check|find|what are|where are)\b.*)?\b(?:coverage gaps?|gaps in (?:the )?(?:schedule|coverage)|uncovered shifts?|unfilled shifts?|shifts? (?:still )?without cover(?:age)?)\b/,
+      /^(?:which|what) shifts? (?:are|is) (?:affected by|clashing with|blocked by) time[ -]off\b/,
+    ]),
+    // "What happened with Saturday's closing shift?"
+    shiftHistory:
+      /^(?:what happened (?:with|to)|(?:show|give me|check|what(?:'s| is)) (?:me )?(?:the )?history (?:of|for)|history (?:of|for))\b.*\bshifts?\b/,
   },
   shiftEdit: {
     relativeTimeChange:
