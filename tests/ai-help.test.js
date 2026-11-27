@@ -295,6 +295,40 @@ test('blocked commands stay blocked and name the page to use instead', () => {
   assert.equal(blockedActionAnswer('fire Jamie', false), null);
 });
 
+test('the link follows the direct object, so added context never changes it (Codex review on #152)', () => {
+  for (const [text, manager, page] of [
+    // [message, manager?, expected page; undefined = general refusal]
+    ['Delete my availability rule for the Friday shift', false, null],
+    ['Delete my availability rule for the Friday shift', true, undefined],
+    ['Approve Sam’s claim because of time off', true, 'approvals'],
+    ['Approve Sam’s claim because of time off', false, 'requests'],
+    ['approve the time off for Sam’s shift', true, 'time-off'],
+    ['approve next week’s time off', true, 'time-off'],
+    ['Cancel my shift because my availability changed', false, 'shifts'],
+    ['delete the shift for Jamie’s time off', true, 'schedule'],
+    ['delete all shifts next week', true, 'schedule'],
+    ['decline Alex’s cover invitation since I’m busy', false, 'cover'],
+    ['delete my availability for Friday', false, 'availability'],
+    ['publish this week’s schedule', true, 'schedule'],
+    ['swap my availability with Jamie', false, undefined],
+    ['approve all pending', true, undefined],
+  ]) {
+    assert.equal(requestsUnsupportedAction(text, manager), true, text);
+    const answer = blockedActionAnswer(text, manager);
+    if (page === undefined) {
+      assert.equal(answer, null, text);
+      assert.equal(
+        chatClarification(text, manager),
+        UNSUPPORTED_ACTION_MESSAGE,
+        text,
+      );
+    } else {
+      assert.equal(answer?.page, page, text);
+      assert.equal(chatClarification(text, manager), answer.message, text);
+    }
+  }
+});
+
 test('publication help says when employees see changes (Codex review on #152)', () => {
   // Publication only applies once a two-week schedule is prepared; before
   // that, saved shifts are visible right away. No answer may promise privacy
