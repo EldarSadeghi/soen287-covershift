@@ -9,7 +9,9 @@ import { JsonStore } from '../src/storage/json-store.js';
 import { requestTimeOff } from '../src/time-off/service.js';
 import { managerLookup } from '../src/ai/manager-lookups.js';
 import {
+  HISTORY_SHIFT_LIMIT,
   OVERTIME_WEEKLY_HOURS,
+  shiftHistory,
   teamHours,
 } from '../src/ai/manager-insights.js';
 import {
@@ -17,6 +19,7 @@ import {
   hoursFocus,
   insightPeriod,
   insightQuery,
+  renderInsight,
 } from '../public/ai-manager-insights.js';
 
 const manager = 'manager_morgan';
@@ -356,4 +359,88 @@ test('the chat reads periods, focus and shift titles from the question', () => {
       .question,
     /^Which date/,
   );
+});
+
+test('a reversed range is asked about instead of replaced by the default period', () => {
+  const today = '2026-11-26';
+  for (const kind of ['teamHours', 'coverageGaps']) {
+    const query = insightQuery(
+      kind,
+      'Who has the most hours from December 5 to December 3?',
+      today,
+    );
+    assert.equal(query.params, undefined, kind);
+    assert.match(query.question, /ends before it starts/);
+  }
+  assert.deepEqual(insightPeriod('December 5 to December 3', today), {
+    reversed: true,
+  });
+});
+
+test('shift history reports every matching shift when it shows only the first ten', async () => {
+  const business = { id: 'b1', timezone: 'America/Toronto' };
+  const db = {
+    businesses: [business],
+    users: [
+      { id: 'a', name: 'Avery', role: 'worker', businessId: 'b1' },
+      { id: 'm', name: 'Morgan', role: 'manager', businessId: 'b1' },
+    ],
+    shifts: Array.from({ length: HISTORY_SHIFT_LIMIT + 1 }, (_, n) => ({
+      id: 's' + n,
+      businessId: 'b1',
+      assignedWorkerId: 'a',
+      title: 'Shift ' + n,
+      startsAt: `2026-12-05T${String(13 + n).padStart(2, '0')}:00:00Z`,
+      endsAt: `2026-12-05T${String(13 + n).padStart(2, '0')}:30:00Z`,
+    })),
+    coverageRequests: [],
+  };
+  const result = await shiftHistory(
+    db,
+    business,
+    'm',
+    { from: '2026-12-05' },
+    clock(),
+  );
+  assert.equal(result.rows.length, HISTORY_SHIFT_LIMIT);
+  assert.equal(result.total, HISTORY_SHIFT_LIMIT + 1);
+
+  const node = (tag) => ({
+    tag,
+    children: [],
+    classList: { add() {} },
+    setAttribute() {},
+    append(...values) {
+      this.children.push(...values);
+    },
+    replaceChildren() {
+      this.children = [];
+    },
+  });
+  const original = globalThis.document;
+  globalThis.document = { createElement: node };
+  try {
+    const data = {
+      kind: 'shiftHistory',
+      from: '2026-12-05',
+      through: '2026-12-05',
+      timezone: business.timezone,
+      asOf: new Date(clock()).toISOString(),
+      ...result,
+    };
+    assert.match(
+      renderInsight(node('div'), data),
+      /^Showing 10 of 11 shifts on /,
+    );
+    assert.match(
+      renderInsight(node('div'), {
+        ...data,
+        rows: data.rows.slice(0, 2),
+        total: 2,
+      }),
+      /^2 shifts on /,
+    );
+  } finally {
+    globalThis.document = original;
+  }
 });

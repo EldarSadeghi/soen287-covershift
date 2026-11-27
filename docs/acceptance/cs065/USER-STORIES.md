@@ -24,7 +24,7 @@ Issue [#149](https://github.com/EldarSadeghi/soen287-covershift/issues/149). Thr
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed (syntax and format) |
-| `npm test` | 502 / 502 passed (3 new insight tests, plus new lookup and routing-group cases) |
+| `npm test` | 504 / 504 passed (5 new insight tests, plus new lookup and routing-group cases) |
 | `npm run ai:acceptance` | 25 / 25 scenarios, 217 checks |
 | `npm run ai:eval` (offline) | 217 / 260 local, 0 write-capable wrong routes; new labels 11 / 13 local (2 paraphrases left to the classifier) |
 | Routing snapshot | 356 phrases, 144 follow-ups; 0 existing phrases changed |
@@ -41,6 +41,11 @@ Issue [#149](https://github.com/EldarSadeghi/soen287-covershift/issues/149). Thr
 | Show the history of the December 4 morning shift | Morning coverage, assigned to Alex Morgan, "Cover requested by Alex Morgan" followed by the claim |
 
 At a 320px viewport, the coverage gaps card fits with no horizontal overflow. The AI allowance stayed at 5 of 5, so none of these questions used a paid call.
+
+## Review fixes (Codex on PR #150)
+
+- **Reversed date range.** "Who has the most hours from December 5 to December 3?" used to fall back silently to the current week. It now asks: "That range ends before it starts. Which dates should I check?" This applies to hours and to coverage gaps. The default period is used only when the question names no period. Checked in the browser.
+- **Busy days in shift history.** The server returns at most 10 shifts but now also sends the `total`. With 11 matching shifts, the card says "Showing 10 of 11 shifts", followed by a hint to add a title word to narrow it down.
 
 ## Out of scope
 

@@ -14,7 +14,8 @@ const addDays = (day, count) =>
     .slice(0, 10);
 
 // A period from the question: "this/next/last week" (Monday–Sunday), "next two
-// weeks", "December 3 through December 5", or one date. Null when none given.
+// weeks", "December 3 through December 5", or one date. Null when none given;
+// { reversed: true } when a range ends before it starts.
 export function insightPeriod(text, today) {
   const week = /\b(this|next|last) week\b/i.exec(text)?.[1]?.toLowerCase();
   if (week) {
@@ -33,7 +34,9 @@ export function insightPeriod(text, today) {
   if (parts.length === 2) {
     const from = coworkerLookupDate(parts[0], today);
     const through = coworkerLookupDate(parts[1], today);
-    return from && through && from <= through ? { from, through } : null;
+    if (from && through)
+      return from <= through ? { from, through } : { reversed: true };
+    return null;
   }
   const day = coworkerLookupDate(text, today);
   return day ? { from: day, through: day } : null;
@@ -86,9 +89,16 @@ export function insightQuery(kind, text, today) {
       params: { ...params, from: day, through: day, ...(title && { title }) },
     };
   }
-  // Defaults: hours for this business week, gaps for the next 14 days.
+  // Defaults (only when no period is given): hours for this business week,
+  // gaps for the next 14 days. A reversed range is asked about, not replaced.
+  const asked = insightPeriod(text, today);
+  if (asked?.reversed)
+    return {
+      question:
+        'That range ends before it starts. Which dates should I check? For example, December 3 to December 5.',
+    };
   const period =
-    insightPeriod(text, today) ??
+    asked ??
     (kind === 'teamHours'
       ? insightPeriod('this week', today)
       : { from: today, through: addDays(today, 13) });
@@ -216,8 +226,11 @@ export function renderInsight(card, data) {
       );
   } else {
     const { rows } = data;
+    const total = data.total ?? rows.length;
     reply = rows.length
-      ? `${rows.length} ${rows.length === 1 ? 'shift' : 'shifts'} on ${localDate(data.from)}.`
+      ? total > rows.length
+        ? `Showing ${rows.length} of ${total} shifts on ${localDate(data.from)}. Add a title word, such as “closing”, to narrow it down.`
+        : `${total} ${total === 1 ? 'shift' : 'shifts'} on ${localDate(data.from)}.`
       : `No shifts${data.title ? ` matching “${data.title}”` : ''} on ${localDate(data.from)}.`;
     card.append(element('p', '', reply));
     for (const row of rows) {

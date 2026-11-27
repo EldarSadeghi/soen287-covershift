@@ -179,10 +179,13 @@ export async function coverageGaps(
 /**
  * Shifts starting on one business-local date (optionally whose title contains
  * a word), with the current assignee and every coverage event, oldest first.
+ * At most HISTORY_SHIFT_LIMIT rows; `total` counts every matching shift.
  */
+export const HISTORY_SHIFT_LIMIT = 10;
+
 export async function shiftHistory(db, business, userId, { from, title }, now) {
   const word = title?.trim().toLowerCase();
-  const shifts = db.shifts
+  const matching = db.shifts
     .filter(
       (shift) =>
         shift.businessId === business.id &&
@@ -192,8 +195,8 @@ export async function shiftHistory(db, business, userId, { from, title }, now) {
     .sort(
       (a, b) =>
         a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id),
-    )
-    .slice(0, 10);
+    );
+  const shifts = matching.slice(0, HISTORY_SHIFT_LIMIT);
   const { records } = await coverageHistory(
     { read: async () => db },
     userId,
@@ -201,6 +204,7 @@ export async function shiftHistory(db, business, userId, { from, title }, now) {
     now,
   );
   return {
+    total: matching.length,
     rows: shifts.map((shift) => ({
       title: shift.title,
       startsAt: shift.startsAt,
