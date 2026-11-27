@@ -2783,6 +2783,519 @@
         null
       ]
     },
+    "Alex asked me to cover Saturday, accept it": {
+      "employee": {
+        "route": "answerInvite",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-28",
+      "historyPeriod": "2026-11-28",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "decline Jamie's invite for Friday": {
+      "employee": {
+        "route": "answerInvite",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": false,
+        "clarification": "I can’t answer cover invitations from chat. Coworkers accept them, then you review claims on Approvals.",
+        "unsupported": true
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "accept the cover invitation from Sam": {
+      "employee": {
+        "route": "answerInvite",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "I want to accept Taylor's cover request": {
+      "employee": {
+        "route": "answerInvite",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "turn down the invitation for the 5th": {
+      "employee": {
+        "route": "answerInvite",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "say yes to Alex's swap request": {
+      "employee": {
+        "route": "answerInvite",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "Jamie wants me to take her Friday shift, tell her yes": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "cancel my cover request for Friday": {
+      "employee": {
+        "route": "cancelCover",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "withdraw the invitation I sent to Sam": {
+      "employee": {
+        "route": "cancelCover",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "cancel my claim for Saturday": {
+      "employee": {
+        "route": "cancelCover",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-28",
+      "historyPeriod": "2026-11-28",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "take back my request to cover the Sunday shift": {
+      "employee": {
+        "route": "cancelCover",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-29",
+      "historyPeriod": "2026-11-29",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "call off the cover invite I sent Taylor": {
+      "employee": {
+        "route": "cancelCover",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "I no longer need cover on Thursday, scrap my request": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-12-03",
+      "historyPeriod": "2026-12-03",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "withdraw my time-off request for the 24th": {
+      "employee": {
+        "route": "cancelTimeOff",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "cancel my leave on December 9": {
+      "employee": {
+        "route": "cancelTimeOff",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-12-09",
+      "historyPeriod": "2026-12-09",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "cancel my vacation request": {
+      "employee": {
+        "route": "cancelTimeOff",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "take back my day off on Friday": {
+      "employee": {
+        "route": "cancelTimeOff",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": "2026-11-27",
+      "historyPeriod": "2026-11-27",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "my plans changed so I want to cancel my holiday on the 12th": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": "this",
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
+    "scrap the leave I booked for next Monday": {
+      "employee": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
+        "unsupported": false
+      },
+      "manager": {
+        "route": "clarification",
+        "fallback": true,
+        "clarification": "What would you like me to check: a shift draft, your team’s schedule, or team availability?",
+        "unsupported": false
+      },
+      "batch": false,
+      "statusDate": false,
+      "duties": false,
+      "summaryWeek": null,
+      "needsHours": false,
+      "ruleCommand": null,
+      "coworkerDate": null,
+      "historyPeriod": "last-30-days",
+      "opening": "undefined",
+      "replyRoute": [
+        null,
+        null
+      ]
+    },
     "Why wasn't I matched to the Saturday shift?": {
       "employee": {
         "route": "explanation",
@@ -7951,7 +8464,7 @@
     },
     "cancel my cover request": {
       "employee": {
-        "route": "clarification",
+        "route": "cancelCover",
         "fallback": true,
         "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
         "unsupported": false
@@ -8122,7 +8635,7 @@
     },
     "cancel my claim for Friday’s shift": {
       "employee": {
-        "route": "clarification",
+        "route": "cancelCover",
         "fallback": true,
         "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
         "unsupported": false
@@ -8149,7 +8662,7 @@
     },
     "cancel my cover request for the Saturday shift": {
       "employee": {
-        "route": "clarification",
+        "route": "cancelCover",
         "fallback": true,
         "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
         "unsupported": false
@@ -8176,7 +8689,7 @@
     },
     "cancel my time off request for the shift on Friday": {
       "employee": {
-        "route": "clarification",
+        "route": "cancelTimeOff",
         "fallback": true,
         "clarification": "What would you like me to check: your schedule, an open shift, or a saved availability rule?",
         "unsupported": false

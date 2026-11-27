@@ -2,6 +2,7 @@
 // instruction overrides. A message containing one is never routed to a task,
 // even if another part of it would be ("create a shift and approve Sam's claim").
 import { anyOf, chatRequests, normalizedMessage } from './text.js';
+import { followThroughRoute } from './employee.js';
 
 const UNSUPPORTED_ACTION = anyOf(
   [
@@ -27,10 +28,33 @@ const EMPLOYEE_DRAFT_COMMAND =
 export const UNSUPPORTED_ACTION_MESSAGE =
   'I can’t approve, assign, delete, send or change records from chat. Use the workspace pages for that, or ask me to check the schedule, find open shifts or prepare a draft for you to review.';
 
+// An employee answering or withdrawing their own request (CS-067): "decline
+// Alex's invite", or "decline it" when the message is about an invitation.
+const BARE_ANSWER =
+  /^(?:decline|reject|turn (?:it|that|this) down)(?: (?:it|that|this|the invite|the invitation))?[.!?]*$/;
+
+// Exempt only when every comma-separated part is the follow-through itself or
+// harmless, so "decline the invite, delete my shift" is still blocked.
+function followThroughOnly(message, aboutInvitation) {
+  const parts = message.split(/\s*(?:,|;|\s[-–—]\s)\s*/);
+  return (
+    parts.some((part) => followThroughRoute(part) || BARE_ANSWER.test(part)) &&
+    parts.every(
+      (part) =>
+        followThroughRoute(part) ||
+        (aboutInvitation && BARE_ANSWER.test(part)) ||
+        !UNSUPPORTED_ACTION.test(part),
+    )
+  );
+}
+
 export function requestsUnsupportedAction(text, manager = false) {
+  const aboutInvitation =
+    !manager && followThroughRoute(normalizedMessage(text)) === 'answerInvite';
   return chatRequests(text).some((request) => {
     const message = normalizedMessage(request);
     if (!manager && EMPLOYEE_DRAFT_COMMAND.test(message)) return false;
+    if (!manager && followThroughOnly(message, aboutInvitation)) return false;
     return UNSUPPORTED_ACTION.test(message);
   });
 }

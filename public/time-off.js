@@ -1,6 +1,7 @@
 import {takeEmployeeDraft} from './ai-employee-drafts.js';
 import {requestJSON} from './request.js';
 import {element} from './shift-card.js';
+import {openRequestedAction} from './requested-action.js';
 const labels={pending:'Pending',approved:'Approved',rejected:'Rejected',cancelled:'Cancelled'};
 export function fullDayEnd(date){const value=new Date(date+'T12:00:00Z');if(!Number.isFinite(value.getTime())||value.toISOString().slice(0,10)!==date)throw new Error('Choose a valid end date.');value.setUTCDate(value.getUTCDate()+1);return value.toISOString().slice(0,10)+'T00:00';}
 export function timeOffRange(r){
@@ -44,7 +45,7 @@ export async function mountTimeOff(main,account,csrf){
       const buttons=element('div','create-actions');
       for(const action of manager?['approve','reject']:['cancel']){
         if(!r['can'+action[0].toUpperCase()+action.slice(1)])continue;
-        const button=element('button',action==='approve'?'solid-link':'logout-button',{approve:'Approve',reject:'Reject',cancel:'Cancel request'}[action]);button.type='button';button.dataset.timeoffMutation='';button.setAttribute('aria-label',`${button.textContent} for ${r.workerName}: ${timeOffRange(r)}`);
+        const button=element('button',action==='approve'?'solid-link':'logout-button',{approve:'Approve',reject:'Reject',cancel:'Cancel request'}[action]);button.type='button';button.dataset.timeoffMutation='';button.dataset.timeoffAction=action;button.setAttribute('aria-label',`${button.textContent} for ${r.workerName}: ${timeOffRange(r)}`);
         button.addEventListener('click',()=>{
           clear();for(const old of main.querySelectorAll('.time-off-decision'))old.remove();
           const box=element('section','coverage-confirm time-off-decision');box.setAttribute('role','group');box.setAttribute('aria-label',action==='cancel'?'Cancel time-off request':'Review time-off decision');
@@ -106,4 +107,5 @@ export async function mountTimeOff(main,account,csrf){
     });
   }
   await load();
+  if(!manager)openRequestedAction(main,'request','time-off-',['cancel'],find('leave-message'));
 }

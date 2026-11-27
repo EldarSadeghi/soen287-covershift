@@ -225,11 +225,12 @@ test('blocked commands stay blocked and name the page to use instead', () => {
       /Cancel one on Time off\.$/,
       'time-off',
     ],
+    // An employee's own answer is a CS-067 route now; managers stay blocked.
     [
       'decline Alex’s cover invitation',
-      false,
-      /Accept or decline them on Cover requests\.$/,
-      'cover',
+      true,
+      /then you review claims on Approvals\.$/,
+      'approvals',
     ],
     [
       'approve Jamie’s time off',
@@ -307,7 +308,7 @@ test('the link follows the direct object, so added context never changes it (Cod
     ['Cancel my shift because my availability changed', false, 'shifts'],
     ['delete the shift for Jamie’s time off', true, 'schedule'],
     ['delete all shifts next week', true, 'schedule'],
-    ['decline Alex’s cover invitation since I’m busy', false, 'cover'],
+    ['decline Alex’s cover invitation since I’m busy', true, 'approvals'],
     ['delete my availability for Friday', false, 'availability'],
     ['publish this week’s schedule', true, 'schedule'],
     ['swap my availability with Jamie', false, undefined],

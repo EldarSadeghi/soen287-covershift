@@ -30,7 +30,7 @@ const AFTER_NAME =
 // the last word to end in 's ("jamie lee's Friday shift"); 'person' follows a
 // verb that takes a person ("replace sam rivera"); 'object' follows "cover"
 // or "take" and needs a date or time next ("cover alex tomorrow").
-function nameAt(rest, mode) {
+export function nameAt(rest, mode) {
   const words = rest.trim().split(/\s+/);
   const name = [];
   for (const raw of words.slice(0, 2)) {

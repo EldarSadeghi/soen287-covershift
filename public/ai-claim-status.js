@@ -72,7 +72,7 @@ export function createTimeOffStatus(view) {
   });
 }
 
-function formatStatusShift(record, timezone) {
+export function formatStatusShift(record, timezone) {
   const time = formatShiftTime(record.shift, timezone);
   return {
     title: record.shift.title,
@@ -143,7 +143,10 @@ export function typedStatusChoice(text, choices, data, match = matchingClaims) {
   return matches?.length === 1 ? matches[0].id : null;
 }
 
-function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) {
+// Also used by the follow-through lookups (CS-067), which add `fetch` (several
+// lists in one), `empty` (nothing to act on) and `action` (a link that opens the
+// item's existing confirmation; nothing is saved from chat).
+export function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) {
   let picker;
   async function load(text, id) {
     picker = null;
@@ -152,7 +155,7 @@ function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) 
     card.hidden = true;
     notice(`Checking your ${config.plural}…`);
     try {
-      const response = await requestJSON(config.endpoint, { cache: 'no-store' });
+      const response = config.fetch ? await config.fetch(text) : await requestJSON(config.endpoint, { cache: 'no-store' });
       if (response.status === 401) { chat.clear(); location.replace('/login?expired=1'); return; }
       if (!response.ok) throw new Error();
       const data = response.data;
@@ -161,7 +164,17 @@ function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) 
       const claim = matches?.length === 1 ? matches[0] : null;
       card.hidden = false;
       let message;
-      if (claim) {
+      const action = claim && config.action ? config.action(claim, text, data) : null;
+      if (!claims.length && config.empty) {
+        message = config.empty(data, text);
+        responseHeader(card, config.heading, message);
+      } else if (action) {
+        message = action.message;
+        const { title, range } = config.format(claim, data.timezone);
+        responseHeader(card, action.status, title);
+        card.append(element('p', '', range));
+        for (const line of action.details) card.append(element('p', '', line));
+      } else if (claim) {
         const recipient = config.recipient?.(claim);
         const status = config.status(claim) || 'Status unavailable';
         const { title, range } = config.format(claim, data.timezone);
@@ -188,8 +201,8 @@ function createStatusLookup({ card, chat, notice, setBusy, onOutcome }, config) 
         }
         if (choices.length > 5) card.append(element('p', '', `Showing five ${config.plural}. Narrow by date or open the full list.`));
       }
-      const link = element('a', 'ai-chat-review ai-response-secondary', config.linkLabel);
-      link.href = config.link(claim);
+      const link = element('a', action?.href ? 'ai-chat-review' : 'ai-chat-review ai-response-secondary', action?.label || config.linkLabel);
+      link.href = action?.href || config.link(claim);
       card.append(checkedMeta(data.asOf, data.timezone), link);
       onOutcome(message);
       notice(message, true);

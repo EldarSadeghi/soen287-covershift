@@ -1,6 +1,7 @@
 import {takeEmployeeDraft} from './ai-employee-drafts.js';
 import {requestJSON} from './request.js';
 import {element} from './shift-card.js';
+import {openRequestedAction} from './requested-action.js';
 export const coverStatusLabels={pending:'Pending response',awaiting_approval:'Awaiting manager approval',approved:'Approved',rejected:'Rejected',declined:'Declined',cancelled:'Cancelled',expired:'Expired'};
 const range=(shift,timezone)=>new Intl.DateTimeFormat('en-US',{timeZone:timezone,dateStyle:'medium',timeStyle:'short'}).formatRange(new Date(shift.startsAt),new Date(shift.endsAt));
 async function coverApi(path,csrf,input){
@@ -57,7 +58,7 @@ export async function mountCoverInbox(main,account,csrf){
         if(r.status==='awaiting_approval')card.append(element('p','section-note','Accepted by the coworker. Original worker remains assigned until manager approval.'));
         if(role==='manager'&&r.status==='awaiting_approval'){const link=element('a','','Review in Approvals');link.href='/workspace/manager/approvals';card.append(link);}
         const history=element('details','cover-history'),summary=element('summary','','Invitation history');history.append(summary);for(const event of r.history)history.append(element('p','section-note',event.action+' · '+new Intl.DateTimeFormat('en-US',{timeZone:r.timezone,dateStyle:'medium',timeStyle:'short'}).format(new Date(event.at))));card.append(history);
-        for(const action of ['accept','decline','cancel'])if(r['can'+action[0].toUpperCase()+action.slice(1)]){const button=element('button',action==='accept'?'solid-link':'logout-button',action[0].toUpperCase()+action.slice(1));button.type='button';button.addEventListener('click',()=>{
+        for(const action of ['accept','decline','cancel'])if(r['can'+action[0].toUpperCase()+action.slice(1)]){const button=element('button',action==='accept'?'solid-link':'logout-button',action[0].toUpperCase()+action.slice(1));button.type='button';button.dataset.coverAction=action;button.addEventListener('click',()=>{
           if(busy||uncertain)return;for(const box of root.querySelectorAll('.cover-decision'))box.remove();const box=element('section','coverage-confirm cover-decision');box.setAttribute('aria-label','Confirm '+action);box.tabIndex=-1;box.append(element('p','',action==='accept'?'Accept this whole shift and send it for manager approval? You will not be assigned yet.':action==='decline'?'Decline this invitation? No shift will change.':'Cancel this invitation? No shift will change.'));const yes=element('button','solid-link','Confirm '+action),no=element('button','logout-button','Back');yes.type=no.type='button';yes.addEventListener('click',()=>mutate(r,action));no.addEventListener('click',()=>{box.remove();button.focus();});box.append(yes,no);card.append(box);box.focus();});card.append(button);}
         section.append(card);
       }root.append(section);
@@ -69,6 +70,8 @@ export async function mountCoverInbox(main,account,csrf){
   }catch(e){q('cover-list').replaceChildren();q('cover-feedback').textContent='Invitations unavailable. Use Refresh to retry.';error(e.message);}finally{busy=false;controls();}}
   async function mutate(r,action){if(busy||uncertain)return;busy=true;controls();q('cover-error').hidden=true;try{const data=await coverApi(`${base}/${r.id}/${action}`,csrf,{revision:r.revision});busy=false;await load();q('cover-feedback').textContent=data.message;q('cover-feedback').focus();}catch(e){if(e.uncertain){uncertain={id:r.id};error('The result is uncertain. Use Refresh to check saved status before another action.');}else error(e.message);}finally{busy=false;controls();}}
   q('cover-refresh').addEventListener('click',load);await load();
+  if(role==='worker')openRequestedAction(main,'invitation','cover-',['accept','decline','cancel'],q('cover-feedback'));
   const draft=role==='worker'&&takeEmployeeDraft(account,'coverDraft');
   if(draft)await openCoverComposer(account,csrf,draft.recipient,draft.shift,q('cover-new'),draft.shift,load);
 }
+

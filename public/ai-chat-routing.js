@@ -109,6 +109,9 @@ const taskLabels = {
   rules: 'check saved rules',
   help: 'answer a question about using CoverShift',
   replacements: 'suggest who could cover a shift',
+  answerInvite: 'answer a cover invitation',
+  cancelCover: 'cancel a cover request',
+  cancelTimeOff: 'cancel time off',
 };
 
 // The route for one request on its own, or null. The order matters where

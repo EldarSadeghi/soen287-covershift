@@ -75,6 +75,58 @@ export const employeePatterns = {
   },
 };
 
+// Follow-through on the employee's own requests (CS-067). The chat finds the
+// item and opens its existing confirmation; nothing is saved from chat.
+const followLead =
+  "(?:(?:i (?:want|need|would like|'d like) to|i'll|i will|let me|go ahead and|ok(?:ay)?,?|yes,?) )?";
+const inviteNoun =
+  '(?:cover )?(?:invit(?:e|es|ation|ations)|requests? to cover|cover requests?|swap requests?)';
+const answerVerb = '(?:accept|decline|reject|turn down|say (?:yes|no) to)';
+const leaveNoun = '(?:time[ -]off|leave|vacation|holiday|days? off|pto)';
+const withdrawVerb = '(?:cancel|withdraw|take back|retract|call off)';
+// Words up to the request noun, never passing "shift": "cancel my shift since
+// I have time off" cancels the shift itself and stays unsupported.
+const upToNoun = '(?:(?!\\bshifts?\\b)[^.!?;])*?';
+
+export const followThroughPatterns = {
+  // "accept Alex's cover invite", "decline the invitation for Friday"
+  answerInvite: new RegExp(
+    `^${followLead}${answerVerb}\\b[^.!?;]*\\b${inviteNoun}\\b`,
+  ),
+  // "Alex asked me to cover Saturday, accept it"
+  askedThenAnswer: new RegExp(
+    `\\b(?:asked|invited) me to (?:cover|take|fill in)\\b.*\\b(?:accept|decline|reject|turn (?:it |that |this )?down|say (?:yes|no))\\b`,
+  ),
+  // "cancel my cover request for Friday", "withdraw my claim"
+  cancelCover: new RegExp(
+    `^${followLead}${withdrawVerb}\\b(?![^.!?;]*\\b(?:${leaveNoun}|rules?|availability)\\b)${upToNoun}\\b(?:claims?|cover(?:age)? requests?|requests? (?:for|to) cover(?:age)?|${inviteNoun})\\b`,
+  ),
+  // "withdraw my time-off request for the 24th"
+  cancelTimeOff: new RegExp(
+    `^${followLead}${withdrawVerb}\\b(?![^.!?;]*\\b(?:rules?|availability)\\b)${upToNoun}\\b${leaveNoun}\\b`,
+  ),
+};
+
+export function followThroughRoute(message) {
+  const { answerInvite, askedThenAnswer, cancelCover, cancelTimeOff } =
+    followThroughPatterns;
+  if (answerInvite.test(message) || askedThenAnswer.test(message))
+    return 'answerInvite';
+  if (cancelTimeOff.test(message)) return 'cancelTimeOff';
+  if (cancelCover.test(message)) return 'cancelCover';
+  return null;
+}
+
+// Which answer an invitation message asks for, or null when it names neither.
+export function invitationAnswer(text) {
+  const message = normalizedMessage(text);
+  const decline = /\b(?:decline|reject|turn (?:\w+ )?down|say no)\b/.test(
+    message,
+  );
+  const accept = /\b(?:accept|say yes)\b/.test(message);
+  return accept === decline ? null : accept ? 'accept' : 'decline';
+}
+
 export function isDutiesQuestion(text) {
   return employeePatterns.lookups.duties.test(normalizedMessage(text));
 }
@@ -82,6 +134,8 @@ export function isDutiesQuestion(text) {
 // Requests checked before summaries: drafts, history, updates and duties.
 export function employeeRequestRoute(message, text) {
   const { drafts, lookups } = employeePatterns;
+  const followThrough = followThroughRoute(message);
+  if (followThrough) return followThrough;
   if (drafts.timeOffDraft.test(message)) return 'timeOffDraft';
   if (drafts.coverDraft.test(message)) return 'coverDraft';
   if (lookups.history.test(message)) return 'history';

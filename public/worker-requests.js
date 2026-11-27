@@ -1,6 +1,7 @@
 import { requestJSON } from './request.js';
 import { element, shiftCard } from './shift-card.js';
 import { coverageAction } from './coverage.js';
+import { openRequestedAction } from './requested-action.js';
 export async function mountWorkerRequests(main, csrfToken) {
   main.innerHTML = '<p class="eyebrow">Coverage, with confidence</p><div class="page-heading"><div><h1>Your requests & claims.</h1><p class="subtitle">Track requests you created and coverage you claimed. The original worker remains assigned until manager approval.</p></div><button id="refresh-requests" class="logout-button" type="button">Refresh</button></div><p><a class="text-link" href="/workspace/worker/shifts">Request coverage from My shifts →</a> · <a class="text-link" href="/workspace/worker/history">View coverage history →</a></p><p id="request-result" class="shift-created" role="status" tabindex="-1" hidden></p><section id="requests-content"></section><p class="section-note" id="requests-updated" role="status"></p>';
   const content = main.querySelector('#requests-content'); const refresh = main.querySelector('#refresh-requests'); const updated = main.querySelector('#requests-updated'); let loading = false;
@@ -17,7 +18,7 @@ export async function mountWorkerRequests(main, csrfToken) {
       const ownHeading = element('h2','requests-group-title','Requests you created'); content.append(ownHeading);
       if (!result.requests.length) { const empty = element('section', 'panel empty'); empty.append(element('h2', '', 'No requests yet.'), element('p', '', 'Open My shifts to request coverage for a future shift assigned to you.')); content.append(empty); }
       for (const request of result.requests) {
-        const article = element('article', 'panel coverage-request');
+        const article = element('article', 'panel coverage-request'); article.id = 'request-' + request.id; article.tabIndex = -1;
         const head = element('div', 'panel-head'); const labels = { open: 'Open · waiting for a teammate', pending: 'Pending manager approval', approved: 'Approved', rejected: 'Claim rejected · coverage reopened', cancelled: 'Cancelled' };
         head.append(element('h2', '', request.displayStatus === 'expired' ? 'Expired' : labels[request.status])); article.append(head, shiftCard(request.shift, result.timezone));
         const details = element('div', 'coverage-details');
@@ -48,4 +49,5 @@ export async function mountWorkerRequests(main, csrfToken) {
     } finally { loading = false; refresh.disabled = false; main.setAttribute('aria-busy', 'false'); if (restoreFocus) refresh.focus(); }
   }
   refresh.addEventListener('click', load); await load();
+  openRequestedAction(main, 'request', 'request-', ['cancel'], main.querySelector('#request-result'));
 }

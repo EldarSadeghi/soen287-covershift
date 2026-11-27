@@ -88,6 +88,9 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
             'claimStatus',
             'coverStatus',
             'timeOffStatus',
+            'answerInvite',
+            'cancelCover',
+            'cancelTimeOff',
           ]),
     ];
     working(true);

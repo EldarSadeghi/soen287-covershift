@@ -129,6 +129,32 @@ const groups = {
       'was my time off for the 24th rejected',
       "Was my December time off approved?",
     ],
+    // CS-067: follow-through on their own requests.
+    answerInvite: [
+      'Alex asked me to cover Saturday, accept it',
+      "decline Jamie's invite for Friday",
+      'accept the cover invitation from Sam',
+      "I want to accept Taylor's cover request",
+      'turn down the invitation for the 5th',
+      "say yes to Alex's swap request",
+      'Jamie wants me to take her Friday shift, tell her yes',
+    ],
+    cancelCover: [
+      'cancel my cover request for Friday',
+      'withdraw the invitation I sent to Sam',
+      'cancel my claim for Saturday',
+      'take back my request to cover the Sunday shift',
+      'call off the cover invite I sent Taylor',
+      'I no longer need cover on Thursday, scrap my request',
+    ],
+    cancelTimeOff: [
+      'withdraw my time-off request for the 24th',
+      'cancel my leave on December 9',
+      'cancel my vacation request',
+      'take back my day off on Friday',
+      'my plans changed so I want to cancel my holiday on the 12th',
+      'scrap the leave I booked for next Monday',
+    ],
     explanation: [
       "Why wasn't I matched to the Saturday shift?",
       "why can't I claim that shift",
