@@ -43,3 +43,7 @@ The evaluation retains all 181 existing prompt IDs and adds 21 manager prompts c
 ## CS-060 shift edit drafts
 
 The evaluator treats `shiftEdit` as write-capable because its proposal can be reviewed and saved through Schedule. The offline run contains 217 messages, including 15 new edit and look-alike prompts. It produced zero incorrect write-capable routes, with 55 prompts eligible for the classifier. For an approved live run, use `npm run ai:eval -- --live --max-calls 55`. Compare the original 202 prompts by ID with CS-059’s 200/202 live baseline.
+
+## CS-061 employee lookups
+
+The offline evaluation includes 232 messages. It retains all 217 previous messages and adds 15 employee prompts covering duties, coverage history, updates and schedule look-alikes. It found zero incorrect write-capable routes and 56 classifier candidates. For the approved live run, use `npm run ai:eval -- --live --max-calls 56`. Compare the 217 existing prompts with CS-060’s 215/217 live reference.

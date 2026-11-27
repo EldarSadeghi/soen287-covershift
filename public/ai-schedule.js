@@ -8,18 +8,28 @@ export function scheduleAnswerMessage(data){
  const checked=new Intl.DateTimeFormat(undefined,{timeZone:data.timezone,dateStyle:'medium',timeStyle:'short'}).format(new Date(data.asOf));
  return `${period} · ${data.scope}: ${data.total} assigned shift${data.total===1?'':'s'}, ${data.totalHours} scheduled hours${data.clippedToWindow?' within this window':''}. ${data.pendingClaims} pending coverage claim${data.pendingClaims===1?'':'s'} excluded from hours. Checked ${checked} (${data.timezone}).`;
 }
-export function showScheduleAnswer(card,data){
+export function appendShiftDuties(container, shift) {
+ if (!shift.duties?.length) return;
+ const section=element('section','shift-duties');
+ section.setAttribute('aria-label','Shift duties');
+ const list=element('ul');
+ for(const duty of shift.duties.slice(0,10)) list.append(element('li','',duty));
+ section.append(element('h4','','Shift duties'),list);
+ container.append(section);
+}
+export function showScheduleAnswer(card,data,{dutiesFocus=false}={}){
  card.replaceChildren();card.hidden=false;
  const next=data.query.kind==='next',shift=data.shifts[0];
  const title=!data.total?'No assigned shifts found.':next?'Here’s your next shift.':`${data.scope==='Entire team'?'Your team':data.scope} is scheduled for ${data.totalHours} hours.`;
  responseHeader(card,next&&data.total?'Assigned':'Saved schedule · Read only',title);
- if(next && shift){const t=formatShiftTime(shift,data.timezone);card.append(responseStats([[new Intl.DateTimeFormat(undefined,{timeZone:data.timezone,month:'short',day:'numeric'}).format(new Date(shift.startsAt)),'Next assigned shift'],[t.duration,'Scheduled duration']]),savedShiftFields(shift,data.timezone,shift.workerName));const link=element('a','ai-chat-review','View saved shift');link.href=shift.href;card.append(link);}
+ if(dutiesFocus)card.append(responseMetaLine('Focused on shift duties'));
+ if(next && shift){const t=formatShiftTime(shift,data.timezone);card.append(responseStats([[new Intl.DateTimeFormat(undefined,{timeZone:data.timezone,month:'short',day:'numeric'}).format(new Date(shift.startsAt)),'Next assigned shift'],[t.duration,'Scheduled duration']]),savedShiftFields(shift,data.timezone,shift.workerName));appendShiftDuties(card,shift);const link=element('a','ai-chat-review','View saved shift');link.href=shift.href;card.append(link);}
  else {
   const last=next?null:new Date(Date.parse(data.query.endDate+'T12:00:00Z')-86400000).toISOString().slice(0,10);
   if(!next)card.append(responseMetaLine(`${localDate(data.query.startDate)} – ${localDate(last)} · ${data.scope}`));
   card.append(responseStats([[`${data.totalHours} h`,'Assigned hours'],[data.total,'Assigned shifts']]));
   if(!data.total)card.append(element('p','',next?'No upcoming assigned shift is saved.':'No assigned work overlaps these dates.'));
-  for(const s of data.shifts){const t=formatShiftTime(s,data.timezone),item=element('article','ai-response-shift');const details=element('div','');details.append(element('h4','',s.title),element('p','',t.date),element('p','',`${t.startTime} – ${t.endDate?t.endDate+' · ':''}${t.endTime}`),element('p','ai-response-meta',`Assigned to ${s.workerName}`));const duration=element('span','ai-response-duration',t.duration);const link=element('a','','View saved shift');link.href=s.href;details.append(link);item.append(details,duration);card.append(item);}
+  for(const s of data.shifts){const t=formatShiftTime(s,data.timezone),item=element('article','ai-response-shift');const details=element('div','');details.append(element('h4','',s.title),element('p','',t.date),element('p','',`${t.startTime} – ${t.endDate?t.endDate+' · ':''}${t.endTime}`),element('p','ai-response-meta',`Assigned to ${s.workerName}`));appendShiftDuties(details,s);const duration=element('span','ai-response-duration',t.duration);const link=element('a','','View saved shift');link.href=s.href;details.append(link);item.append(details,duration);card.append(item);}
  }
  if(data.pendingClaims)card.append(responseNote(`${data.pendingClaims} ${next?'upcoming ':''}request${data.pendingClaims===1?'':'s'} awaiting approval. Not included in assigned hours.`));
  if(data.total>data.shifts.length)card.append(responseMetaLine(`Showing ${data.shifts.length} of ${data.total} shifts. Totals include every matching shift; ask for a narrower window to see the rest.`));

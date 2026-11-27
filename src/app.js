@@ -1,3 +1,4 @@
+import { employeeLookup } from './ai/employee-lookups.js';
 import { managerLookup } from './ai/manager-lookups.js';
 import { explainAvailability } from './availability/explanations.js';
 import {getSchedulePeriod,prepareSchedule,publishSchedule,discardDraft} from './schedules/publication.js';
@@ -52,6 +53,7 @@ const assets = new Map([
   ['/ai-chat-view.js', ['ai-chat-view.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-provider.js', ['ai-chat-provider.js', 'text/javascript; charset=utf-8']],
   ['/ai-chat-send.js', ['ai-chat-send.js', 'text/javascript; charset=utf-8']],
+  ['/ai-employee-lookups.js', ['ai-employee-lookups.js', 'text/javascript; charset=utf-8']],
   ['/ai-manager-lookups.js', ['ai-manager-lookups.js', 'text/javascript; charset=utf-8']],
   ['/ai-shift-edit.js', ['ai-shift-edit.js', 'text/javascript; charset=utf-8']],
   ['/ai-team-availability.js', ['ai-team-availability.js', 'text/javascript; charset=utf-8']],
@@ -232,6 +234,13 @@ export function createAppServer({ store, signup = registerManager, login = authe
         if (new URL(request.url, 'http://localhost').search) throw new HttpError(400, 'Explanations use your signed-in workspace.');
         limitCoverage(account.user.id);
         sendJson(response, 200, await explainAvailability(store, account.user.id, await readJson(request), shiftClock));
+        return;
+      }
+      if (pathname === '/api/worker/chat-lookup') {
+        requireMethod(request, response, 'GET');
+        const account = await requireAccount(store, sessions, request.headers.cookie, 'worker');
+        const query = new URL(request.url, 'http://localhost').searchParams;
+        sendJson(response, 200, await employeeLookup(store, account.user.id, query, shiftClock));
         return;
       }
       if (pathname === '/api/manager/chat-lookup') {

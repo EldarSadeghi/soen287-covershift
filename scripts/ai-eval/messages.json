@@ -110,6 +110,36 @@
       "message": "is my sunday shift early or late"
     },
     {
+      "id": "e-questions-19",
+      "role": "employee",
+      "expected": "questions",
+      "message": "What are my duties on Thursday?"
+    },
+    {
+      "id": "e-questions-20",
+      "role": "employee",
+      "expected": "questions",
+      "message": "What are my tasks today?"
+    },
+    {
+      "id": "e-questions-21",
+      "role": "employee",
+      "expected": "questions",
+      "message": "What do I have to do on my next shift?"
+    },
+    {
+      "id": "e-questions-22",
+      "role": "employee",
+      "expected": "questions",
+      "message": "What tasks do I have tomorrow?"
+    },
+    {
+      "id": "e-questions-23",
+      "role": "employee",
+      "expected": "questions",
+      "message": "What's my schedule?"
+    },
+    {
       "id": "e-search-01",
       "role": "employee",
       "expected": "search",
@@ -696,6 +726,66 @@
       "role": "employee",
       "expected": "clarification",
       "message": "show me the manager's salary"
+    },
+    {
+      "id": "e-history-01",
+      "role": "employee",
+      "expected": "history",
+      "message": "Which shifts did I pick up last month?"
+    },
+    {
+      "id": "e-history-02",
+      "role": "employee",
+      "expected": "history",
+      "message": "How many shifts have I given away?"
+    },
+    {
+      "id": "e-history-03",
+      "role": "employee",
+      "expected": "history",
+      "message": "What happened with my coverage requests in November?"
+    },
+    {
+      "id": "e-history-04",
+      "role": "employee",
+      "expected": "history",
+      "message": "Show my coverage history this year."
+    },
+    {
+      "id": "e-history-05",
+      "role": "employee",
+      "expected": "history",
+      "message": "Can you tally how many shifts I took over in February?"
+    },
+    {
+      "id": "e-updates-01",
+      "role": "employee",
+      "expected": "updates",
+      "message": "Any updates for me?"
+    },
+    {
+      "id": "e-updates-02",
+      "role": "employee",
+      "expected": "updates",
+      "message": "What's new?"
+    },
+    {
+      "id": "e-updates-03",
+      "role": "employee",
+      "expected": "updates",
+      "message": "Did anything change?"
+    },
+    {
+      "id": "e-updates-04",
+      "role": "employee",
+      "expected": "updates",
+      "message": "Show me my recent updates."
+    },
+    {
+      "id": "e-updates-05",
+      "role": "employee",
+      "expected": "updates",
+      "message": "Has anything landed in my notifications since yesterday?"
     },
     {
       "id": "m-shiftEdit-01",

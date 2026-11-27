@@ -1,3 +1,11 @@
+import { renderEmployeeLookup } from './ai-employee-lookups.js';
+import {
+  coworkerLookupDate,
+  coworkersFreeOnDate,
+  historyPeriod,
+  isDutiesQuestion,
+  isStatusDateFollowUp,
+} from './ai-chat-routing.js';
 import { sendEditToSchedule, showShiftEdit } from './ai-shift-edit.js';
 import {
   managerLookupQuery,
@@ -8,7 +16,6 @@ import {
   selectAvailabilityWorkers,
   renderTeamAvailability,
 } from './ai-team-availability.js';
-import { coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
 import {
   createClaimStatus,
   createCoverStatus,
@@ -24,6 +31,7 @@ import {
   localDate,
   localShiftFields,
   responseHeader,
+  revealResponse,
   responseMeta,
   responseNote,
   savedShiftFields,
@@ -302,7 +310,7 @@ export function createChatCards({
     );
   }
 
-  async function loadManagerData(url) {
+  async function loadLookupData(url) {
     const response = await requestJSON(url, { cache: 'no-store' });
     if (response.status === 401) {
       chat.clear();
@@ -318,19 +326,49 @@ export function createChatCards({
     return response.data;
   }
 
+  async function showEmployeeLookup(kind, text) {
+    const endpoint = '/api/worker/chat-lookup';
+    card.hidden = true;
+    working(true);
+    try {
+      const params = new URLSearchParams({ kind });
+      if (kind === 'history') {
+        const context = await loadLookupData(endpoint);
+        if (!context) return;
+        const period = historyPeriod(text, context.today);
+        if (!period) {
+          outcomeText(
+            'Which period should I check? Try “last month,” “November,” or “this year.”',
+          );
+          return;
+        }
+        params.set('period', period);
+      }
+      const data = await loadLookupData(endpoint + '?' + params);
+      if (!data) return;
+      outcomeText(renderEmployeeLookup(card, data));
+      card.hidden = false;
+      revealResponse(card);
+    } catch (error) {
+      outcomeText(error.message);
+    } finally {
+      working(false);
+    }
+  }
+
   async function showManagerLookup(kind, text) {
     const endpoint = '/api/manager/chat-lookup';
     card.hidden = true;
     working(true);
     try {
-      const context = await loadManagerData(endpoint);
+      const context = await loadLookupData(endpoint);
       if (!context) return;
       const query = managerLookupQuery(kind, text, context.today);
       if (query.question) {
         outcomeText(query.question);
         return;
       }
-      const data = await loadManagerData(
+      const data = await loadLookupData(
         endpoint + '?' + new URLSearchParams(query.params),
       );
       if (!data) return;
@@ -348,7 +386,7 @@ export function createChatCards({
     card.hidden = true;
     working(true);
     try {
-      const context = await loadManagerData(endpoint);
+      const context = await loadLookupData(endpoint);
       if (!context) return;
       const query = teamAvailabilityQuery(
         text,
@@ -359,7 +397,7 @@ export function createChatCards({
         outcomeText(query.question);
         return;
       }
-      const data = await loadManagerData(
+      const data = await loadLookupData(
         endpoint + '?' + new URLSearchParams(query.params),
       );
       if (!data) return;
@@ -501,8 +539,17 @@ export function createChatCards({
                 : `Proposed shift: ${data.draft.title} for ${data.workerName}, ${data.draft.startLocal} to ${data.draft.endLocal}, ${data.timezone}. Nothing has been saved. You can ask me to change it or select Review shift.`;
     chat.value.draftCancelled = false;
     appendTurn(reply);
-    if (data.kind === 'schedule_answer') showScheduleAnswer(card, data);
-    else if (manager && data.kind === 'batch') {
+    if (data.kind === 'schedule_answer') {
+      const latestQuestion = chat.value.messages.at(-2)?.text;
+      const earlierQuestion = chat.value.messages.at(-4)?.text;
+      const dutiesFocus =
+        !manager &&
+        (isDutiesQuestion(latestQuestion || '') ||
+          (chat.value.messages.at(-3)?.topic === 'questions' &&
+            isStatusDateFollowUp(latestQuestion || '') &&
+            isDutiesQuestion(earlierQuestion || '')));
+      showScheduleAnswer(card, data, { dutiesFocus });
+    } else if (manager && data.kind === 'batch') {
       chat.value.suggestion = null;
       chat.value.refinementPending = false;
       batchReview.open(data);
@@ -536,6 +583,7 @@ export function createChatCards({
     showCoworkerAvailability,
     showTeamAvailability,
     showManagerLookup,
+    showEmployeeLookup,
     renderProviderReply,
   };
 }

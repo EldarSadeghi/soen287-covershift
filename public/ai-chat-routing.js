@@ -22,6 +22,8 @@ export const MANAGER_LOOKUPS = [
   'publicationStatus',
 ];
 
+export const EMPLOYEE_LOOKUPS = ['history', 'updates'];
+
 const taskLabels = {
   draft: 'draft a shift',
   shiftEdit: 'prepare a change to an existing shift',
@@ -33,6 +35,8 @@ const taskLabels = {
   teamTimeOff: 'check team time off',
   coverageStatus: 'check shift coverage',
   publicationStatus: 'check schedule publication',
+  history: 'check coverage history',
+  updates: 'check recent updates',
   coworkers: 'check coworker availability',
   claimStatus: 'check a claim status',
   coverStatus: 'check a cover request',
@@ -45,6 +49,14 @@ const taskLabels = {
 const patterns = {
   negation: {
     command: /^(?:do not|don't|never)\b/,
+  },
+  employeeLookups: {
+    history:
+      /^(?:which shifts (?:did|have) i (?:pick(?:ed)? up|giv(?:e|en) away)|how many (?:shifts|claims) (?:did|have) i (?:pick(?:ed)? up|giv(?:e|en) away)|(?:show|list|check) (?:me )?(?:my )?coverage history|what happened (?:with|to) my coverage requests?(?=.*\b(?:last|this|in|during|between)\b))\b/,
+    updates:
+      /^(?:(?:any|show (?:me )?(?:my )?|check (?:my )?)\s*(?:new |recent )?updates(?: for me)?|what(?:'s| is) new(?: for me)?|did anything change(?: for me)?)[.!?]*$/,
+    duties:
+      /^(?:(?:what(?:'s| are| is)|show|list|tell me)\b.*\b(?:my|shift) (?:duties|tasks)\b|(?:what (?:do i have|am i supposed|do i need) to do|what (?:tasks|duties) (?:do i have|are assigned to me))\b.*\b(?:shift|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)/,
   },
   timeOffStatus: {
     lead: /^(?:did|has|was|is|what|check|show)\b/,
@@ -73,6 +85,8 @@ const patterns = {
       /\b(?:working week|weekly summary|upcoming work|my coverage (?:decisions|requests|status)|my pending (?:coverage )?(?:requests|claims)|coverage decisions)\b/,
   },
   shiftEdit: {
+    relativeTimeChange:
+      /^(?:could|can|would) the (?:existing|scheduled|saved) shift\b[^.!?]*\b(?:start|end)\b[^.!?]*\b(?:earlier|later)[.!?]*$/,
     command:
       /^(?:move|change|reschedule|push|rename|reassign|extend|shorten|edit)\b/,
     subject: /\bshifts?\b/,
@@ -170,6 +184,11 @@ function explicitRoute(text, manager) {
       if (pattern.test(message)) return intent;
     }
   }
+  if (!manager) {
+    if (patterns.employeeLookups.history.test(message)) return 'history';
+    if (patterns.employeeLookups.updates.test(message)) return 'updates';
+    if (isDutiesQuestion(text)) return 'questions';
+  }
   if (patterns.summary.lead.test(message)) {
     const summary = manager
       ? patterns.summary.manager
@@ -178,8 +197,9 @@ function explicitRoute(text, manager) {
   }
   if (
     manager &&
-    patterns.shiftEdit.command.test(message) &&
-    patterns.shiftEdit.subject.test(message)
+    (patterns.shiftEdit.relativeTimeChange.test(message) ||
+      (patterns.shiftEdit.command.test(message) &&
+        patterns.shiftEdit.subject.test(message)))
   ) {
     return 'shiftEdit';
   }
@@ -318,6 +338,10 @@ export function isStatusDateFollowUp(text) {
   return statusFollowUpDate.test(normalizedMessage(text));
 }
 
+export function isDutiesQuestion(text) {
+  return patterns.employeeLookups.duties.test(normalizedMessage(text));
+}
+
 export function routeChat(text, manager, current) {
   if (requestsUnsupportedAction(text) || mixedRoutes(text, manager).length > 1)
     return 'clarification';
@@ -445,6 +469,17 @@ export function resolveChatTarget({
     /^Which date/.test(previous.text) &&
     unroutedForEmployee &&
     plainReply(false);
+  const historyPeriodReply = new RegExp(
+    `^${followUpPrefix}(?:last month|last 30 days|this year|${followUpMonth}(?: 20[0-9]{2})?)[.!?]*$`,
+  );
+  const historyReply =
+    !manager &&
+    previousTopic === 'history' &&
+    unroutedForEmployee &&
+    previous.text.startsWith('Which period') &&
+    plainReply(false) &&
+    (historyPeriodReply.test(normalizedMessage(text)) ||
+      isStatusDateFollowUp(text));
   const editReply =
     manager &&
     previousTopic === 'shiftEdit' &&
@@ -476,6 +511,7 @@ export function resolveChatTarget({
   const target =
     (batchReply && 'draft') ||
     (explanationReply && 'explanation') ||
+    (historyReply && 'history') ||
     (editReply && 'shiftEdit') ||
     (teamDateReply && previousTopic) ||
     (coworkerDateReply && 'coworkers') ||
@@ -719,4 +755,46 @@ export function coworkersFreeOnDate(data, date) {
       ),
     }))
     .filter((worker) => worker.windows.length > 0);
+}
+
+const monthNames =
+  'january february march april may june july august september october november december'.split(
+    ' ',
+  );
+const month = new RegExp(
+  `\\b(${monthNames.join('|')})(?:\\s+(20\\d{2}))?\\b`,
+  'gi',
+);
+
+export function historyPeriod(text, today) {
+  const exactDay = today && coworkerLookupDate(text, today);
+  const named = [...text.matchAll(month)];
+  const relative = [
+    ...text.matchAll(/\b(?:last month|this year|last 30 days)\b/gi),
+  ];
+  if (
+    relative.length + named.length > 1 ||
+    /\b(?:between|since|through|until)\b/i.test(text)
+  )
+    return null;
+  if (relative.length) return relative[0][0].toLowerCase().replaceAll(' ', '-');
+  if (exactDay) return exactDay;
+  if (named.length) {
+    const [, name, year] = named[0];
+    // An invalid specific date is not interpreted as the whole month.
+    if (/^\s+\d/.test(text.slice(named[0].index + named[0][0].length)))
+      return null;
+    const number = String(monthNames.indexOf(name.toLowerCase()) + 1).padStart(
+      2,
+      '0',
+    );
+    return year ? year + '-' + number : 'month-' + number;
+  }
+  if (
+    /\b(?:last|next|this|past|previous)\s+(?:\d+\s+)?(?:days?|weeks?|months?|years?)\b|\b(?:between|since|through|until)\b|\b20\d{2}(?:-\d{2}-\d{2})?\b/i.test(
+      text,
+    )
+  )
+    return null;
+  return 'last-30-days';
 }

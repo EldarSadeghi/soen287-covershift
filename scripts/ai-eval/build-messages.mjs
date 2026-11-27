@@ -25,6 +25,11 @@ const groups = {
       'how many hrs am i working next week',
       'Am I on the rota tomorrow?',
       'is my sunday shift early or late',
+      'What are my duties on Thursday?',
+      'What are my tasks today?',
+      'What do I have to do on my next shift?',
+      'What tasks do I have tomorrow?',
+      "What's my schedule?",
     ],
     search: [
       'Are there any open shifts on Friday?',
@@ -145,6 +150,20 @@ const groups = {
       'can you clock me in',
       'do not find any shifts',
       "show me the manager's salary",
+    ],
+    history: [
+      'Which shifts did I pick up last month?',
+      'How many shifts have I given away?',
+      'What happened with my coverage requests in November?',
+      'Show my coverage history this year.',
+      'Can you tally how many shifts I took over in February?',
+    ],
+    updates: [
+      'Any updates for me?',
+      "What's new?",
+      'Did anything change?',
+      'Show me my recent updates.',
+      'Has anything landed in my notifications since yesterday?',
     ],
   },
   manager: {
