@@ -64,7 +64,40 @@ function availabilitySnapshot(db,business,input,now,excludeWorkerId=null){
 
 export async function teamAvailability(store,managerId,input,clock=Date.now){
   const db=await store.read(),business=managerBusiness(db,managerId);
-  return availabilitySnapshot(db,business,input,clock());
+  const now = clock();
+  if (!Object.keys(input).length) {
+    return { timezone: business.timezone, today: availabilityHorizon(business.timezone, now).startDate };
+  }
+  if (!exact(input, ['date'])) return availabilitySnapshot(db,business,input,now);
+
+  const { date } = input;
+  const timezone = business.timezone;
+  const startsAt = businessInstant(date + 'T00:00', timezone, 'date');
+  const next = new Date(date + 'T00:00Z');
+  next.setUTCDate(next.getUTCDate() + 1);
+  const endsAt = businessInstant(next.toISOString().slice(0, 10) + 'T00:00', timezone, 'date');
+  if (Date.parse(endsAt) <= now || Date.parse(startsAt) > now + 90 * 86400000) {
+    throw new HttpError(422, 'Choose today or a date within the next 90 days.');
+  }
+  const remaining = { startsAt: new Date(Math.max(now, Date.parse(startsAt))).toISOString(), endsAt };
+  const workers = db.users.filter(u => u.businessId === business.id && u.role === 'worker' && !u.deactivation)
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
+    .map(worker => {
+      const identity = { id: worker.id, name: worker.name };
+      if (!worker.passwordHash) {
+        return { ...identity, status: 'unavailable', reasons: ['Account setup incomplete'], windows: [] };
+      }
+      const saved = (db.availabilityWindows || []).filter(window =>
+        window.workerId === worker.id && window.businessId === business.id &&
+        window.status === 'confirmed' && window.timezone === timezone);
+      const commitments = claimCommitments(db, worker, now);
+      const windows = freeWindows(saved, commitments, remaining);
+      if (windows.length) return { ...identity, status: 'available', reasons: ['Confirmed free time'], windows };
+      const hadAvailability = saved.some(window => intervalsOverlap(window, remaining));
+      if (hadAvailability) return { ...identity, status: 'unavailable', reasons: ['Existing commitments overlap the confirmed availability'], windows };
+      return { ...identity, status: 'unknown', reasons: ['No confirmed free time for this date'], windows };
+    });
+  return { timezone, checkedAt: new Date(now).toISOString(), workers };
 }
 export async function coworkerAvailability(store,workerId,input,clock=Date.now){
   const db=await store.read(),{user,business}=workerAccount(db,workerId);

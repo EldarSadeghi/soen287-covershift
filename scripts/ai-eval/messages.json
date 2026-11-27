@@ -698,6 +698,54 @@
       "message": "show me the manager's salary"
     },
     {
+      "id": "m-teamAvailability-01",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Is Alex Morgan available on December 3?"
+    },
+    {
+      "id": "m-teamAvailability-02",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Who is free on Friday?"
+    },
+    {
+      "id": "m-teamAvailability-03",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Is anyone available tomorrow afternoon?"
+    },
+    {
+      "id": "m-teamAvailability-04",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Check team availability on 2026-12-08 from 1 PM to 4 PM."
+    },
+    {
+      "id": "m-teamAvailability-05",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Who on the team is free this Wednesday?"
+    },
+    {
+      "id": "m-teamAvailability-06",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Is Jamie free?"
+    },
+    {
+      "id": "m-teamAvailability-07",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Can Alex work tomorrow afternoon?"
+    },
+    {
+      "id": "m-teamAvailability-08",
+      "role": "manager",
+      "expected": "teamAvailability",
+      "message": "Could you find out whether anyone has room for more hours on Thursday?"
+    },
+    {
       "id": "m-questions-01",
       "role": "manager",
       "expected": "questions",

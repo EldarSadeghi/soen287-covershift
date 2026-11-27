@@ -1,3 +1,8 @@
+import {
+  teamAvailabilityQuery,
+  selectAvailabilityWorkers,
+  renderTeamAvailability,
+} from './ai-team-availability.js';
 import { coworkerLookupDate, coworkersFreeOnDate } from './ai-chat-routing.js';
 import {
   createClaimStatus,
@@ -292,6 +297,57 @@ export function createChatCards({
     );
   }
 
+  async function showTeamAvailability(text, subject = text) {
+    const endpoint = '/api/manager/availability-windows';
+    card.hidden = true;
+    working(true);
+    async function load(url) {
+      const response = await requestJSON(url, { cache: 'no-store' });
+      if (response.status === 401) {
+        chat.clear();
+        location.replace('/login?expired=1');
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error(
+          response.data?.message ||
+            'Team availability could not load. Try asking again.',
+        );
+      }
+      return response.data;
+    }
+    try {
+      const context = await load(endpoint);
+      if (!context) return;
+      const query = teamAvailabilityQuery(
+        text,
+        context.today,
+        context.timezone,
+      );
+      if (query.question) {
+        outcomeText(query.question);
+        return;
+      }
+      const data = await load(
+        endpoint + '?' + new URLSearchParams(query.params),
+      );
+      if (!data) return;
+      const result = selectAvailabilityWorkers(data.workers, subject);
+      if (result.question) {
+        outcomeText(result.question);
+        return;
+      }
+      outcomeText(
+        renderTeamAvailability(card, data, query.date, result.workers),
+      );
+      card.hidden = false;
+    } catch (error) {
+      outcomeText(error.message);
+    } finally {
+      working(false);
+    }
+  }
+
   async function showCoworkerAvailability(text) {
     card.hidden = false;
     card.append(element('p', '', 'Checking coworker availability…'));
@@ -419,6 +475,7 @@ export function createChatCards({
     loadWorkingSummary,
     showSuggestion,
     showCoworkerAvailability,
+    showTeamAvailability,
     renderProviderReply,
   };
 }

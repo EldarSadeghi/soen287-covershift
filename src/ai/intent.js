@@ -3,7 +3,7 @@ import { aiConfigured, responsesBody, structuredResponse } from './structured-re
 import { validateChatInput } from './shift-draft.js';
 
 const employee = ['questions', 'search', 'availability', 'coworkers', 'summary', 'claimStatus', 'coverStatus', 'timeOffStatus'];
-const manager = ['questions', 'draft', 'summary'];
+const manager = ['questions', 'draft', 'summary', 'teamAvailability'];
 
 // Examples are deliberately different from scripts/ai-eval/messages.json, so
 // the evaluation measures generalisation rather than memorised answers.
@@ -20,6 +20,7 @@ timeOffStatus = status of THEIR time-off request ("did my holiday request get th
 Viewing, pausing or cancelling SAVED availability rules is not availability: return clarification.`,
   manager: `The sender is a MANAGER.
 questions = the team's or one employee's assigned shifts or hours ("who's in on the 9th", "is Sam on this weekend").
+teamAvailability = confirmed free time or availability for the team or a named employee ("can Priya work tomorrow afternoon", "who has any room to pick up hours Friday").
 draft = prepare a new shift for an employee, even with missing details ("pop Alex on the Wednesday close").
 summary = what needs the manager's attention: pending approvals, unfilled coverage ("anything I need to sign off").`,
 };

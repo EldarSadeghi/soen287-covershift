@@ -148,6 +148,16 @@ const groups = {
     ],
   },
   manager: {
+    teamAvailability: [
+      'Is Alex Morgan available on December 3?',
+      'Who is free on Friday?',
+      'Is anyone available tomorrow afternoon?',
+      'Check team availability on 2026-12-08 from 1 PM to 4 PM.',
+      'Who on the team is free this Wednesday?',
+      'Is Jamie free?',
+      'Can Alex work tomorrow afternoon?',
+      'Could you find out whether anyone has room for more hours on Thursday?',
+    ],
     questions: [
       'Who is working tomorrow?',
       'show the team schedule for next week',

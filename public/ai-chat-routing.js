@@ -20,6 +20,7 @@ const taskLabels = {
   availability: 'draft availability',
   questions: 'check the schedule',
   summary: 'show a working-week summary',
+  teamAvailability: 'check team availability',
   coworkers: 'check coworker availability',
   claimStatus: 'check a claim status',
   coverStatus: 'check a cover request',
@@ -62,6 +63,13 @@ const patterns = {
   draft: {
     command:
       /\b(?:draft|create|add|assign|make|set up|put together)\b.*\bshifts?\b|^(?:draft|create|assign|schedule)\b/,
+  },
+  teamAvailability: {
+    question:
+      /^(?:is|are|was|were|who(?:'s|s)?|which|whether|anyone|anybody|can you check|check|show|tell me|do we have)\b/,
+    availability: /\b(?:availability|available|free)\b/,
+    change:
+      /\b(?:approve|delete|cancel|assign|request|send|change|save|publish)\b/,
   },
   coworkers: {
     people: /\b(?:co[ -]?workers?|colleagues?|teammates?)\b/,
@@ -134,6 +142,15 @@ function explicitRoute(text, manager) {
   }
   if (manager && requestsShiftBatch(message)) return 'draft';
   if (manager && patterns.draft.command.test(message)) return 'draft';
+  const team = patterns.teamAvailability;
+  if (
+    manager &&
+    team.question.test(message) &&
+    team.availability.test(message) &&
+    !team.change.test(message)
+  ) {
+    return 'teamAvailability';
+  }
   if (!manager) {
     if (
       (patterns.coworkers.people.test(message) &&
@@ -320,7 +337,7 @@ export function chatClarification(text, manager) {
     return 'What date and exact time should I use to look for open shifts?';
   }
   return manager
-    ? 'What would you like me to check: a shift draft or your team’s schedule?'
+    ? 'What would you like me to check: a shift draft, your team’s schedule, or team availability?'
     : 'What would you like me to check: your schedule, an open shift, or a saved availability rule?';
 }
 
@@ -373,6 +390,15 @@ export function resolveChatTarget({
     /^Which date/.test(previous.text) &&
     unroutedForEmployee &&
     plainReply(false);
+  const teamDateReply =
+    manager &&
+    previousTopic === 'teamAvailability' &&
+    /^Which date/.test(previous.text) &&
+    unrouted &&
+    plainReply(true) &&
+    isStatusDateFollowUp(
+      text.replace(/\s+(morning|afternoon|evening)(?=[.!?]*$)/i, ''),
+    );
   const answerRoute =
     !manager &&
     previousTopic === 'clarification' &&
@@ -381,6 +407,7 @@ export function resolveChatTarget({
   const target =
     (batchReply && 'draft') ||
     (explanationReply && 'explanation') ||
+    (teamDateReply && 'teamAvailability') ||
     (coworkerDateReply && 'coworkers') ||
     answerRoute ||
     routed;

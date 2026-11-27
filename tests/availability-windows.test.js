@@ -41,3 +41,23 @@ test('coworker upcoming windows show only free intervals in next14 days without 
 test('upcoming windows exclude withdrawn/old-zone windows, inactive and foreign peers',async t=>{const {coworkerUpcomingWindows}=await import('../src/availability/windows.js');const f=await fixture(t),r=await f.save(period(),'worker_alex');await withdrawWindow(f.store,'worker_alex',r.id,{revision:r.revision},clock);await f.store.transaction(db=>{db.businesses.push({...db.businesses[0],id:'foreign'});db.users.push({...db.users.find(u=>u.id===worker),id:'foreign_worker',businessId:'foreign',email:'foreign@example.test'});db.availabilityWindows.push({...db.availabilityWindows[0],id:randomUUID(),workerId:'foreign_worker',businessId:'foreign',status:'confirmed',submissionId:randomUUID()});});assert.ok((await coworkerUpcomingWindows(f.store,worker,clock)).workers.every(u=>!u.windows.length));await f.save(period(),'worker_sam');await f.store.transaction(db=>{db.businesses[0].timezone='America/Vancouver';});assert.ok((await coworkerUpcomingWindows(f.store,worker,clock)).workers.every(u=>!u.windows.length));let db=await f.store.read();await removeWorker(f.store,manager,'worker_alex','deactivate',{revision:workerRemovalState(db,db.users.find(u=>u.id==='worker_alex'),now).revision},clock);assert.ok(!(await coworkerUpcomingWindows(f.store,worker,clock)).workers.some(u=>u.id==='worker_alex'));await assert.rejects(coworkerUpcomingWindows(f.store,manager,clock),{status:403});});
 test('own upcoming view uses14-day horizon, retains later/history and clipping preserves withdrawal revision',async t=>{const {ownWindowGroups}=await import('../public/availability-view.js');const f=await fixture(t);await f.save(period('2030-01-20T22:00','2030-01-21T06:00'));await f.save(period('2030-01-22T09:00','2030-01-22T17:00'));let data=await listWindows(f.store,worker,clock),groups=ownWindowGroups(data.windows,data.horizon);assert.equal(groups.upcoming.length,1);assert.equal(groups.upcoming[0].endsAt,data.horizon.endsAt);assert.equal(groups.upcoming[0].clipped,true);assert.equal(groups.later.length,1);await withdrawWindow(f.store,worker,groups.upcoming[0].id,{revision:groups.upcoming[0].revision},clock);data=await listWindows(f.store,worker,clock);groups=ownWindowGroups(data.windows,data.horizon);assert.equal(groups.upcoming.length,0);assert.equal(groups.history.length,1);assert.equal(groups.later.length,1);});
 test('coworker upcoming HTTP rejects custom ranges/writes and is scoped, authenticated and no-store',async t=>{const f=await fixture(t),sessions=new SessionStore(),server=createAppServer({store:f.store,sessions,shiftClock:clock});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>{server.close(r);server.closeIdleConnections();}));const base=`http://127.0.0.1:${server.address().port}`,Cookie=sessions.create(worker).cookie.split(';')[0],mc=sessions.create(manager).cookie.split(';')[0],path='/api/worker/coworker-windows',before=await readFile(f.store.filename,'utf8');assert.equal((await fetch(base+path)).status,401);assert.equal((await fetch(base+path,{headers:{Cookie:mc}})).status,403);assert.equal((await fetch(base+path+'?workerId=foreign',{headers:{Cookie}})).status,400);assert.equal((await fetch(base+path,{method:'POST',headers:{Cookie}})).status,405);const response=await fetch(base+path,{headers:{Cookie}});assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');assert.equal((await response.json()).horizon.days,14);assert.equal(await readFile(f.store.filename,'utf8'),before);});
+
+test('manager day lookup returns remaining free windows without modifying the store', async (t) => {
+  const f = await fixture(t);
+  await f.save(period('2030-01-10T13:00', '2030-01-10T18:00'));
+  await createShift(f.store, manager, {
+    title: 'Fictional service',
+    assignedWorkerId: worker,
+    startLocal: '2030-01-10T14:00',
+    endLocal: '2030-01-10T17:00',
+  }, clock);
+  const before = await readFile(f.store.filename, 'utf8');
+  const result = await f.team({ date: '2030-01-10' });
+  assert.equal(jamie(result).status, 'available');
+  assert.deepEqual(jamie(result).windows, [
+    { startsAt: '2030-01-10T18:00:00.000Z', endsAt: '2030-01-10T19:00:00.000Z' },
+    { startsAt: '2030-01-10T22:00:00.000Z', endsAt: '2030-01-10T23:00:00.000Z' },
+  ]);
+  await assert.rejects(teamAvailability(f.store, worker, { date: '2030-01-10' }, clock), { status: 403 });
+  assert.equal(await readFile(f.store.filename, 'utf8'), before);
+});

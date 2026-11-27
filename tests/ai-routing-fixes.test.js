@@ -73,10 +73,12 @@ test('the classifier is told who is asking and gets role-specific examples', asy
   assert.match(seen.manager.instructions, /sender is a MANAGER/);
   assert.match(seen.manager.instructions, /draft = prepare a new shift/);
   assert.doesNotMatch(seen.manager.instructions, /claimStatus/);
+  assert.match(seen.manager.instructions, /teamAvailability = confirmed free time/);
+  assert.doesNotMatch(seen.worker.instructions, /teamAvailability/);
   assert.match(seen.worker.instructions, /sender is an EMPLOYEE/);
   assert.match(seen.worker.instructions, /SAVED availability rules is not availability/);
   assert.deepEqual(JSON.parse(seen.worker.input), { conversation: [], request: 'any spare hours' }, 'only the request and earlier turns are sent, never workspace data');
-  assert.deepEqual(seen.manager.text.format.schema.properties.intent.enum, ['questions', 'draft', 'summary', 'clarification']);
+  assert.deepEqual(seen.manager.text.format.schema.properties.intent.enum, ['questions', 'draft', 'summary', 'teamAvailability', 'clarification']);
 });
 
 test('classifier examples are not copied from the evaluation set', async () => {

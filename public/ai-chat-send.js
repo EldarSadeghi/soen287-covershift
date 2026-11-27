@@ -37,6 +37,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     showAlternatives,
     loadWorkingSummary,
     showCoworkerAvailability,
+    showTeamAvailability,
   } = cards;
   // The last two complete turns, each with a user and an
   // assistant, each at most 1,500 characters, at most 4,500 bytes in total).
@@ -68,7 +69,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       'questions',
       'summary',
       ...(manager
-        ? ['draft']
+        ? ['draft', 'teamAvailability']
         : [
             'search',
             'availability',
@@ -156,7 +157,8 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     const previous = chat.value.messages.at(-1);
     const previousTopic = previous?.topic;
     const currentTopic =
-      previousTopic === 'summary' || Object.hasOwn(statusLookups, previousTopic)
+      ['summary', 'teamAvailability'].includes(previousTopic) ||
+      Object.hasOwn(statusLookups, previousTopic)
         ? previousTopic
         : previous && previousTopic !== 'clarification'
           ? flow.mode
@@ -312,6 +314,21 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     ) {
       chat.value.criteria = null;
       chat.value.alternateTo = null;
+    }
+    if (target === 'teamAvailability') {
+      const earlier = chat.value.messages.at(-2)?.text;
+      const continuing =
+        previousTopic === target &&
+        routed === 'clarification' &&
+        /^Which date/.test(previous.text) &&
+        earlier;
+      say('user', text);
+      appendTurn('I’ll check confirmed team availability.');
+      await showTeamAvailability(
+        continuing ? earlier + ' ' + text : text,
+        continuing ? earlier : text,
+      );
+      return;
     }
     if (target === 'coworkers') {
       employeeRequests.reset();
