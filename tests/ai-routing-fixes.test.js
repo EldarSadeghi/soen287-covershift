@@ -137,7 +137,7 @@ test('a status choice cannot be answered with an unsupported command', () => {
 });
 
 test('the chat composer uses the shared follow-up routing', async () => {
-  const source = await readFile(new URL('../public/ai-shift-draft.js', import.meta.url), 'utf8');
+  const source = await readFile(new URL('../public/ai-chat-send.js', import.meta.url), 'utf8');
   assert.match(source, /resolveChatTarget\(\{/);
   assert.doesNotMatch(source, /batchReply|coworkerDateReply|openingReply/, 'follow-up routing must not be re-implemented inline');
 });
