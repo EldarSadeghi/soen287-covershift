@@ -82,7 +82,14 @@ export function withMonth(text, today) {
 }
 
 export function recordDate(text, today) {
-  return coworkerLookupDate(withMonth(text, today), today);
+  const expanded = text.replace(
+    /\b(jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec)\.?(?=\s+\d)/gi,
+    (short) =>
+      MONTHS.find((month) =>
+        month.toLowerCase().startsWith(short.toLowerCase().replace('.', '')),
+      ),
+  );
+  return coworkerLookupDate(withMonth(expanded, today), today);
 }
 
 // Resolve a reply against the rows actually offered in the current card.
@@ -106,10 +113,11 @@ export function shiftChoiceIndex(text, choices, timezone) {
     'ninth',
     'tenth',
   ];
-  const numeric = /^(?:number )?(\d{1,2})(?:st|nd|rd|th)?$/.exec(selector);
+  const numeric = /^(?:number |#)?(\d{1,2})(?:st|nd|rd|th)?$/.exec(selector);
   const ordinal = numeric ? Number(numeric[1]) - 1 : ordinals.indexOf(selector);
+  if (selector === 'last') return choices.length ? choices.length - 1 : null;
   if (numeric || ordinal >= 0) return choices[ordinal] ? ordinal : null;
-  if (!selector) return null;
+  if (!selector) return undefined;
   const matches = choices.flatMap((shift, index) =>
     matchesShiftTitle(shift.title, selector) ||
     matchesRecordName(shift.workerName, selector) ||
@@ -117,5 +125,9 @@ export function shiftChoiceIndex(text, choices, timezone) {
       ? [index]
       : [],
   );
-  return matches.length === 1 ? matches[0] : null;
+  if (matches.length === 1) return matches[0];
+  return matches.length ||
+    /^the (?:[\p{L}\p{N}'’-]+ ){1,4}(?:one|shift)$/u.test(reply)
+    ? null
+    : undefined;
 }

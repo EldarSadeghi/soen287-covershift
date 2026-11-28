@@ -282,6 +282,32 @@ export function chatClarification(text, manager) {
     : 'What would you like me to check: your schedule, an open shift, or a saved availability rule?';
 }
 
+function isRecordDateReply(text) {
+  return (
+    isStatusDateFollowUp(text) ||
+    /^(?:(?:on|for|the) )?\d{1,2}(?:st|nd|rd|th)[.!?]*$/i.test(text) ||
+    /^(?:(?:on|for) )?(?:jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\.? \d{1,2}(?:st|nd|rd|th)?(?:,? 20\d{2})?[.!?]*$/i.test(
+      text,
+    )
+  );
+}
+
+function isCopyWeekReply(text) {
+  const parts = text
+    .replace(/^(?:from|to|into|onto)\s+/i, '')
+    .split(/\s+(?:to|into|onto)\s+/i);
+  return (
+    parts.length <= 2 &&
+    parts.every(
+      (part) =>
+        isRecordDateReply(part) ||
+        /^(?:(?:last|previous|this|current|next) week|the week after(?: next)?)[.!?]*$/i.test(
+          part,
+        ),
+    )
+  );
+}
+
 /**
  * Decides where a chat message goes, given the router's answer and what the
  * assistant asked last (a pending batch, a coworker date, an opening, a status
@@ -398,20 +424,11 @@ export function resolveChatTarget({
     ((manager &&
       previousTopic === 'shiftDuties' &&
       /^Which date/i.test(previous.text) &&
-      isStatusDateFollowUp(text)) ||
+      isRecordDateReply(text)) ||
       (manager &&
         previousTopic === 'copyWeek' &&
         /^Which week/i.test(previous.text) &&
-        text.split(/\s+(?:to|into)\s+/i).length === 2 &&
-        text.split(/\s+(?:to|into)\s+/i).every((part) => {
-          const week = part.trim().replace(/^from\s+/i, '');
-          return (
-            isStatusDateFollowUp(week) ||
-            /^(?:(?:last|this|next) week|the week after(?: next)?)[.!?]*$/i.test(
-              week,
-            )
-          );
-        })) ||
+        isCopyWeekReply(text)) ||
       (previousTopic === 'summary' &&
         /^Which summary/i.test(previous.text) &&
         /^(?:this|next) week[.!?]*$/i.test(text)));

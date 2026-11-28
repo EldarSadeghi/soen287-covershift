@@ -129,9 +129,25 @@ const plusDays = (day, count) =>
 // Any mention of a particular day: "December 14", "2026-12-14", "Monday",
 // "tomorrow", "the 14th".
 const DATE_MENTION =
-  /\b(?:20\d{2}-\d{2}-\d{2}|today|tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}(?:st|nd|rd|th))\b/i;
+  /\b(?:20\d{2}-\d{2}-\d{2}|today|tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|january|february|march|april|may|june|july|august|september|october|november|december|(?:jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\.?\s+\d{1,2}|\d{1,2}(?:st|nd|rd|th))\b/i;
 // The word that introduces the destination week.
 const DESTINATION = /\b(?:to|into|onto)\b/i;
+
+// Merge a short answer with any source or destination the user already named.
+export function copyWeekReply(original, reply) {
+  const separator = DESTINATION.exec(original);
+  const source = separator ? original.slice(0, separator.index) : original;
+  const destination = separator
+    ? original.slice(separator.index + separator[0].length).trim()
+    : '';
+  const hasSource =
+    DATE_MENTION.test(source) || [...source.matchAll(WEEK_REF)].length > 0;
+  if (/^(?:to|into|onto)\s+/i.test(reply)) return source + ' ' + reply;
+  if (DESTINATION.test(reply)) return 'copy ' + reply;
+  if (hasSource) return source + ' to ' + reply;
+  if (/^the week after[.!?]*$/i.test(reply)) return original;
+  return 'copy ' + reply + (destination ? ' to ' + destination : '');
+}
 
 /**
  * The Monday of the week named in one part of the message, null when that
@@ -157,7 +173,8 @@ function weekIn(part, today, previous) {
     return plusDays(afterNext ? base : (previous ?? base), afterNext ? 14 : 7);
   }
   if (!dated) return null;
-  const day = recordDate(rest, today);
+  const ordinal = /^(?:the )?\d{1,2}(?:st|nd|rd|th)[.!?]*$/i.test(rest.trim());
+  const day = recordDate(rest, ordinal && previous ? previous : today);
   return day ? monday(day) : undefined;
 }
 

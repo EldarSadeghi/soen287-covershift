@@ -1,3 +1,4 @@
+import { copyWeekReply } from './ai-manager-drafts.js';
 import { shiftChoiceIndex } from './record-matching.js';
 import { sendProviderMessage } from './ai-chat-provider.js';
 import {
@@ -13,7 +14,6 @@ import {
   chatClarification,
   needsIntentFallback,
   openingReference,
-  isStatusDateFollowUp,
   requestsUnsupportedAction,
   resolveChatTarget,
   requestsShiftBatch,
@@ -48,6 +48,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     showManagerLookup,
     showManagerDraft,
     pendingShiftChoice,
+    pendingCopyWeek,
     showEmployeeLookup,
     showHelp,
     showBlocked,
@@ -182,7 +183,8 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         : previous && previousTopic !== 'clarification'
           ? flow.mode
           : null;
-    const routed = routeChat(text, manager, currentTopic);
+    const activePicker = pendingShiftChoice(previous);
+    const routed = routeChat(text, manager, activePicker ? null : currentTopic);
     const previousLookup = statusLookups[previousTopic]?.lookup;
     // Follow-up routing lives in resolveChatTarget so it can be tested; it
     // never lets an unsupported command continue an earlier question.
@@ -190,7 +192,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       text,
       manager,
       routed,
-      previous,
+      previous: activePicker ? null : previous,
       batchClarifying: chat.value.batchClarifying,
       hasSelectedOpening: () =>
         Boolean(employeeRequests.openingContext().selectedId),
@@ -199,16 +201,23 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         ? (reply) => previousLookup.choiceReply(reply)
         : null,
     });
-    const shiftPicker =
+    const pickerReply =
+      activePicker &&
       !chat.value.editSelection &&
-      /^[\p{L}\p{N}][\p{L}\p{N} '’./-]{0,79}[!?]?$/u.test(text) &&
-      !isStatusDateFollowUp(text) &&
-      routeChat(text, manager, null) === 'clarification' &&
+      routed === 'clarification' &&
       !requestsUnsupportedAction(text, manager) &&
-      !chatClarification(text, manager).startsWith(MIXED_INTENT_QUESTION)
-        ? pendingShiftChoice(previous)
-        : null;
-    if (shiftPicker) target = previousTopic;
+      !chatClarification(text, manager).startsWith(MIXED_INTENT_QUESTION);
+    const dismissPicker =
+      pickerReply &&
+      /^(?:never mind|nevermind|cancel|none of them|thanks|thank you)[.!?]*$/i.test(
+        text,
+      );
+    const shiftIndex =
+      pickerReply && !dismissPicker
+        ? shiftChoiceIndex(text, activePicker.rows, activePicker.timezone)
+        : undefined;
+    const shiftPicker = shiftIndex === undefined ? null : activePicker;
+    if (shiftPicker || dismissPicker) target = previousTopic;
     if (
       chat.value.editSelection &&
       previousTopic === 'shiftEdit' &&
@@ -291,12 +300,14 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       chat.value.composer = composer.value;
       chat.save();
     }
+    if (dismissPicker) {
+      say('user', text);
+      appendTurn('Okay. What else can I help with?');
+      showSuggestion(null);
+      return;
+    }
     if (shiftPicker) {
-      const index = shiftChoiceIndex(
-        text,
-        shiftPicker.rows,
-        shiftPicker.timezone,
-      );
+      const index = shiftIndex;
       if (index === null) {
         notice(
           'Choose a number from the displayed shifts or give a unique title, employee or time of day.',
@@ -391,7 +402,8 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       const earlier = chat.value.messages.at(-2)?.text;
       let query = text;
       if (priorQuestion && previousTopic === target && earlier) {
-        if (target === 'copyWeek') query = 'copy ' + text;
+        if (target === 'copyWeek')
+          query = copyWeekReply(pendingCopyWeek(previous) ?? earlier, text);
         else query = earlier + ' ' + text;
       }
       say('user', text);

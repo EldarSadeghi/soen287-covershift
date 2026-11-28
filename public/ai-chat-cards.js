@@ -83,6 +83,12 @@ export function createChatCards({
 }) {
   const { card, notice, working, outcomeText, close, dialog, launcher } = view;
   let shiftChoices;
+  let copyWeekQuestion;
+  function pendingCopyWeek(previous) {
+    return copyWeekQuestion?.question === previous
+      ? copyWeekQuestion?.text
+      : undefined;
+  }
   function offerShiftChoices(rows, timezone, choose, resubmits = false) {
     shiftChoices = {
       anchor: card.firstChild,
@@ -520,6 +526,7 @@ export function createChatCards({
           outcomeText(
             'Which week should I copy, and to which week? For example, “copy this week to next week”.',
           );
+          copyWeekQuestion = { question: chat.value.messages.at(-1), text };
           return;
         }
         const data = await loadLookupData(
@@ -806,6 +813,7 @@ export function createChatCards({
     showManagerLookup,
     showManagerDraft,
     pendingShiftChoice,
+    pendingCopyWeek,
     showEmployeeLookup,
     showHelp,
     showBlocked,
