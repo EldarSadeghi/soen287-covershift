@@ -282,6 +282,32 @@ export function chatClarification(text, manager) {
     : 'What would you like me to check: your schedule, an open shift, or a saved availability rule?';
 }
 
+function isRecordDateReply(text) {
+  return (
+    isStatusDateFollowUp(text) ||
+    /^(?:(?:on|for|the) )?\d{1,2}(?:st|nd|rd|th)[.!?]*$/i.test(text) ||
+    /^(?:(?:on|for) )?(?:jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\.? \d{1,2}(?:st|nd|rd|th)?(?:,? 20\d{2})?[.!?]*$/i.test(
+      text,
+    )
+  );
+}
+
+function isCopyWeekReply(text) {
+  const parts = text
+    .replace(/^(?:from|to|into|onto)\s+/i, '')
+    .split(/\s+(?:to|into|onto)\s+/i);
+  return (
+    parts.length <= 2 &&
+    parts.every(
+      (part) =>
+        isRecordDateReply(part) ||
+        /^(?:(?:last|previous|this|current|next) week|the week after(?: next)?)[.!?]*$/i.test(
+          part,
+        ),
+    )
+  );
+}
+
 /**
  * Decides where a chat message goes, given the router's answer and what the
  * assistant asked last (a pending batch, a coworker date, an opening, a status
@@ -392,12 +418,27 @@ export function resolveChatTarget({
     unrouted &&
     plainReply(true) &&
     /^[\p{L}\p{N}][\p{L}\p{N} '’.-]{0,59}[.!?]?$/u.test(text.trim());
+  const priorQuestion =
+    routeChat(text, manager, null) === 'clarification' &&
+    plainReply(manager) &&
+    ((manager &&
+      previousTopic === 'shiftDuties' &&
+      /^Which date/i.test(previous.text) &&
+      isRecordDateReply(text)) ||
+      (manager &&
+        previousTopic === 'copyWeek' &&
+        /^Which week/i.test(previous.text) &&
+        isCopyWeekReply(text)) ||
+      (previousTopic === 'summary' &&
+        /^Which summary/i.test(previous.text) &&
+        /^(?:this|next) week[.!?]*$/i.test(text)));
   const answerRoute =
     !manager &&
     previousTopic === 'clarification' &&
     clarificationReplyRoute(text, previous.text);
 
   const target =
+    (priorQuestion && previousTopic) ||
     (batchReply && 'draft') ||
     (explanationReply && 'explanation') ||
     (employeeDraftReply && previousTopic) ||
@@ -408,7 +449,12 @@ export function resolveChatTarget({
     (coworkerDateReply && 'coworkers') ||
     answerRoute ||
     routed;
-  return { target, statusLookup: false, choice };
+  return {
+    target,
+    statusLookup: false,
+    choice,
+    ...(priorQuestion && { priorQuestion: true }),
+  };
 }
 
 export const GENERIC_CLARIFICATION_PREFIX = 'What would you like me to check';
