@@ -95,6 +95,28 @@ export function managerLookupQuery(
   };
 }
 
+// Structured fallback values are only used by the existing read-only routes.
+export function classifiedManagerLookup(kind, text, today, details) {
+  const query = managerLookupQuery(kind, text, today);
+  if (
+    !details ||
+    !['coverageStatus', 'shiftHistory', 'replacements', 'teamTimeOff'].includes(
+      kind,
+    )
+  )
+    return query;
+  const from = details.date ?? query.params?.from;
+  const title = details.title ?? query.params?.title;
+  if (!from && !(kind === 'coverageStatus' && title)) return query;
+  const params = { ...query.params, kind };
+  if (from) params.from = from;
+  if (details.through) params.through = details.through;
+  else if (details.date && kind !== 'teamTimeOff') params.through = from;
+  if (title) params.title = title;
+  if (kind === 'replacements' && details.person) params.worker = details.person;
+  return { params };
+}
+
 export function renderManagerLookup(card, data) {
   if (data.kind === 'replacements') return renderReplacements(card, data);
   if (INSIGHT_KINDS.includes(data.kind)) return renderInsight(card, data);

@@ -16,6 +16,7 @@ import {
 import { sendEditToSchedule, showShiftEdit } from './ai-shift-edit.js';
 import { CAPABILITIES, renderBlocked, renderHelp } from './ai-help.js';
 import {
+  classifiedManagerLookup,
   managerLookupQuery,
   renderManagerLookup,
 } from './ai-manager-lookups.js';
@@ -451,6 +452,7 @@ export function createChatCards({
     text,
     dateReply = null,
     priorDate = null,
+    details = null,
   ) {
     const endpoint = '/api/manager/chat-lookup';
     card.hidden = true;
@@ -458,13 +460,9 @@ export function createChatCards({
     try {
       const context = await loadLookupData(endpoint);
       if (!context) return;
-      const query = managerLookupQuery(
-        kind,
-        text,
-        context.today,
-        dateReply,
-        priorDate,
-      );
+      const query = details
+        ? classifiedManagerLookup(kind, text, context.today, details)
+        : managerLookupQuery(kind, text, context.today, dateReply, priorDate);
       if (query.question) {
         outcomeText(query.question);
         return;
@@ -585,7 +583,7 @@ export function createChatCards({
     }
   }
 
-  async function showTeamAvailability(text, subject = text) {
+  async function showTeamAvailability(text, subject = text, details = null) {
     const endpoint = '/api/manager/availability-windows';
     card.hidden = true;
     working(true);
@@ -593,7 +591,7 @@ export function createChatCards({
       const context = await loadLookupData(endpoint);
       if (!context) return;
       const query = teamAvailabilityQuery(
-        text,
+        details?.date ? text.replace(details.datePhrase, details.date) : text,
         context.today,
         context.timezone,
       );
@@ -605,7 +603,10 @@ export function createChatCards({
         endpoint + '?' + new URLSearchParams(query.params),
       );
       if (!data) return;
-      const result = selectAvailabilityWorkers(data.workers, subject);
+      const result = selectAvailabilityWorkers(
+        data.workers,
+        details?.person ? `Is ${details.person} available?` : subject,
+      );
       if (result.question) {
         outcomeText(result.question);
         return;
@@ -621,7 +622,7 @@ export function createChatCards({
     }
   }
 
-  async function showCoworkerAvailability(text) {
+  async function showCoworkerAvailability(text, details = null) {
     card.hidden = false;
     card.append(element('p', '', 'Checking coworker availability…'));
     working(true);
@@ -637,7 +638,8 @@ export function createChatCards({
           'Coworker availability could not load. Try asking again.',
         );
       const data = response.data;
-      const date = coworkerLookupDate(text, data.horizon.startDate);
+      const date =
+        details?.date ?? coworkerLookupDate(text, data.horizon.startDate);
       card.replaceChildren();
       if (!date) {
         card.hidden = true;
