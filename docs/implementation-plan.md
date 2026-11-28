@@ -82,8 +82,8 @@ CS-048 adds 19 deterministic tests. Browser review on port 3056 confirmed “Who
 | CS-066 | Replacement suggestions for managers in chat | Done | [#153](https://github.com/EldarSadeghi/soen287-covershift/issues/153) | New | Merged in PR #154 |
 | CS-067 | Employee follow-through on their own requests in chat | Done | [#155](https://github.com/EldarSadeghi/soen287-covershift/issues/155) | New | Merged in PR #156 |
 | CS-068 | More manager drafts in chat: add an employee, copy a week, duties in edits | Done | [#157](https://github.com/EldarSadeghi/soen287-covershift/issues/157) | New | — |
-| CS-070 | Shared record matching for chat workflows | Done | [#159](https://github.com/EldarSadeghi/soen287-covershift/issues/159) | New | — |
-| CS-071 | Short chat replies | Done | [#161](https://github.com/EldarSadeghi/soen287-covershift/issues/161) | New | — |
+| CS-070 | Shared record matching for chat workflows | Done | [#159](https://github.com/EldarSadeghi/soen287-covershift/issues/159) | New | [#160](https://github.com/EldarSadeghi/soen287-covershift/pull/160) |
+| CS-071 | Short chat replies | Done | [#161](https://github.com/EldarSadeghi/soen287-covershift/issues/161) | New | [#162](https://github.com/EldarSadeghi/soen287-covershift/pull/162) |
 | CS-072 | Structured fallback for unusual wording | Your review | [#163](https://github.com/EldarSadeghi/soen287-covershift/issues/163) | New | — |
 | CS-043 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
