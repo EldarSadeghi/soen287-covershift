@@ -83,7 +83,7 @@ export function showShiftEdit(card, data, review, choose) {
         card.append(button);
       }
     }
-    return 'Which shift do you mean? Select a shift below or tell me its title and time.';
+    return 'Which shift do you mean? Select a shift below, or reply with its position, title or time of day.';
   }
   responseHeader(card, 'Proposed change', data.before.title);
   const timeRange = ({ startLocal, endLocal }) => {

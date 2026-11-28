@@ -38,6 +38,7 @@ const nameOf = (db, id) =>
 
 function shiftRow(db, shift) {
   return {
+    id: shift.id,
     title: shift.title,
     startsAt: shift.startsAt,
     endsAt: shift.endsAt,
@@ -69,13 +70,14 @@ function exclusion(db, worker, shift, timezone, now) {
 export function replacementSuggestions(
   db,
   business,
-  { from, title, worker },
+  { from, title, worker, shiftId },
   now,
 ) {
   const shifts = db.shifts
     .filter(
       (shift) =>
         shift.businessId === business.id &&
+        (!shiftId || shift.id === shiftId) &&
         localDate(shift.startsAt, business.timezone) === from &&
         matchesShiftTitle(shift.title, title) &&
         matchesRecordName(nameOf(db, shift.assignedWorkerId), worker),

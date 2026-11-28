@@ -1,3 +1,5 @@
+import { copyWeekReply } from './ai-manager-drafts.js';
+import { shiftChoiceIndex } from './record-matching.js';
 import { sendProviderMessage } from './ai-chat-provider.js';
 import {
   MIXED_INTENT_QUESTION,
@@ -45,6 +47,8 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     showTeamAvailability,
     showManagerLookup,
     showManagerDraft,
+    pendingShiftChoice,
+    pendingCopyWeek,
     showEmployeeLookup,
     showHelp,
     showBlocked,
@@ -180,15 +184,16 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         : previous && previousTopic !== 'clarification'
           ? flow.mode
           : null;
-    const routed = routeChat(text, manager, currentTopic);
+    const activePicker = pendingShiftChoice(previous);
+    const routed = routeChat(text, manager, activePicker ? null : currentTopic);
     const previousLookup = statusLookups[previousTopic]?.lookup;
     // Follow-up routing lives in resolveChatTarget so it can be tested; it
     // never lets an unsupported command continue an earlier question.
-    let { target, statusLookup, choice } = resolveChatTarget({
+    let { target, statusLookup, choice, priorQuestion } = resolveChatTarget({
       text,
       manager,
       routed,
-      previous,
+      previous: activePicker ? null : previous,
       batchClarifying: chat.value.batchClarifying,
       hasSelectedOpening: () =>
         Boolean(employeeRequests.openingContext().selectedId),
@@ -197,6 +202,29 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         ? (reply) => previousLookup.choiceReply(reply)
         : null,
     });
+    const pickerReply =
+      activePicker &&
+      !chat.value.editSelection &&
+      routed === 'clarification' &&
+      !requestsUnsupportedAction(text, manager) &&
+      !chatClarification(text, manager).startsWith(MIXED_INTENT_QUESTION);
+    const dismissPicker =
+      pickerReply &&
+      /^(?:never mind|nevermind|cancel|none of them|thanks|thank you)[.!?]*$/i.test(
+        text,
+      );
+    const shiftIndex =
+      pickerReply && !dismissPicker
+        ? shiftChoiceIndex(text, activePicker.rows, activePicker.timezone)
+        : undefined;
+    const shiftPicker = shiftIndex === undefined ? null : activePicker;
+    if (shiftPicker || dismissPicker) target = previousTopic;
+    if (
+      chat.value.editSelection &&
+      previousTopic === 'shiftEdit' &&
+      !requestsUnsupportedAction(text, manager)
+    )
+      target = 'shiftEdit';
     // Only the generic "What would you like me to check" fallback asks the
     // server-side classifier; specific clarifications stay local.
     let intentPass = null;
@@ -275,6 +303,30 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       chat.value.composer = composer.value;
       chat.save();
     }
+    if (dismissPicker) {
+      say('user', text);
+      appendTurn('Okay. What else can I help with?');
+      showSuggestion(null);
+      return;
+    }
+    if (shiftPicker) {
+      const index = shiftIndex;
+      if (index === null) {
+        notice(
+          'Choose a number from the displayed shifts or give a unique title, employee or time of day.',
+          true,
+        );
+        return;
+      }
+      if (shiftPicker.resubmits) {
+        await shiftPicker.choose(index);
+        return;
+      }
+      say('user', text);
+      appendTurn('I’ll check that shift.');
+      await shiftPicker.choose(index);
+      return;
+    }
     if (statusLookup) {
       explanations.reset();
       say('user', text);
@@ -350,9 +402,16 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     if (manager && MANAGER_DRAFTS.includes(target)) {
       chat.value.batch = null;
       chat.value.batchClarifying = false;
+      const earlier = chat.value.messages.at(-2)?.text;
+      let query = text;
+      if (priorQuestion && previousTopic === target && earlier) {
+        if (target === 'copyWeek')
+          query = copyWeekReply(pendingCopyWeek(previous) ?? earlier, text);
+        else query = earlier + ' ' + text;
+      }
       say('user', text);
       appendTurn('I’ll prepare that for your review.');
-      await showManagerDraft(target, text);
+      await showManagerDraft(target, query);
       return;
     }
     if (MANAGER_LOOKUPS.includes(target)) {
