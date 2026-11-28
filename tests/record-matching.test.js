@@ -92,7 +92,15 @@ test('duty lookups recognize conversational modifiers and preserve the rest of t
     ],
   };
 
-  for (const phrase of ['the morning', 'Jamie’s early', 'the new']) {
+  for (const phrase of [
+    'the morning',
+    'Jamie’s early',
+    'the new',
+    'the usual',
+    'the busy',
+    'the weekend',
+    'the early morning',
+  ]) {
     const { params } = dutyQuery(
       `Add 'sweep' to ${phrase} opening shift on December 3`,
       '2026-11-27',
@@ -106,6 +114,17 @@ test('duty lookups recognize conversational modifiers and preserve the rest of t
   );
   assert.equal(dutyShift(db, business, params, now).status, 'none');
 
+  for (const title of [
+    'evening opening',
+    'early evening opening',
+    'morning evening opening',
+  ]) {
+    assert.equal(
+      dutyShift(db, business, { ...params, title }, now).status,
+      'none',
+    );
+  }
+
   db.shifts.push({
     ...db.shifts[0],
     id: 'second',
@@ -116,4 +135,30 @@ test('duty lookups recognize conversational modifiers and preserve the rest of t
 
   db.shifts[1].title = 'Early opening';
   assert.equal(dutyShift(db, business, ambiguous, now).shift.id, 'second');
+});
+
+test('duty dates use the local start day across an overnight DST shift and keep past shifts locked', () => {
+  const business = { id: 'shop', timezone: 'America/Toronto' };
+  const shift = {
+    id: 'overnight',
+    businessId: business.id,
+    title: 'Closing service',
+    startsAt: '2026-11-01T03:00:00Z',
+    endsAt: '2026-11-01T09:00:00Z',
+  };
+  const db = { shifts: [shift], users: [], coverageRequests: [] };
+  const now = Date.parse('2026-11-02T15:00Z');
+  const query = { from: '2026-10-31', title: 'evening closing' };
+
+  const result = dutyShift(db, business, query, now);
+  assert.equal(result.shift.id, 'overnight');
+  assert.ok(result.shift.locked);
+  assert.equal(
+    dutyShift(db, business, { ...query, from: '2026-11-01' }, now).status,
+    'none',
+  );
+  assert.equal(
+    dutyShift(db, business, { ...query, title: 'morning closing' }, now).status,
+    'none',
+  );
 });

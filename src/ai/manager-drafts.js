@@ -1,6 +1,7 @@
 import {
   matchesRecordName,
   matchesShiftTitle,
+  matchesShiftDayPart,
 } from '../../public/record-matching.js';
 // Manager drafts prepared from chat (CS-068). Read-only: these build what the
 // manager reviews; saving goes through the existing batch save or the
@@ -136,17 +137,27 @@ export function dutyShift(db, business, { from, title, worker }, now) {
   const fullMatches = candidates.filter((shift) =>
     matchesShiftTitle(shift.title, title),
   );
-  // A leading conversational modifier may describe the shift without being
-  // part of its title. Keep every other title word as a constraint.
-  const shorterTitle =
-    /^(?:morning|afternoon|evening|early|late|new)\s+(.+)$/i.exec(
+  // Keep title words as constraints. Only recognized leading descriptions
+  // may be separated from the title, and time descriptions constrain starts.
+  const descriptors =
+    /^(?:(?:morning|afternoon|evening|night|early|late|new|usual|busy|weekend)\s+)+/i.exec(
       title ?? '',
-    )?.[1];
+    )?.[0];
+  const shorterTitle = descriptors && title.slice(descriptors.length);
+  const dayParts = (descriptors ?? '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => /^(?:morning|afternoon|evening|night)$/.test(word));
   const matches =
     fullMatches.length || !shorterTitle
       ? fullMatches
-      : candidates.filter((shift) =>
-          matchesShiftTitle(shift.title, shorterTitle),
+      : candidates.filter(
+          (shift) =>
+            matchesShiftTitle(shift.title, shorterTitle) &&
+            dayParts.every((part) =>
+              matchesShiftDayPart(shift.startsAt, timezone, part),
+            ),
         );
   // Every choice carries what the Schedule edit form needs, so picking one
   // from a list opens it directly. Rechecked when the edit is saved.

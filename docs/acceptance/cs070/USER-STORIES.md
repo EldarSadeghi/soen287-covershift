@@ -14,3 +14,9 @@ The handlers still decide which records are eligible for their task. Existing re
 - The duty lookup tries the full selector first. If it has no match, it can omit a recognized leading descriptor while retaining the employee, date and remaining title words. Duplicate employee names still return choices when multiple shifts match.
 - In the scripted fictional manager preview, “Add ‘sweep’ to the morning opening shift on December 3” showed Jamie Lee’s Opening service (9 AM to noon) with a Review on Schedule button. The browser check stopped at the review card.
 - 539 tests and 25 offline scenarios (217 checks) passed. Offline routing remained at 275 of 327 with zero wrong routes into save-capable features. No live provider calls were made.
+
+## Second review follow-up
+
+- Duty lookups accept stacked leading descriptors, including “early morning.” A time-of-day descriptor separated from the stored title must match the shift’s local start time. Unrecognized words stay in the selector to protect distinctions such as front versus back counter.
+- The overnight daylight-saving test verifies selection by the local start date and confirms a past shift remains locked.
+- In the fictional manager browser, the December 3 evening request showed “No matching shift.” The early morning request opened the Schedule form for Opening service with “sweep” filled in. Saving showed “Private draft saved” and the duty appeared on that shift.

@@ -27,6 +27,26 @@ export function matchesShiftTitle(title, selector) {
   );
 }
 
+const DAY_PARTS = {
+  morning: [0, 12],
+  afternoon: [12, 17],
+  evening: [17, 24],
+  night: [17, 24],
+};
+
+export function matchesShiftDayPart(startsAt, timezone, word) {
+  if (!Object.hasOwn(DAY_PARTS, word)) return false;
+  const [start, end] = DAY_PARTS[word];
+  const hour = Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hourCycle: 'h23',
+    }).format(new Date(startsAt)),
+  );
+  return hour >= start && hour < end;
+}
+
 const MONTHS = [
   'January',
   'February',

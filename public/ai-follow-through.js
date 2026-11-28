@@ -13,6 +13,7 @@ import {
 import {
   matchesRecordName,
   matchesShiftTitle,
+  matchesShiftDayPart,
   withMonth,
 } from './record-matching.js';
 export { withMonth } from './record-matching.js';
@@ -71,13 +72,6 @@ function byPerson(records, text, person) {
 // Words that place a shift in time rather than name it.
 const NOT_TITLE =
   /^(?:the|my|a|an|this|that|next|last|today|tomorrow|tonight|(?:mon|tues|wednes|thurs|fri|satur|sun)day|january|february|march|april|may|june|july|august|september|october|november|december|\d+(?:st|nd|rd|th)?|first|second|third|fourth|fifth|one|shifts?)$/i;
-const DAY_PARTS = {
-  morning: [0, 12],
-  afternoon: [12, 17],
-  evening: [17, 24],
-  night: [17, 24],
-};
-
 // The words describing the shift: "the opening shift on Friday" → opening,
 // "my Friday closing shift" → closing, "the morning one" → morning.
 // A new determiner starts a new phrase, so "my cover request for the ..."
@@ -101,19 +95,10 @@ function byShiftWords(records, text, timezone) {
   const words = shiftWords(text);
   if (!words.length) return records;
   return records.filter(({ shift }) => {
-    const hour = Number(
-      new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone,
-        hour: 'numeric',
-        hourCycle: 'h23',
-      }).format(new Date(shift.startsAt)),
-    );
     return words.every(
       (word) =>
         matchesShiftTitle(shift.title, word) ||
-        (DAY_PARTS[word] &&
-          hour >= DAY_PARTS[word][0] &&
-          hour < DAY_PARTS[word][1]),
+        matchesShiftDayPart(shift.startsAt, timezone, word),
     );
   });
 }
