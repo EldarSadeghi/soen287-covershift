@@ -84,3 +84,38 @@ export function withMonth(text, today) {
 export function recordDate(text, today) {
   return coworkerLookupDate(withMonth(text, today), today);
 }
+
+// Resolve a reply against the rows actually offered in the current card.
+export function shiftChoiceIndex(text, choices, timezone) {
+  const reply = text
+    .trim()
+    .toLowerCase()
+    .replace(/[.!?]+$/, '');
+  const selector = reply
+    .replace(/^the\s+/, '')
+    .replace(/\s+(?:one|shift)$/, '');
+  const ordinals = [
+    'first',
+    'second',
+    'third',
+    'fourth',
+    'fifth',
+    'sixth',
+    'seventh',
+    'eighth',
+    'ninth',
+    'tenth',
+  ];
+  const numeric = /^(?:number )?(\d{1,2})(?:st|nd|rd|th)?$/.exec(selector);
+  const ordinal = numeric ? Number(numeric[1]) - 1 : ordinals.indexOf(selector);
+  if (numeric || ordinal >= 0) return choices[ordinal] ? ordinal : null;
+  if (!selector) return null;
+  const matches = choices.flatMap((shift, index) =>
+    matchesShiftTitle(shift.title, selector) ||
+    matchesRecordName(shift.workerName, selector) ||
+    (shift.startsAt && matchesShiftDayPart(shift.startsAt, timezone, selector))
+      ? [index]
+      : [],
+  );
+  return matches.length === 1 ? matches[0] : null;
+}

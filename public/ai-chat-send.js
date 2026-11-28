@@ -1,3 +1,4 @@
+import { shiftChoiceIndex } from './record-matching.js';
 import { sendProviderMessage } from './ai-chat-provider.js';
 import {
   MIXED_INTENT_QUESTION,
@@ -12,6 +13,7 @@ import {
   chatClarification,
   needsIntentFallback,
   openingReference,
+  isStatusDateFollowUp,
   requestsUnsupportedAction,
   resolveChatTarget,
   requestsShiftBatch,
@@ -45,6 +47,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     showTeamAvailability,
     showManagerLookup,
     showManagerDraft,
+    pendingShiftChoice,
     showEmployeeLookup,
     showHelp,
     showBlocked,
@@ -183,7 +186,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     const previousLookup = statusLookups[previousTopic]?.lookup;
     // Follow-up routing lives in resolveChatTarget so it can be tested; it
     // never lets an unsupported command continue an earlier question.
-    let { target, statusLookup, choice } = resolveChatTarget({
+    let { target, statusLookup, choice, priorQuestion } = resolveChatTarget({
       text,
       manager,
       routed,
@@ -196,6 +199,22 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         ? (reply) => previousLookup.choiceReply(reply)
         : null,
     });
+    const shiftPicker =
+      !chat.value.editSelection &&
+      /^[\p{L}\p{N}][\p{L}\p{N} '’./-]{0,79}[!?]?$/u.test(text) &&
+      !isStatusDateFollowUp(text) &&
+      routeChat(text, manager, null) === 'clarification' &&
+      !requestsUnsupportedAction(text, manager) &&
+      !chatClarification(text, manager).startsWith(MIXED_INTENT_QUESTION)
+        ? pendingShiftChoice(previous)
+        : null;
+    if (shiftPicker) target = previousTopic;
+    if (
+      chat.value.editSelection &&
+      previousTopic === 'shiftEdit' &&
+      !requestsUnsupportedAction(text, manager)
+    )
+      target = 'shiftEdit';
     // Only the generic "What would you like me to check" fallback asks the
     // server-side classifier; specific clarifications stay local.
     let intentPass = null;
@@ -272,6 +291,28 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       chat.value.composer = composer.value;
       chat.save();
     }
+    if (shiftPicker) {
+      const index = shiftChoiceIndex(
+        text,
+        shiftPicker.rows,
+        shiftPicker.timezone,
+      );
+      if (index === null) {
+        notice(
+          'Choose a number from the displayed shifts or give a unique title, employee or time of day.',
+          true,
+        );
+        return;
+      }
+      if (shiftPicker.resubmits) {
+        await shiftPicker.choose(index);
+        return;
+      }
+      say('user', text);
+      appendTurn('I’ll check that shift.');
+      await shiftPicker.choose(index);
+      return;
+    }
     if (statusLookup) {
       explanations.reset();
       say('user', text);
@@ -347,9 +388,15 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     if (manager && MANAGER_DRAFTS.includes(target)) {
       chat.value.batch = null;
       chat.value.batchClarifying = false;
+      const earlier = chat.value.messages.at(-2)?.text;
+      let query = text;
+      if (priorQuestion && previousTopic === target && earlier) {
+        if (target === 'copyWeek') query = 'copy ' + text;
+        else query = earlier + ' ' + text;
+      }
       say('user', text);
       appendTurn('I’ll prepare that for your review.');
-      await showManagerDraft(target, text);
+      await showManagerDraft(target, query);
       return;
     }
     if (MANAGER_LOOKUPS.includes(target)) {

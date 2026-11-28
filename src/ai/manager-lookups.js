@@ -67,11 +67,18 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
           'focus',
           'hours',
           'worker',
+          'shiftId',
         ].includes(key) || query.getAll(key).length !== 1,
     )
   ) {
     throw new HttpError(422, 'Choose a supported manager lookup.');
   }
+  const shiftId = query.get('shiftId');
+  if (
+    query.has('shiftId') &&
+    (kind !== 'replacements' || !shiftId || shiftId.length > 120)
+  )
+    throw new HttpError(422, 'Choose a displayed shift.');
   const from = query.get('from');
   const through = query.get('through') ?? from;
   const title = query.get('title')?.trim().toLowerCase();
@@ -130,7 +137,12 @@ export async function managerLookup(store, userId, query, clock = Date.now) {
       ...metadata,
       title: query.get('title'),
       worker: query.get('worker'),
-      ...replacementSuggestions(db, business, { from, title, worker }, now),
+      ...replacementSuggestions(
+        db,
+        business,
+        { from, title, worker, shiftId },
+        now,
+      ),
     };
   }
   if (query.has('worker'))

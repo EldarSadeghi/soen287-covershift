@@ -139,7 +139,7 @@ export function renderReplacements(card, data) {
     reply = `No shifts${filters ? ` matching ${filters}` : ''} on ${date}.`;
     card.append(element('p', '', reply));
   } else if (data.status === 'choose') {
-    reply = `${SHIFT_QUESTION} There are ${data.total} on ${date}. Reply with its title, such as “${data.shifts[0].title}”.`;
+    reply = `${SHIFT_QUESTION} There are ${data.total} on ${date}. Reply with its position or title, such as “${data.shifts[0].title}”.`;
     card.append(element('p', '', reply));
     for (const row of data.shifts)
       card.append(

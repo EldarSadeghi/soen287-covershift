@@ -392,12 +392,36 @@ export function resolveChatTarget({
     unrouted &&
     plainReply(true) &&
     /^[\p{L}\p{N}][\p{L}\p{N} '’.-]{0,59}[.!?]?$/u.test(text.trim());
+  const priorQuestion =
+    routeChat(text, manager, null) === 'clarification' &&
+    plainReply(manager) &&
+    ((manager &&
+      previousTopic === 'shiftDuties' &&
+      /^Which date/i.test(previous.text) &&
+      isStatusDateFollowUp(text)) ||
+      (manager &&
+        previousTopic === 'copyWeek' &&
+        /^Which week/i.test(previous.text) &&
+        text.split(/\s+(?:to|into)\s+/i).length === 2 &&
+        text.split(/\s+(?:to|into)\s+/i).every((part) => {
+          const week = part.trim().replace(/^from\s+/i, '');
+          return (
+            isStatusDateFollowUp(week) ||
+            /^(?:(?:last|this|next) week|the week after(?: next)?)[.!?]*$/i.test(
+              week,
+            )
+          );
+        })) ||
+      (previousTopic === 'summary' &&
+        /^Which summary/i.test(previous.text) &&
+        /^(?:this|next) week[.!?]*$/i.test(text)));
   const answerRoute =
     !manager &&
     previousTopic === 'clarification' &&
     clarificationReplyRoute(text, previous.text);
 
   const target =
+    (priorQuestion && previousTopic) ||
     (batchReply && 'draft') ||
     (explanationReply && 'explanation') ||
     (employeeDraftReply && previousTopic) ||
@@ -408,7 +432,12 @@ export function resolveChatTarget({
     (coworkerDateReply && 'coworkers') ||
     answerRoute ||
     routed;
-  return { target, statusLookup: false, choice };
+  return {
+    target,
+    statusLookup: false,
+    choice,
+    ...(priorQuestion && { priorQuestion: true }),
+  };
 }
 
 export const GENERIC_CLARIFICATION_PREFIX = 'What would you like me to check';

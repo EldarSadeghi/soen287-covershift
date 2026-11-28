@@ -371,7 +371,7 @@ export function renderDutyShift(card, data, duty, review) {
         ),
       );
     card.append(checkedMeta(data.asOf, data.timezone));
-    return `${data.total} shifts match. Which one gets “${duty}”? Choose it from the list, or add its title or employee.`;
+    return `${data.total} shifts match. Which one gets “${duty}”? Choose it from the list, or reply with its position, title or employee.`;
   }
   const { shift } = data;
   const blocker = dutyBlocker(shift, duty);

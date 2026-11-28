@@ -82,6 +82,25 @@ export function createChatCards({
   view,
 }) {
   const { card, notice, working, outcomeText, close, dialog, launcher } = view;
+  let shiftChoices;
+  function offerShiftChoices(rows, timezone, choose, resubmits = false) {
+    shiftChoices = {
+      anchor: card.firstChild,
+      question: chat.value.messages.at(-1),
+      rows,
+      timezone,
+      choose,
+      resubmits,
+    };
+  }
+  function pendingShiftChoice(previous) {
+    return shiftChoices?.question === previous &&
+      shiftChoices?.anchor?.parentNode === card &&
+      !card.hidden
+      ? shiftChoices
+      : null;
+  }
+
   const claimStatus = !manager
     ? createClaimStatus({
         card,
@@ -450,6 +469,21 @@ export function createChatCards({
       if (!data) return;
       outcomeText(renderManagerLookup(card, data));
       card.hidden = false;
+      if (kind === 'replacements' && data.status === 'choose') {
+        offerShiftChoices(data.shifts, data.timezone, async (index) => {
+          const params = new URLSearchParams(query.params);
+          params.set('shiftId', data.shifts[index].id);
+          working(true);
+          try {
+            const selected = await loadLookupData(endpoint + '?' + params);
+            if (selected) outcomeText(renderManagerLookup(card, selected));
+          } catch (error) {
+            outcomeText(error.message);
+          } finally {
+            working(false);
+          }
+        });
+      }
     } catch (error) {
       outcomeText(error.message);
     } finally {
@@ -516,16 +550,27 @@ export function createChatCards({
         endpoint + '?' + new URLSearchParams(query.params),
       );
       if (!data) return;
-      outcomeText(
-        renderDutyShift(card, data, query.duty, (edit) => {
-          if (!sendDutyToSchedule(account, edit))
-            notice(
-              'This browser couldn’t keep the change. Edit the shift on Schedule instead.',
-              true,
-            );
-        }),
-      );
+      const review = (edit) => {
+        if (!sendDutyToSchedule(account, edit))
+          notice(
+            'This browser couldn’t keep the change. Edit the shift on Schedule instead.',
+            true,
+          );
+      };
+      outcomeText(renderDutyShift(card, data, query.duty, review));
       card.hidden = false;
+      if (data.status === 'choose') {
+        offerShiftChoices(data.shifts, data.timezone, (index) => {
+          outcomeText(
+            renderDutyShift(
+              card,
+              { ...data, status: 'ready', shift: data.shifts[index] },
+              query.duty,
+              review,
+            ),
+          );
+        });
+      }
     } catch (error) {
       outcomeText(error.message);
     } finally {
@@ -666,6 +711,15 @@ export function createChatCards({
         data.kind === 'shiftEdit'
           ? { id: data.id, revision: data.revision, draft: data.draft }
           : null;
+      const choose = (choice) => {
+        if (flow.busy) return;
+        chat.value.editSelection = {
+          id: choice.id,
+          revision: choice.revision,
+        };
+        view.composer.value = initialRequest;
+        view.form.requestSubmit();
+      };
       const reply = showShiftEdit(
         card,
         data,
@@ -674,17 +728,21 @@ export function createChatCards({
           if (!sendEditToSchedule(account, data))
             notice('Open Schedule to edit this shift manually.');
         },
-        (choice) => {
-          if (flow.busy) return;
-          chat.value.editSelection = {
-            id: choice.id,
-            revision: choice.revision,
-          };
-          view.composer.value = initialRequest;
-          view.form.requestSubmit();
-        },
+        choose,
       );
       appendTurn(reply);
+      if (data.kind === 'editChoices') {
+        offerShiftChoices(
+          data.choices,
+          data.timezone,
+          (index) => {
+            const choice = data.choices[index];
+            if (choice.lockReason) notice(choice.lockReason, true);
+            else choose(choice);
+          },
+          true,
+        );
+      }
       chat.save();
       return reply;
     }
@@ -747,6 +805,7 @@ export function createChatCards({
     showTeamAvailability,
     showManagerLookup,
     showManagerDraft,
+    pendingShiftChoice,
     showEmployeeLookup,
     showHelp,
     showBlocked,
