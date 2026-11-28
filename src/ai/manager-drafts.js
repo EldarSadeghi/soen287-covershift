@@ -1,3 +1,8 @@
+import {
+  matchesRecordName,
+  matchesShiftTitle,
+  matchesShiftDayPart,
+} from '../../public/record-matching.js';
 // Manager drafts prepared from chat (CS-068). Read-only: these build what the
 // manager reviews; saving goes through the existing batch save or the
 // Schedule edit form, with their usual checks.
@@ -113,31 +118,47 @@ export function copyWeekDraft(db, business, { source, target }, now) {
 }
 
 /**
- * The shift on business-local date `from` (optionally narrowed by a title word
+ * The shift on business-local date `from` (optionally narrowed by a title
  * and the assigned employee's name) to add a duty to, as the Schedule edit form
  * needs it. One match is returned with its edit lock, if any; several are listed.
  */
 export function dutyShift(db, business, { from, title, worker }, now) {
   const { timezone } = business;
-  const word = title?.trim().toLowerCase();
-  const person = worker?.trim().toLowerCase();
-  const matches = visibleShifts(db, business)
-    .filter((shift) => {
-      const name = nameOf(db, shift.assignedWorkerId).toLowerCase();
-      return (
+  const candidates = visibleShifts(db, business)
+    .filter(
+      (shift) =>
         localDate(shift.startsAt, timezone) === from &&
-        (!word ||
-          shift.title
-            .toLowerCase()
-            .split(/\s+/)
-            .some((part) => part.startsWith(word))) &&
-        (!person || name === person || name.split(/\s+/).includes(person))
-      );
-    })
+        matchesRecordName(nameOf(db, shift.assignedWorkerId), worker),
+    )
     .sort(
       (a, b) =>
         a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id),
     );
+  const fullMatches = candidates.filter((shift) =>
+    matchesShiftTitle(shift.title, title),
+  );
+  // Keep title words as constraints. Only recognized leading descriptions
+  // may be separated from the title, and time descriptions constrain starts.
+  const descriptors =
+    /^(?:(?:morning|afternoon|evening|night|early|late|new|usual|busy|weekend)\s+)+/i.exec(
+      title ?? '',
+    )?.[0];
+  const shorterTitle = descriptors && title.slice(descriptors.length);
+  const dayParts = (descriptors ?? '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => /^(?:morning|afternoon|evening|night)$/.test(word));
+  const matches =
+    fullMatches.length || !shorterTitle
+      ? fullMatches
+      : candidates.filter(
+          (shift) =>
+            matchesShiftTitle(shift.title, shorterTitle) &&
+            dayParts.every((part) =>
+              matchesShiftDayPart(shift.startsAt, timezone, part),
+            ),
+        );
   // Every choice carries what the Schedule edit form needs, so picking one
   // from a list opens it directly. Rechecked when the edit is saved.
   const row = (shift) => {

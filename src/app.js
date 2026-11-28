@@ -119,6 +119,10 @@ const assets = new Map([
     '/ai-chat-routing.js',
     ['ai-chat-routing.js', 'text/javascript; charset=utf-8'],
   ],
+  [
+    '/record-matching.js',
+    ['record-matching.js', 'text/javascript; charset=utf-8'],
+  ],
   ['/routing/text.js', ['routing/text.js', 'text/javascript; charset=utf-8']],
   [
     '/routing/status.js',
