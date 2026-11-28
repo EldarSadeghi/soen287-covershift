@@ -14,6 +14,10 @@ const dateToken = anyOf(
   { before: '\\b', after: '\\b', flags: 'gi' },
 );
 
+export function dateMentionCount(text) {
+  return [...text.matchAll(dateToken)].length;
+}
+
 export function coworkerLookupDate(text, today) {
   if (
     /\b(?:this|next|last) week\b|\b(?:next|last) (?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(

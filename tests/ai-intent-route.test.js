@@ -27,7 +27,10 @@ function provider(intent = 'search') {
   const fetchImpl = async (_, { body }) => {
     const name = JSON.parse(body).text.format.name;
     calls.push(name);
-    if (name === 'covershift_intent') return reply({ intent: typeof intent === 'function' ? intent() : intent });
+    if (name === 'covershift_intent') {
+      const output = typeof intent === 'function' ? intent() : intent;
+      return reply(typeof output === 'object' ? output : { intent: output });
+    }
     if (name === 'existing_shift_search') return reply(searchClarification);
     if (name === 'schedule_question') return reply(scheduleClarification);
     throw new Error(`Unexpected schema ${name}`);
@@ -237,4 +240,25 @@ test('intent passes are single-use, expire and only cover paid intents', () => {
   assert.deepEqual(takeIntentPass({ description: 'x', intentPass: 't' }), { input: { description: 'x' }, token: 't' });
   assert.deepEqual(takeIntentPass({ description: 'x' }), { input: { description: 'x' }, token: null });
   assert.deepEqual(takeIntentPass(null), { input: null, token: null });
+});
+
+test('intent endpoint returns only grounded lookup fields and never a draft pass for a lookup', async t => {
+  const app = await startServer(t, {
+    intent: {
+      intent: 'replacements',
+      details: { date: 'December 3', through: null, person: 'Jamie Lee', title: 'Opening service' },
+    },
+  });
+  const headers = await app.signIn('manager_morgan');
+  const accepted = await app.post('/api/ai-intent', headers, {
+    description: 'Find a stand-in for Jamie Lee at Opening service on December 3',
+  });
+  assert.deepEqual(await accepted.json(), {
+    intent: 'replacements',
+    details: { date: '2026-12-03', datePhrase: 'December 3', person: 'Jamie Lee', title: 'Opening service' },
+  });
+  const ungrounded = await app.post('/api/ai-intent', headers, {
+    description: 'Find a stand-in for Alex Morgan',
+  });
+  assert.deepEqual(await ungrounded.json(), { intent: 'replacements' });
 });

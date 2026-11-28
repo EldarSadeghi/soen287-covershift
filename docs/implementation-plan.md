@@ -83,6 +83,7 @@ CS-048 adds 19 deterministic tests. Browser review on port 3056 confirmed “Who
 | CS-067 | Employee follow-through on their own requests in chat | Done | [#155](https://github.com/EldarSadeghi/soen287-covershift/issues/155) | New | Merged in PR #156 |
 | CS-068 | More manager drafts in chat: add an employee, copy a week, duties in edits | Your review | [#157](https://github.com/EldarSadeghi/soen287-covershift/issues/157) | New | — |
 | CS-070 | Shared record matching for chat workflows | Your review | [#159](https://github.com/EldarSadeghi/soen287-covershift/issues/159) | New | — |
+| CS-072 | Structured fallback for unusual wording | Your review | [#163](https://github.com/EldarSadeghi/soen287-covershift/issues/163) | New | — |
 | CS-043 | Deployment and final submission | Todo | [#70](https://github.com/EldarSadeghi/soen287-covershift/issues/70) | CS-040 / CS-018 | — |
 
 CS-001–037, CS-040–042 and CS-044 are complete. CS-045 is the conversation quality follow-up before CS-038 and CS-039. CS-043 final deployment remains last. Each increment requires local user review and explicit merge approval. Stable issue numbers preserve historical task mappings.

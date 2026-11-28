@@ -115,6 +115,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       if (!result.ok || !allowed.includes(intent)) return {};
       return {
         intent,
+        details: result.data.details,
         pass: typeof result.data.pass === 'string' ? result.data.pass : null,
       };
     } catch {
@@ -199,6 +200,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
     // Only the generic "What would you like me to check" fallback asks the
     // server-side classifier; specific clarifications stay local.
     let intentPass = null;
+    let intentDetails = null;
     const askedClassifier =
       target === 'clarification' && needsIntentFallback(text, manager);
     if (askedClassifier) {
@@ -208,6 +210,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
         target = classified.intent;
         statusLookup = Object.hasOwn(statusLookups, target);
         intentPass = classified.pass;
+        intentDetails = classified.details;
       }
     }
     recordRoute(text, routed, target, askedClassifier);
@@ -367,7 +370,11 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       appendTurn('I’ll check the saved records.');
       const query = continuing ? earlier + ' ' + text : text;
       if (target === 'teamAvailability') {
-        await showTeamAvailability(query, continuing ? earlier : text);
+        await showTeamAvailability(
+          query,
+          continuing ? earlier : text,
+          intentDetails,
+        );
       } else {
         // A date reply replaces the earlier dates; the rest of the question stays.
         await showManagerLookup(
@@ -375,6 +382,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
           replacement?.question ?? query,
           continuing ? text : null,
           replacement?.dateReply,
+          intentDetails,
         );
       }
       return;
@@ -385,7 +393,7 @@ export function bindChatSend({ manager, chat, csrfToken, flow, view, cards }) {
       chat.value.refinementPending = true;
       say('user', text);
       appendTurn('I’ll check your coworkers’ confirmed free windows.');
-      await showCoworkerAvailability(text);
+      await showCoworkerAvailability(text, intentDetails);
       return;
     }
     if (target === 'explanation') {

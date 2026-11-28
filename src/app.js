@@ -927,14 +927,18 @@ export function createAppServer({
         if (classifying) {
           const input = await readJson(request);
           limitAi(account.user.id);
-          const { intent } = await handler(account, input, shiftClock);
+          const { intent, details } = await handler(account, input, shiftClock);
           const pass = intentPasses.issue(
             account.user.id,
             intent,
             chatText(input),
             shiftClock(),
           );
-          sendJson(response, 200, { intent, ...(pass && { pass }) });
+          sendJson(response, 200, {
+            intent,
+            ...(details && { details }),
+            ...(pass && { pass }),
+          });
           return;
         }
         const { input, options } = await readAiChat(
